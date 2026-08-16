@@ -159,6 +159,23 @@ this corpus**, computed on every run, against an answer that is already known.
 Not because they are wrong — because with no human anywhere in this loop (D-040), nothing else in
 the system can tell you whether they are right.
 
+### 🆕 What would make the rubric a promotion condition — and why it is not one yet
+
+⚠️ **The reason is `n`, not a view about rubrics.** A rubric is an excellent instrument where its
+noise **averages out** — the strongest published case for one is as an RL reward, dense across
+thousands of episodes, where a signal that is individually noisy is collectively right. **A
+promotion gate is the opposite regime:** n=10, one decision, no averaging, and a judge that is 90%
+reliable corrupts about one case in ten — which is the entire margin between two adjacent versions.
+
+So D-045's "never gates" is really a **threshold**, and `criterion_1_agreement` is the instrument
+that reads it. The rubric becomes admissible as a sixth condition when: agreement **≥ 0.95 sustained
+over ≥ 10 versions**, its disagreements are inspected and **non-systematic** (a judge always wrong
+about escalation is worse than one wrong at random), the benchmark is **n ≥ 50**, and it is counted
+as a **separate layer** rather than a second gate on the same judge.
+
+🎯 **Which is why the guarantee is a test rather than a sentence.** A boundary can be moved
+deliberately, in one visible diff, by whoever meets those four. Prose can only be forgotten.
+
 ### ⛔ Two gates that call the same judge are one gate
 
 A gate stack's strength is the number of **uncorrelated** failure modes in it, never the number of
