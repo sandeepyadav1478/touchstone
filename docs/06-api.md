@@ -1,5 +1,7 @@
 # 06 — Surfaces: CLI, HTTP, compose
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 Two surfaces. **The CLI is the primary one** — it is what the loop runs and what CI calls.
 
 **The HTTP service exists for one reason, and it is not "so this is a system rather than a

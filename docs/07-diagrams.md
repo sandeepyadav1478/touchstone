@@ -1,5 +1,7 @@
 # 07 — Diagrams first: the gate no phase starts without
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **This is a process rule, and it is the only one in this repo that blocks work.** Everything
 else here describes what to build. This describes **when you are allowed to start.**
 

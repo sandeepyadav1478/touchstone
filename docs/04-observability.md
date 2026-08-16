@@ -1,5 +1,7 @@
 # 04 — Observability: the spans *are* the score
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **The reframe that makes this project different from every "we added tracing" repo:**
 instrumentation here is not a dashboard someone looks at. It is the **input to the scorer**.
 `touchstone score` reads spans and never reads the agent's prose.

@@ -1,5 +1,7 @@
 # 05 — Scoring
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 Four metrics, one of them judged. **The three that gate promotion have no model in them.**
 
 ---

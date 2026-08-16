@@ -1,5 +1,7 @@
 # 00 — The stack: every package, every version, and the model path
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **Read this before `uv add` anything.** Every package below was resolved against PyPI on
 **2026-08-14** and every SDK field quoted was read out of the installed wheel, not from
 memory. Nothing here is aspirational.

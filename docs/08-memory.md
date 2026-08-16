@@ -1,5 +1,7 @@
 # 08 — Memory: where it goes, and the failure it is there to catch
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **The earlier answer was too small.** D-022 established that memory must not be infrastructure,
 which is correct and still stands. It left the impression that memory is a coin-flip experiment
 — *"we tried it, maybe it helped"* — and an agent whose only memory story is a null result reads

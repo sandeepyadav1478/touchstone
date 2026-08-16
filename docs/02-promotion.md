@@ -1,5 +1,7 @@
 # 02 — The promotion gate
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **This is the project. Everything else is the specimen it operates on.**
 
 A touchstone never changes. A candidate version of the agent ships only if it is better on

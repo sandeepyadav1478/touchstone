@@ -1,5 +1,7 @@
 # 09 — Schemas, file map and the contracts implementation runs against
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **Everything the other docs name but do not define.** [docs/01](01-spec.md) §2 gives the models
 that carry meaning; this file gives the ones that carry data, plus the four contracts a phase
 would otherwise have to invent: the hash, the attempt record, the retrieval corpus and the

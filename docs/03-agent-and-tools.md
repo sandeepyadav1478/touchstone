@@ -1,5 +1,7 @@
 # 03 — The agent and its tools
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **The agent is the specimen, not the point.** It exists to be a thing touchstone can measure
 versions of. Keep it small enough that a change is attributable.
 

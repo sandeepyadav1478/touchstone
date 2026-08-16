@@ -18,14 +18,30 @@ touchstone score v4                 # score from the spans, write results/v4.jso
 touchstone compare v4 --against v3  # per-case verdict → promote or reject
 ```
 
+> ### ⚠️ Status: phase 0 — specified, not yet built
+>
+> **What is here now:** the full specification (`docs/00`–`09`), the promotion rule, the
+> structural diagram that gates implementation, and `touchstone doctor`, which runs.
+> **What is not here:** the loop. No run has happened, so there are no artifacts under
+> `results/` — the directory is created by the first run — and the version table below has no
+> data in it.
+>
+> Those three commands above are the specified interface, not a working one. Today `doctor`
+> is the only implemented verb — see [Quick start](#quick-start), which says so per command.
+>
+> **The empty table is deliberate and it is the point.** Every cell is filled from a committed
+> run artifact or left blank; there is no path here for a number that was not measured. A repo
+> that shows its schedule before its results is the honest version of one that shows results
+> it cannot reproduce.
+
 ---
 
 ## The version history
 
-**This table is the point of the repository.** Every cell comes from a committed artifact in
-[`results/`](results/).
+**This table is the point of the repository** — the shape of it, until there are runs to fill
+it. Every cell comes from a committed artifact under `results/`, which is empty at phase 0.
 
-| version | what changed | correct | all_k(5) | escalation F1 | tool calls | $/correct triage¹ | promoted |
+| version | what changed | correct | all_k(3) | escalation F1 | tool calls | $/correct triage¹ | promoted |
 |---|---|---|---|---|---|---|---|
 | v1 | baseline — one node, no tools | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | — |
 | v2 | + three specialists behind a supervisor | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
@@ -35,9 +51,10 @@ touchstone compare v4 --against v3  # per-case verdict → promote or reject
 ¹ From the Agent SDK's own cache-aware `total_cost_usd` — a real per-call figure, drawn from a
 subscription quota rather than billed. **Not an invoice** — see [Limits](#limits).
 
-⟨*Once a candidate has been rejected, describe it here in two sentences: what looked better,
-which case regressed, and what the trace showed. That paragraph is worth more than the
-table.*⟩
+**The rejections get written up here, next to the table.** When a candidate is refused, this
+section gains two sentences: what looked better, which case regressed, and what the trace
+showed. A gate that never visibly refuses anything is not a gate, so the refusals are the part
+worth reading.
 
 ---
 
@@ -55,8 +72,9 @@ So the primary metric is **exact match on `root_cause_id`** — no judge, no rub
 argument about whether an answer was good enough. A judge appears in exactly one dimension
 (explanation quality) and it is named in the results file.
 
-**What this buys, concretely:** a regression is a fact. Case 07 passed at v2 and fails at v4,
-so CI blocks the promotion. There is nothing to interpret.
+**What this buys, concretely:** a regression is a fact rather than a judgement. If case 07
+passes at v2 and fails at v4, CI blocks the promotion — there is nothing to interpret and
+nobody to overrule.
 
 **What it costs** is in [Limits](#limits), and it is real: a planted root cause is not an
 ambiguous one, and real incidents are ambiguous.
@@ -123,15 +141,26 @@ understanding the design, it is written out in the doc rather than delegated to 
 ## Quick start
 
 ```bash
-git clone <repo> && cd touchstone
+git clone git@github.com:sandeepyadav1478/touchstone.git && cd touchstone
 uv sync
-docker compose up -d phoenix            # traces. ⚠️ that is all the loop needs — the five
-                                        # tools run over MCP stdio, in-process, no container
+uv run touchstone doctor                # ✅ works today — checks the CLI, login and fallbacks
+```
 
-touchstone incidents generate --n 10    # the suite, with planted root causes
-touchstone run v1 --k 3                 # 10 incidents × 3 attempts
-touchstone score v1                     # → results/v1.json
-touchstone compare v2 --against v1      # → promote or reject, per case
+⚠️ `uv sync` does not put `touchstone` on your `PATH`. Use `uv run touchstone …`, or activate
+the environment with `source .venv/bin/activate` first. The blocks below drop the prefix for
+readability.
+
+The rest of the interface is specified in [docs/06](docs/06-api.md) and **not yet
+implemented**. It is listed here because the spec is fixed, not because it runs:
+
+```bash
+docker compose up -d phoenix            # ⬜ traces. ⚠️ that is all the loop needs — the five
+                                        #    tools run over MCP stdio, in-process, no container
+
+touchstone incidents generate --n 10    # ⬜ the suite, with planted root causes
+touchstone run v1 --k 3                 # ⬜ 10 incidents × 3 attempts
+touchstone score v1                     # ⬜ → results/v1.json
+touchstone compare v2 --against v1      # ⬜ → promote or reject, per case
 ```
 
 ### Models
@@ -153,8 +182,10 @@ voids that run rather than mixing it — provider and model are part of a candid
 The **judge never runs on the Claude quota**; it cannot gate anything, so it is the cheapest
 thing to move off the constrained provider.
 
-⟨*Fill the model id from `touchstone doctor` at phase 0 — it comes from a live call, not a config
-file.*⟩ Full manifest and reasoning: [docs/00-stack.md](docs/00-stack.md).
+**The model is pinned to `claude-sonnet-4-6`**, and that id comes from a live call rather than
+a config file — `doctor` asks the running CLI what it actually answered as, because the id is
+part of a candidate's identity and a config file can disagree with reality. Full manifest and
+reasoning: [docs/00-stack.md](docs/00-stack.md).
 
 ---
 
@@ -175,20 +206,21 @@ to decide whether to put something on call.**
 
 ## Limits
 
-**Read this before quoting any number above.**
+**Read this before quoting any number this repo ever produces.** These are properties of the
+design, so they hold whether or not a run has happened yet.
 
-- **The incidents are synthetic.** A generator wrote them. This system has never seen a real
-  alert, a real pager, or a real production system.
+- **The incidents are synthetic.** A generator writes them. This system has never seen a real
+  alert, a real pager, or a real production system, and is not designed to.
 - **A planted root cause is not a real one.** Real incidents have several contributing causes,
   ambiguous evidence, and sometimes no single correct answer. The suite is cleaner than
   reality, which makes the correctness number an upper bound on a harder problem.
-- **Five of the eleven failure classes were shaped against real telemetry; six were not.**
-  The renderers were written after reading public fault-injection corpora — chiefly
-  [RCAEval](https://github.com/phamquiluan/RCAEval) RE2 — but those inject at the
+- **Only five of the eleven failure classes can be shaped against real telemetry; six cannot.**
+  The renderers are specified to be built after reading public fault-injection corpora —
+  chiefly [RCAEval](https://github.com/phamquiluan/RCAEval) RE2 — but those inject at the
   infrastructure layer, so `db_pool_exhausted`, `slow_query_after_migration`, `cache_stampede`,
-  `bad_deploy_regression`, `config_drift` and `insufficient_evidence` are built from the
-  documented mechanism instead. ⛔ **No public data is loaded, imported or vendored here** —
-  it was read to shape the renderers and nothing else (D-029, [docs/01](docs/01-spec.md) §4).
+  `bad_deploy_regression`, `config_drift` and `insufficient_evidence` have to be built from the
+  documented mechanism instead. ⛔ **No public data is loaded, imported or vendored here** — it
+  is read to shape the renderers and nothing else (D-029, [docs/01](docs/01-spec.md) §4).
 - **The agent does not learn, and the suite does not grow yet either.** Nothing here trains,
   fine-tunes or updates weights. A human writes each candidate version; the gate only decides
   whether it ships. **Mining a failure into a permanent regression case is designed and
@@ -202,8 +234,8 @@ to decide whether to put something on call.**
   cases.
 - **Cost figures are measured but never billed.** They come from the Agent SDK's own
   `total_cost_usd`, which is cache-aware — so they are a real per-call figure and not
-  tokens × list price. But these runs went through a **Claude Code subscription**, so the
-  number is *what the run would have cost at API list prices*, out of a quota rather than an
+  tokens × list price. But runs go through a **Claude Code subscription**, so the number is
+  *what the run would have cost at API list prices*, drawn from a quota rather than an
   invoice. Both halves of that sentence are load-bearing.
 - **Rate-limited attempts are void, not failed.** A 429 means the attempt did not happen;
   scoring it as wrong would let a quota limit look like a regression. `void_attempts` is

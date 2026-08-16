@@ -211,7 +211,7 @@ def run(probe: bool = True) -> int:
         console.print(f"\n[bold red]✗ {len(failed)} blocking[/] — fix before running anything.")
         return 1
     if probe:
-        console.print("\n[green]✓ green.[/] Paste this output into DECISIONS.md D-001, verbatim.")
+        console.print("\n[green]✓ green.[/] Paste this output verbatim into your decision record (D-001).")
     else:
         console.print("\n[green]✓ green[/], but unprobed — D-001 needs a run with the live call.")
     return 0

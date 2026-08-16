@@ -1,5 +1,7 @@
 # 01 — Spec: the incident, the verdict, the generator
 
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+
 **Write this file's code first, before any agent exists.** The corpus is what makes every
 later number falsifiable; an agent built before the answer key is an agent you cannot score.
 
