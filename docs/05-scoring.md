@@ -123,7 +123,13 @@ is read from the same substrate as everything else.
 - Runs on `verdict.reasoning`: is the explanation supported by evidence the agent actually
   retrieved? (Cross-check the tool spans — a reason citing a metric it never fetched is
   a fabrication, and **that check is mechanical, not judged.**)
-- ⛔ **Never gates promotion.** Reported beside the others, in its own column.
+- ⛔ **Never gates promotion.** Reported beside the others, in its own column. 🆕 **And since
+  D-045 that is a test rather than this sentence** — the fields live inside
+  §6's `diagnostics` object and `compare.py` is asserted never to read it.
+- 🔴 **Built at P2.6a, not in phase 1** (DEF-009). This section specified the judge
+  in full while no roadmap row built it, for as long as it has existed. **The placement is the
+  finding:** a metric that cannot gate cannot block the loop, so it comes *after* the gate it is not
+  part of.
 - ⚠️ **Ceiling: a smaller judge is a weaker judge.** State it, and state which model. The
   honest framing is the interesting one — *"the quota goes to the thing being measured, not to
   a metric that cannot block anything"* — and it is only honest if the trade is named.
@@ -190,7 +196,8 @@ is untouched: the agent never reads `truth.json`; only the scorer does.
 ⛔ **It never becomes a fifth promotion condition.** A router metric measures *which mechanism*
 produced an answer, and gating on a mechanism forbids a version that reaches the right answer a
 different way — the opposite of what the version table is for. It is a reported column, like the
-judged one, for the same reason.
+judged one, for the same reason — and since D-045 it sits inside §6's
+`diagnostics` object, where a test enforces what this paragraph asserts.
 
 🔴 **The field has a deadline, and it is the reason this is not a phase-2 item.** `truth.json` is
 inside `benchmark_hash` byte for byte ([docs/09](09-schemas.md) §5), so adding a key to it after
@@ -216,20 +223,24 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
   "model": "⟨the model_usage key, from the run — D-033⟩",
   "provider": "⟨subscription | cerebras | ollama — from config; the model id is the evidence⟩",
   "auth": "subscription",
-  "judge": {"provider": "cerebras", "model": "⟨…⟩",           // ⛔ required, not illustrative (D-041)
-            "rubric_hash": "7d13ae…"},
   "aggregate": {
     "correct": 0.0, "all_k": 0.0, "pass_at_1": 0.0,
     "escalation": {"precision": 0.0, "recall": 0.0, "f1": 0.0},
     "cost_per_correct_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
-    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0,
+    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0
+  },
+  "cases": [{"id": "inc-001", "correct_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
 
-    // ⛔ diagnostic only — neither of these is a promotion axis
+  // ⛔ compare.py NEVER reads inside this object, and one test proves it (D-045).
+  //    Everything a promotion depends on is above this line.
+  "diagnostics": {
+    "judge": {"provider": "cerebras", "model": "⟨…⟩",         // ⛔ required, not illustrative (D-041)
+              "rubric_hash": "7d13ae…"},
     "criterion_1_agreement": 0.0,                             // the judge's measured error rate (D-041)
+    "explanation_quality": {"criterion_2": 0.0, "criterion_3": 0.0, "criterion_4": 0.0},
     "router": {"macro_f1": 0.0,                               // vs required_specialist (D-042)
                "per_specialist": {"timeline": {"precision": 0.0, "recall": 0.0}}}
   },
-  "cases": [{"id": "inc-001", "correct_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
 
   "regression": {
     "locked": 41, "open": 6, "quarantined": 1,
@@ -243,6 +254,15 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
 ⛔ **Written by `touchstone score`, never by hand.** The README table is generated from these
 files ([docs/02](02-promotion.md) §2.6). Per-attempt records and the four `status` values:
 [docs/09](09-schemas.md) §6.
+
+🎯 **`diagnostics` is a boundary, not a heading (D-045).** Both things inside it are opinions about
+*how* an answer was produced — a judge's read of the reasoning, and which specialist the router
+picked — and §5 and §5a each promise, in prose, never to gate on them. **A promise in prose is
+worth what the next reader knows about it.** So the fields move inside one named object and
+`test_compare_ignores_diagnostics` asserts that perturbing **every value in it** leaves the
+promotion decision byte-identical. ⚠️ **The point is not that the judge is trustworthy. It is that
+the gate cannot be affected by whether it is** — the same construction that keeps `truth.json` from
+the agent by a directory boundary rather than by an instruction.
 
 ⚠️ **`max_hops` is here because it is part of the candidate's identity, not because it is
 interesting** — D-013 makes a candidate `(graph, prompts, parameters, provider, model)`, and two

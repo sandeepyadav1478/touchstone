@@ -23,8 +23,8 @@ gitignored.
 
 | | |
 |---|---|
-| Frame | 6792 × 13470 — **91.5 MP** |
-| On disk | 3.48 MB |
+| Frame | 6313 × 14683 — **92.7 MP** |
+| On disk | 3.70 MB |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
 
@@ -36,14 +36,21 @@ the only reason they are comparable at all.
 |---|---|---|---|---|
 | D-039 | one node's label | ⟨not recorded⟩ | **0** | +80 |
 | D-039 → D-040 | **a node removed** from inside a group | 6437 × 13066 → 6752 × 12674 | **+315** | **−392** |
-| D-040 → D-043 | **five labels grew**, no node added or removed | 6752 × 12674 → **6792 × 13470** | +40 | **+796** |
+| D-040 → D-043 | **five labels grew**, no node added or removed | 6752 × 12674 → 6792 × 13470 | +40 | **+796** |
+| D-043 → D-045 | **two nodes and two edges added** | 6792 × 13470 → **6313 × 14683** | **−479** | **+1213** |
 
-⛔ **Three edits, three unrelated reflow shapes — so there is no stable-layout claim left to make.**
+⛔ **Four edits, four unrelated reflow shapes — so there is no stable-layout claim left to make.**
 The paragraph this replaced said the layout was stable on the strength of the first row alone.
-**One stable re-export is one sample.** ⚠️ **And the third row is the one that should change how you
-read the other two**: it added no node and moved no edge, yet it moved the height **ten times
-further** than the row that deleted a node — because Eraser wraps a label and every box below it
-slides. **The size of a diagram edit in the DSL predicts nothing about the size of the reflow.**
+**One stable re-export is one sample.** ⚠️ **Rows three and four are the ones that should change how
+you read the first two.** Row three added no node and moved no edge, yet moved the height **ten
+times further** than the row that deleted a node. Row four *added* two nodes and came out **479px
+narrower**. **The size of a diagram edit in the DSL predicts neither the size nor the sign of the
+reflow** — Eraser re-wraps labels and re-packs columns, and a canvas that grows in content can
+shrink in an axis.
+
+🎯 **The reason this table is kept rather than overwritten each time is that it is the only
+falsifiable thing in this file.** Everything else here is an argument; these are four measurements,
+each re-derivable from a committed PNG's IHDR chunk.
 
 ⚠️ **The content bounding box is no longer recorded here.** It came from Eraser's own canvas
 readout, and a figure that cannot be re-derived from the committed PNG is a figure that goes stale
@@ -51,8 +58,8 @@ without anyone noticing. **The frame is measured from `loop.png`'s IHDR chunk** 
 re-run that.
 
 ⚠️ **The hosted copy is a renderer, not the artifact, and it is deliberately not the same bytes.**
-What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 9,019 chars against the
-file's 26,286. Comments render no pixels, so the picture is identical and the two-thirds of this
+What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 9,696 chars against the
+file's 28,235. Comments render no pixels, so the picture is identical and the two-thirds of this
 file that is argument never leaves the repo. ⛔ **Do not read a figure off the hosted copy and do
 not edit it**; an edit there is invisible in every diff this repo has.
 

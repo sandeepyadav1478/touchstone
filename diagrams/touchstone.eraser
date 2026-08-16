@@ -152,7 +152,10 @@ legend [position: top-left] {
   [connection: -->, label: "reads it — does not trigger it"]
 }
 
-Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing"]
+// D-044 belongs on this node and nowhere else. The developer is the ONLY writer of a
+// candidate — there is no auto-tuner, and the reason is attribution (D-013), not principle.
+// Saying it here rather than in a floating note keeps it attached to the thing it constrains.
+Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing\n⛔ NO auto-tuner — a human writes every candidate (D-044)"]
 
 // ── 1 · THE CORPUS — built BEFORE the agent exists ────────────────────────────
 // That ordering is the falsifiability claim. The answer key is planted before
@@ -297,7 +300,17 @@ RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3
 // Router P/R (D-042) and the rubric (D-041) are reported, never gated: a router metric
 // measures WHICH MECHANISM produced an answer, and gating on a mechanism forbids a
 // version that gets it right a different way. The absent edge is the point.
-ScorePy [color: blue, icon: bar-chart-2, label: "9 · loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nDIAGNOSTIC, never gates: router P/R (D-042) · rubric (D-041)"]
+// D-045 changed what this node has to show. The old label said "DIAGNOSTIC, never gates" —
+// which was the prose promise, drawn as if it were a mechanism. It is not: the scorer has TWO
+// outputs and the whole guarantee is that only one of them reaches the gate. So the split is
+// drawn, and Diag below is deliberately a DEAD END on this canvas. A box with no outgoing edge
+// is the only honest way to draw "nothing downstream may read this".
+ScorePy [color: blue, icon: bar-chart-2, label: "9 · loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
+
+// Read this node together with Judge in section 13. The judge WRITES here and this reads by
+// nothing: that is the entire content of D-045, and it is why the rubric is not a human in the
+// loop — a human gate halts the machine, this cannot even be observed by it.
+Diag [shape: document, color: red, icon: eye-off, label: "results/<version>.json → diagnostics{}\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nno outgoing edge, ON PURPOSE"]
 
 Dev > CliPy
 CliPy > RunPy
@@ -305,6 +318,7 @@ Bench > RunPy: the Incident only — NEVER the truth
 RunPy > Agent: invoke(state, thread_id=run_id)
 Spans > ScorePy
 Truth > ScorePy: read at SCORE time only
+ScorePy > Diag: the OTHER output — and it stops here
 
 // ── 10 · THE GATE — this is the product ───────────────────────────────────────
 // Everything above exists to make this output mean something. The chain is an
@@ -387,6 +401,10 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   // deleted, because "whether it is built" is an open decision and not this file's call.
   ApiPy [icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION"]
   Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER\nNEVER a dependency of scoring"]
+  // DEF-009. This existed as a full specification in docs/05 §5 -- library, provider, criteria,
+  // required fields, a results-schema entry -- and NO row in any phase built it. It is drawn in
+  // phase 2 rather than phase 1 because a metric that cannot gate cannot block the loop.
+  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\n🔴 had no build row at all until DEF-009"]
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
   NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.6 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
 }
@@ -394,6 +412,7 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
 BudgetPy > C4
 Promoted > PromotePy > RecordPy
 Gate --> NegControl
+Judge > Diag: writes the rubric fields — and reaches NOTHING else
 Spans --> Phoenix
 Spans --> CI
 
