@@ -296,21 +296,36 @@ TelemetryPy > Spans
 
 CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.9 adds incidents · triage · run · score"]
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
-// The two diagnostic columns are drawn ON the scorer and deliberately NOT wired to Gate.
-// Router P/R (D-042) and the rubric (D-041) are reported, never gated: a router metric
-// measures WHICH MECHANISM produced an answer, and gating on a mechanism forbids a
-// version that gets it right a different way. The absent edge is the point.
-// D-045 changed what this node has to show. The old label said "DIAGNOSTIC, never gates" —
-// which was the prose promise, drawn as if it were a mechanism. It is not: the scorer has TWO
-// outputs and the whole guarantee is that only one of them reaches the gate. So the split is
-// drawn, and Diag below is deliberately a DEAD END on this canvas. A box with no outgoing edge
-// is the only honest way to draw "nothing downstream may read this".
-ScorePy [color: blue, icon: bar-chart-2, label: "9 · loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
+// ⚠ RESTRUCTURED by D-046. Judge used to live in section 13 with the phase-2 "surfaces"
+// and Diag sat here unnumbered, so the one edge carrying the whole D-045 argument ran the
+// height of the canvas and a reader had to find two nodes at opposite ends to answer "how
+// is the rubric kept out of the gate?". Judge is not a surface — it is a scoring component
+// that happens to be phase-2 TIMED, and this diagram groups by ROLE while COLOUR carries
+// phase. So all three sit in one box and the orange node inside a blue group is the phase,
+// said the way the legend already says it.
+//
+// 📐 The regroup added no node and removed none, and the canvas went 6313 × 14683 →
+// 7300 × 10742 — 3,941px of height gone, 27% less to scroll. Which GROUP a node is in is a
+// bigger layout input than how many nodes there are. Measured, not predicted; row five of
+// diagrams/README.md.
+Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens at score time"] {
+  // Note what does NOT arrive here: the agent's return value. That absence is what lets CI
+  // score a committed JSONL with no credential and no model call.
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
 
-// Read this node together with Judge in section 13. The judge WRITES here and this reads by
-// nothing: that is the entire content of D-045, and it is why the rubric is not a human in the
-// loop — a human gate halts the machine, this cannot even be observed by it.
-Diag [shape: document, color: red, icon: eye-off, label: "results/<version>.json → diagnostics{}\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nno outgoing edge, ON PURPOSE"]
+  // The dead end IS the mechanism. The old label said "DIAGNOSTIC, never gates", which was
+  // the prose promise drawn as though it were a structure. A box with no outgoing edge is
+  // the only honest way to draw "nothing downstream may read this" — and it is why a rubric
+  // is not a human in the loop: a human gate HALTS the machine, this cannot even be observed
+  // by it. ⛔ If an edge ever leaves this node, D-045 has been broken.
+  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/<version>.json\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
+
+  // Phase-2 timed, drawn here anyway: it belongs to scoring, and P2.6a says when.
+  // ⚠ It is admissible as a SIXTH promotion condition only at agreement ≥ 0.95 sustained
+  //   over ≥ 10 versions, non-systematic disagreements, and n ≥ 50 (D-045 amendment).
+  //   Until then the edge below is the only one it gets.
+  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\n🔴 had no build row at all until DEF-009"]
+}
 
 Dev > CliPy
 CliPy > RunPy
@@ -319,6 +334,7 @@ RunPy > Agent: invoke(state, thread_id=run_id)
 Spans > ScorePy
 Truth > ScorePy: read at SCORE time only
 ScorePy > Diag: the OTHER output — and it stops here
+Judge > Diag: writes the rubric fields — and reaches NOTHING else
 
 // ── 10 · THE GATE — this is the product ───────────────────────────────────────
 // Everything above exists to make this output mean something. The chain is an
@@ -401,10 +417,11 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   // deleted, because "whether it is built" is an open decision and not this file's call.
   ApiPy [icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION"]
   Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER\nNEVER a dependency of scoring"]
-  // DEF-009. This existed as a full specification in docs/05 §5 -- library, provider, criteria,
-  // required fields, a results-schema entry -- and NO row in any phase built it. It is drawn in
-  // phase 2 rather than phase 1 because a metric that cannot gate cannot block the loop.
-  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\n🔴 had no build row at all until DEF-009"]
+  // ⚠ Judge WAS here and moved into section 9. It was filed under "the surfaces" because it is
+  // phase-2 timed, but this group means ROLE and a judge is not a surface — it sits beside
+  // api.py and CI, which it has nothing to do with. DEF-009 is the reason it exists at all:
+  // docs/05 §5 specified it in full — library, provider, criteria, required fields, a
+  // results-schema entry — and NO row in any phase built it.
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
   NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.6 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
 }
@@ -412,7 +429,6 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
 BudgetPy > C4
 Promoted > PromotePy > RecordPy
 Gate --> NegControl
-Judge > Diag: writes the rubric fields — and reaches NOTHING else
 Spans --> Phoenix
 Spans --> CI
 
