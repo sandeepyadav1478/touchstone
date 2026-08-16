@@ -23,8 +23,8 @@ gitignored.
 
 | | |
 |---|---|
-| Frame | 7343 × 10742 — **78.9 MP** |
-| On disk | 3.60 MB |
+| Frame | 7887 × 12420 — **98.0 MP** |
+| On disk | 4.21 MB |
 | Method | ⛔ `manually_create_diagram` → export twice → **delete the temp diagram**, per finding 1. Then the four-edge check in finding 2a |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
@@ -40,6 +40,15 @@ the only reason they are comparable at all.
 | D-040 → D-043 | **five labels grew**, no node added or removed | 6752 × 12674 → 6792 × 13470 | +40 | **+796** |
 | D-043 → D-045 | **two nodes and two edges added** | 6792 × 13470 → 6313 × 14683 | **−479** | **+1213** |
 | D-045 → D-046 | one node moved between groups, one duplicate edge deleted | ~~6313 × 14683 → 7300 × 10742~~ | ~~+987~~ | ~~−3941~~ |
+| the audit fixes | **+2 nodes** (`Inv`, `Regr`), **+3 edges**, one legend row, one node recoloured | 7343 × 10742 → **7887 × 12420** | **+544** | **+1678** |
+
+✅ **Row six is the first pair in this table that is a pair.** Both frames were taken the same
+way — create fresh, export twice, confirm the hashes match, check all four edges — so this is the
+first row where the *before* and the *after* were measured by the same method and neither came off
+a long-edited diagram. Rows 1–4 name no method at all and row five was withdrawn for having the
+wrong one. ⚠️ **That is all it establishes: one honest sample, not a rule.** Do not read +1678 as a
+per-node cost — row four added two nodes and came out *narrower*, and nothing here says which of the
+five changes moved the height.
 
 🔴 **Row five is WITHDRAWN, and it is the most instructive row in the table.** It was written up as
 *"−3,941px of height, 27% less to scroll, which group a node is in is a bigger layout input than how
@@ -49,10 +58,13 @@ a record of edit history rather than of content. The rule was already written, i
 the diagram's own header, and it was not followed. Worse: the D-046 export was also **clipped**
 (finding 2a), so the 10742 was not even that render's own height. **Re-measured under the stated
 method — create fresh, export twice, check all four edges — the settled frame is 7343 × 10742.**
-There is no honest before/after left, because the *before* would have to be re-measured the same
-way and that diagram is gone.
+There is no honest before/after left **for that edit**, because the *before* would have to be
+re-measured the same way and that diagram is gone. ✅ **Row six is the one that is honest**, and it
+only exists because the settled 7343 × 10742 above became a *before* the moment the next edit
+landed. The withdrawal is what made the next comparison possible.
 
-⛔ **Four edits, four unrelated reflow shapes — so there is no stable-layout claim left to make.**
+⛔ **Five live rows, five unrelated reflow shapes — so there is no stable-layout claim left to
+make.**
 The paragraph this replaced said the layout was stable on the strength of the first row alone.
 **One stable re-export is one sample.** ⚠️ **Rows three and four are the ones that should change how
 you read the first two.** Row three added no node and moved no edge, yet moved the height **ten
@@ -65,6 +77,7 @@ shrink in an axis.
 this table rather than a footnote.** Row five was withdrawn precisely because its method was wrong,
 and nothing recorded here says whether the others were created-fresh or exported from a diagram
 mid-edit. **Treat them as suggestive and not as comparable** until a row can say how it was taken.
+✅ **Row six can say it** — it is the first one that can, which is why it is marked and they are not.
 🎯 **The fix is a column, not a re-measurement** — any future row that cannot fill it does not go
 in.
 

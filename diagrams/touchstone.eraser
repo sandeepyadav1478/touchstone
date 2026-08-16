@@ -3,10 +3,41 @@ title touchstone — the loop that has to get better
 // ═══════════════════════════════════════════════════════════════════════════════
 //  READ THIS FIRST — three conventions, and the measurements that set them.
 //
-//  1 · COLOUR IS PHASE, AND NOTHING ELSE.  See the legend.
+//  1 · WHERE A NODE CARRIES A PHASE COLOUR, THAT COLOUR IS THE SCHEDULE.
 //      A node coloured for a phase it is not in is the quiet lie the key exists
-//      to stop. The colour IS the schedule, and the schedule is most of the risk.
-//      ONE exception: section 11, where colour is case STATUS. It says so there.
+//      to stop. The schedule is most of the risk, so that is the colour that has
+//      to be right.
+//
+//      ⚠ THIS RULE READ "COLOUR IS PHASE, AND NOTHING ELSE — ONE exception:
+//        section 11" UNTIL 2026-08-16, AND THAT WAS MEASURABLY FALSE. Counted
+//        off the DSL rather than remembered:
+//          · red    10 nodes, NOT ONE of them a phase — and it has had its own
+//                   legend row the whole time ("an invariant, or a never"). So
+//                   the biggest exception was in the key, and the header still
+//                   said there was one exception and named a different one.
+//          · grey   6 nodes, and only Life and V5 are "deferred, or cut".
+//                   Boundary, Voided, Incomplete and C5 are none of those.
+//          · none   34 nodes carry no colour at all, so the phase is read off
+//                   the Pn.n in the label — which is the real mechanism, and
+//                   convention 3 is where it is actually written down.
+//        ⛔ The rule was not wrong when written; it was written about the
+//           schedule colours and then read as a claim about every colour. A
+//           convention stated more strongly than it is true gets enforced
+//           somewhere it does not apply, which is how ApiPy ended up with a
+//           comment describing a colour it did not have (DEF-013).
+//
+//      🔴 ONE COLOUR IS STILL WRONG AND IT IS AN OPEN QUESTION, NOT A FIX:
+//        green's key says "phase 0 — shipped" and green is on `Scored` and
+//        `Promoted` — the two GOOD OUTCOMES, neither of them phase 0. The only
+//        node naming a P0 artifact is `CliPy` ("cli.py — P0 shipped `doctor`")
+//        and it is BLUE, because it is mostly P1.9. So either CliPy goes green
+//        and green is the phase, or the outcomes keep it and the key stops
+//        claiming a phase. ⛔ That is a schedule decision, not a drawing one,
+//        so it is NOT being made here — see the open-questions section.
+//
+//      TWO documented non-phase uses, both stated where they are used:
+//        · section 11, where colour is case STATUS. It says so there.
+//        · red and purple, which have their own legend rows.
 //
 //  2 · THE BOXES CARRY THE NAME AND THE RULE. THESE COMMENTS CARRY THE ARGUMENT.
 //      ⛔ ONE line a node. TWO at the outside. If it needs a paragraph it is an
@@ -149,6 +180,18 @@ legend [position: top-left] {
   [color: pink, label: "phase 3 — v0.2.0"]
   [color: grey, label: "deferred, or cut"]
   [color: red, label: "an invariant, or a never"]
+  // D-047, and the citation is in this comment rather than in the label on purpose: the
+  // label is rendered text, and adding to it would invalidate the PNG beside this file.
+  // ⛔ This row is not decoration — it closes a gap this file had ALREADY NAMED and then
+  //    worked around. The comment above `Bound`, at the foot of this file, says: "the old
+  //    node was grey while it was an open question, WHICH THE KEY NEVER COVERED". It solved
+  //    that one node by picking red and explaining why, and left the hole open. api.py is
+  //    the next one, and it was drawn in the default palette while its comment claimed it
+  //    was "grey-question form" — the prose and the render disagreeing, DEF-011's shape.
+  //    ⚠ "Deferred" and "undecided" are different states and must not share a colour:
+  //    deferred means the answer is yes and the date is later; this means nobody has said
+  //    yes. Collapsing them is how a question quietly becomes a queued task.
+  [color: purple, label: "an OPEN QUESTION — nobody has decided yet"]
   [connection: -->, label: "reads it — does not trigger it"]
 }
 
@@ -165,7 +208,7 @@ Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1
   DomainPy [icon: file-text, label: "domain.py — P1.1\npydantic models, docs/09 §1–4"]
   GenPy [icon: settings, label: "incidents/generate.py — P1.2\ntruth FIRST, then render"]
   RendPy [icon: layers, label: "incidents/renderers.py — P1.2\nten cause renderers + the deletion path"]
-  Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3\nn=10, frozen · manifest.json"]
+  Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3\nn=10, frozen · manifest.json\nNO writer after generation — the asymmetry is in section 11"]
   // D-042: required_specialist is drawn here because the field has a DEADLINE, not
   // because it is interesting. truth.json is hashed byte for byte, so the key is free
   // at P1.2 and a benchmark version bump at any later moment. An implementer working
@@ -315,7 +358,12 @@ RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3
 Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens at score time"] {
   // Note what does NOT arrive here: the agent's return value. That absence is what lets CI
   // score a committed JSONL with no credential and no model call.
-  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
+  // ⚠ Both metrics are named because the CONTRAST is the claim, and the picture carried
+  // only half of it: all_k appeared four times, pass@1 not once. docs/05 §2 — "pass@1
+  // describes a demo, all_k describes something you would put on call." A diagram that
+  // shows only the headline number has quietly dropped the sentence that makes it mean
+  // anything, and P3.1 requires both reported ESPECIALLY when they differ.
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nall_k is the HEADLINE · pass@1 reported beside it, docs/05 §2\nBOTH, even when they differ — especially then\nTWO outputs — only ONE of them reaches the gate"]
 
   // The dead end IS the mechanism. The old label said "DIAGNOSTIC, never gates", which was
   // the prose promise drawn as though it were a structure. A box with no outgoing edge is
@@ -365,6 +413,17 @@ C5 > Promoted: all five hold
 Gate > Refused: any ONE fails
 Refused --> Dev: informed by WHICH case broke
 
+// ⛔ P1.4 was the ONLY phase-1 step with nothing on the canvas — it lived in a comment,
+//    and a comment renders no pixels. That is not a filing error. Diag one section above
+//    says "ONE TEST proves it (D-045)", and the test it names had no node, so the picture
+//    asserted a mechanism and then declined to draw it. Every other claim here points at a
+//    file a reader can open; this one pointed at prose.
+// ⚠ Drawn with `-->` on purpose — the legend reads it as "reads it, does not trigger it".
+//    A test that TRIGGERED the gate would be a different and much weaker thing.
+Inv [shape: document, color: blue, icon: check-square, label: "tests/unit/test_invariants.py — P1.4\n13 LIVE invariants of docs/01 §6, numbered to 14\n⛔ 5 is RETIRED, not renumbered (D-040) — the slot stays EMPTY\n1–8 now · 9–10 v5-only · 11–12 need the regression tier · 13–14 need v2"]
+
+Inv --> Gate: asserts compare.py reads NO field inside diagnostics{} — the code half of D-045
+
 // ── 11 · THE REGRESSION LIFECYCLE — all that condition 5 reads ────────────────
 // ⚠ COLOUR HERE IS STATUS, NOT PHASE. The only section where that is true.
 // ⛔ There is no arrow out of SLocked back to SOpen. A locked case unlocks only
@@ -376,8 +435,16 @@ Refused --> Dev: informed by WHICH case broke
 // adrift at the top of the canvas to beside the gate it feeds — the fix for the
 // meaning and the fix for the placement were the same edge.
 
+// ⛔ THE SECOND SUITE MANIFEST LIVES HERE, and it was missing until an audit counted the
+//    stores against docs/07 §2. That row does not say "draw the suite" — it says draw
+//    EVERY store AND ITS WRITER, and it names this pair as the one that is NOT symmetric:
+//    suite/benchmark/ has no writer at all once generated, suite/regression/ has exactly
+//    one. Four statuses were drawn with no store under them, so the picture showed what a
+//    case BECOMES and never where it is kept or who may put it there. A store with one
+//    writer is a design claim; an undrawn store is that claim made invisible.
 Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.6, DEFERRED (D-030)"] {
   MinePy [icon: filter, label: "loop/mine.py · loop/suite.py\nfailures → suite/proposed/"]
+  Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\nthe five gates: reproducible · not_flaky · not_a_void · distinct · justified\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
   SOpen [icon: circle, label: "open — does NOT gate"]
   SLocked [color: red, icon: lock, label: "locked — GATES FOREVER, one-way\nset automatically on the first PROMOTED all_k"]
   SQuar [icon: pause-circle, label: "quarantined — human, reason REQUIRED"]
@@ -385,7 +452,8 @@ Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.
 }
 
 ScorePy --> MinePy: the failures, mined
-MinePy > SOpen: enters as open
+MinePy > Regr: suite/proposed/ → the FIVE admission gates, ALL five (docs/02 §5)
+Regr > SOpen: admitted — enters as open, and admitted_by records the GATE SET, never a name (D-040)
 SOpen > SLocked: a promoted version scores it all_k
 SOpen > SQuar: human
 SLocked > SQuar: human, with a reason
@@ -417,9 +485,14 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   RecordPy [icon: grid, label: "loop/record.py — P2.10\nthe README table, GENERATED"]
   McpPy [icon: link, label: "tools/mcp_server.py — P2.9\nthe same five tools, a second surface"]
   // D-040 took this node's reason away: the four endpoints were justified by a DURABLE
-  // interrupt, and no node waits any more. Drawn in grey-question form rather than
-  // deleted, because "whether it is built" is an open decision and not this file's call.
-  ApiPy [icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION"]
+  // interrupt, and no node waits any more. Kept rather than deleted, because "whether it
+  // is built" is an open decision and not this file's call.
+  // 🔴 PURPLE, and it was not. This comment used to say it was drawn "in grey-question
+  //    form" — it carried no colour attribute at all and rendered in the default palette,
+  //    so the one node the key had no word for was also the one node whose comment
+  //    described a colour it did not have. Grey would have been wrong too: grey is
+  //    "deferred, or cut", and this is neither. See the legend.
+  ApiPy [color: purple, icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION\nnothing waits, so there is nothing to resume and nothing the CLI hides"]
   Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER\nNEVER a dependency of scoring"]
   // ⚠ Judge WAS here and moved into section 9. It was filed under "the surfaces" because it is
   // phase-2 timed, but this group means ROLE and a judge is not a surface — it sits beside
@@ -434,15 +507,55 @@ BudgetPy > C4
 Promoted > PromotePy > RecordPy
 Gate --> NegControl
 Spans --> Phoenix
+// ⛔ McpPy had NO edge at all, and for this node that is the whole claim. "A second
+//    surface" is a statement about what it points AT — the same five tools, not a
+//    reimplementation of them (D-019). Unwired, it read as a sixth thing to build.
+//    ApiPy stays unwired on purpose: it has nothing to point at until it is decided.
+McpPy --> Tools: the SAME five, re-exposed — NOT a second implementation (D-019)
 Spans --> CI
 
-// ── THE OPEN QUESTIONS, AND WHY THE LIST IS NOW EMPTY ─────────────────────────
+// ── THE OPEN QUESTIONS — TWO. ONE IS DRAWN, ONE CANNOT BE ────────────────────
 // docs/07 §6: a diagram with no open questions is usually a diagram nobody
-// thought about. This one had three, and all three are closed — D-037 (the
-// scorer reads spans from phase 1), D-038 (v1 IS the synthesizer node), D-039
-// (the bound is 6). ⛔ THAT IS THE GOOD OUTCOME, NOT A MISSING SECTION. D-038
-// says it explicitly: an "open" question nothing is waiting on is a decision
-// with the record missing, and leaving it drawn as open was a rejected option.
+// thought about. The three this started with are closed — D-037 (the scorer
+// reads spans from phase 1), D-038 (v1 IS the synthesizer node), D-039 (the
+// bound is 6). ⛔ THAT IS THE GOOD OUTCOME, NOT A MISSING SECTION. D-038 says
+// it explicitly: an "open" question nothing is waiting on is a decision with
+// the record missing, and leaving it drawn as open was a rejected option.
+//
+// 🔴 THIS HEADING READ "AND WHY THE LIST IS NOW EMPTY" AND THAT WAS FALSE.
+//    ONE question is open, it is section 13's `ApiPy`, and the node has said so
+//    in its own label the whole time: whether api.py is built at all, after
+//    D-040 removed the durable interrupt that was its only justification
+//    (ROADMAP P2.8, docs/06 header). The file therefore contained a completeness
+//    claim and, four sections above it, the counter-example — and the claim was
+//    the more confident of the two. ⚠ The failure was not a stale comment. The
+//    three closed questions were closed by DECISIONS, so "closed" was checked
+//    against D-037/D-038/D-039; this one was never opened by a decision, it was
+//    opened by one being REVERSED, so nothing in the D-series marked it. A
+//    question created by a withdrawal is invisible to a sweep that looks for
+//    questions created by a decision.
+//    🎯 It is now COUNTABLE rather than asserted: a question ABOUT A NODE is the
+//    node, painted purple. Empty list ⟺ no purple in the legend's sense.
+//
+// 🔴 QUESTION TWO — AND IT BROKE THE RULE ONE LINE ABOVE ON THE SAME PASS THAT
+//    WROTE IT. Convention 1 was checked against the DSL and found false; the
+//    correction surfaced a live question with it: `green` is keyed "phase 0 —
+//    shipped" and sits on `Scored` and `Promoted`, the two good OUTCOMES, while
+//    the only node naming a P0 artifact (`CliPy`) is blue. Either CliPy goes
+//    green, or the key stops claiming a phase. It is a schedule call, so it is
+//    not made here.
+//    ⛔ IT CANNOT BE PAINTED PURPLE, and that is the finding, not a snag. It is
+//    a question about the KEY — about what a colour means — so there is no node
+//    to colour, and painting one would state the question in the very notation
+//    the question is about. **A question about the notation is invisible to a
+//    count that is taken in that notation.** Same shape as the paragraph above:
+//    that one escaped a sweep for questions-opened-by-a-decision because it was
+//    opened by a WITHDRAWAL; this one escapes a sweep for purple nodes because
+//    it is not about a node. Both times the mechanism was sound and the
+//    ENUMERATION it ran over was the thing with the hole in it.
+//    ⚠ So the honest rule is two-part, and the second part is not mechanical:
+//    purple nodes, PLUS whatever is written in this section. If those two ever
+//    disagree, this section wins — it is the one a person maintains.
 //
 // ⚠ WHAT REPLACES IT IS NOT A FOURTH QUESTION — IT IS THE FALSIFIER OF THE
 //   ONE ANSWER THAT IS NOT A MEASUREMENT. 6 was chosen with no run behind it,
