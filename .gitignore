@@ -1,0 +1,61 @@
+# ⛔ Two things that look ignorable and are NOT — read before adding a line here.
+#
+#   suite/benchmark/truth.json   the answer key. Committed on purpose: "frozen" has to be
+#                                checkable by a stranger, and the key is not a secret — the
+#                                agent never sees it (invariant 1 is what enforces that,
+#                                not this file).
+#   uv.lock                      an application, not a library. A version table whose runs
+#                                cannot be reproduced is a table of anecdotes.
+#
+# results/*.json and the spans under results/spans/ are committed too — they ARE the
+# version table's evidence.
+
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+.env
+.env.*
+
+# the CLI's own checkpointer — per-machine state, not evidence (docs/06 §3)
+.touchstone/
+
+# ⛔ The phase-0 probes, and the reason they are ignored rather than kept: `doctor.py`
+# is the productised version of exactly these checks, and it ships in src/. Two tools
+# asking the same question is how one of them goes stale unnoticed — the same argument
+# that retired the second index in this project's own docs. The probe output they
+# produced is pasted verbatim in D-001 and docs/00 §6, so the *measurement* survives
+# even though the scaffolding does not.
+scripts/p0-*
+
+# ⛔ The working record — local only. These are how the project steers itself; what it
+# produces is README.md, docs/, diagrams/ and src/.
+#
+# ⚠️ The D-xxx, DEF-xxx and Pn.n tags in the published docs therefore resolve to nothing a
+# reader can open — 176 decision citations, 22 defect ones, 54 phase ones, plus 15 baked into
+# the rendered diagram's labels. That is deliberate: they mark where a choice was made, and
+# README.md says so in one paragraph rather than leaving it to be discovered. ⛔ The rule that
+# keeps this honest: if a reason is needed to understand the design, WRITE IT IN THE DOC. A
+# tag is a bookmark, never a substitute for the argument.
+#
+# scripts/check-diagram.py reads DECISIONS.md and DEFECTS.md, which is why it is local too —
+# it could not run here even if it were published.
+DECISIONS.md
+DEFECTS.md
+ROADMAP.md
+scripts/check-diagram.py
+
+# phoenix owns its storage in a docker volume; nothing of it belongs in git
+.phoenix/
+
+phase0.log
+*.log
+
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+.idea/
+.vscode/
+.DS_Store

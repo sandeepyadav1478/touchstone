@@ -1,0 +1,203 @@
+# 05 — Scoring
+
+Four metrics, one of them judged. **The three that gate promotion have no model in them.**
+
+---
+
+## 1. Correctness — exact match, no judge
+
+A verdict is **correct** iff:
+
+```python
+if truth.resolvable:
+    correct = (verdict.root_cause_id  == truth.root_cause_id
+           and verdict.affected_service == truth.affected_service
+           and verdict.escalate is False)
+else:                                    # `insufficient_evidence` cases
+    correct = verdict.escalate is True
+```
+
+**Both halves matter.** Naming the right failure in the wrong service is not a triage; and
+confidently answering an incident that has no determinable cause is the failure that wakes
+people up at 3am for nothing.
+
+⚠️ **Partial credit is reported, never gated.** The results file carries `root_cause_only` and
+`service_only` alongside the strict number, because *"right cause, wrong service"* is a
+different diagnosis from *"no idea"* and the version diff is more legible with both. **The
+promotion rule uses the strict conjunction only** — one number to gate on, the rest for
+reading.
+
+### Stratified by `precedent`, for v5 (D-023)
+
+**Not a new metric — a group-by.** `correct` and `all_k` are additionally reported per
+`precedent` label (`true` / 🔴 `false_friend` / `none`, [docs/01](01-spec.md) §4), because a
+memory candidate's average hides the thing worth knowing: memory should *help* on `true`, *hurt*
+on `false_friend`, and be flat on `none`.
+
+⛔ **Counts, never percentages, at n=10.** A stratum holds two or three cases; `2/2 → 0/2` is a
+fact and *"memory costs 40%"* is a number invented from two data points. The gate result is
+valid at this n — one per-case regression is one regression — the rate is not.
+[docs/08](08-memory.md) §7.
+
+---
+
+## 2. `all_k` — reliability
+
+Each case runs **k times** (default 3 — `config.K`, D-030).
+
+| Metric | Definition |
+|---|---|
+| `pass@1` | Mean correctness across all attempts |
+| `all_k` | **Fraction of cases correct on *every* attempt** |
+
+`all_k` is the headline. An agent right 80% of the time on each of five independent attempts
+fully succeeds on about a third of cases — `pass@1` describes a demo, `all_k` describes
+something you would put on call.
+
+**Both go in the README, even when they differ — especially when they differ.**
+
+> From [`tracebench`](https://github.com/sandeepyadav1478/tracebench). Cite it.
+
+---
+
+## 3. Escalation F1
+
+`escalate=True` is the positive class, over the labelled cases:
+
+| | Should escalate | Should not |
+|---|---|---|
+| **Did** | TP | FP — cried wolf |
+| **Did not** | FN — acted on a guess | TN |
+
+**Both errors are real and they are not symmetric.** An FN means the agent confidently
+recommended an action on an incident whose cause was undetermined. Report precision and
+recall separately as well as F1. **Promotion gates on F1; the split is what tells you which way
+a version moved**, and two versions with the same F1 can be opposite kinds of wrong.
+
+⚠️ This metric only means something because 2–3 of 10 cases are `insufficient_evidence`
+([docs/01](01-spec.md) §3). **Quote n alongside it, always.**
+
+---
+
+## 4. Cost per correct triage
+
+```
+cost_per_correct = sum(ResultMessage.total_cost_usd) / n_correct_attempts
+```
+
+**Measured, not computed.** The Agent SDK reports `total_cost_usd` per call, plus a
+per-model breakdown carrying `cacheReadInputTokens` — so **tokens × list price would be wrong,
+and wrong in the flattering direction**, because prompt caching is not in the list price.
+
+🔴 **But it was not billed.** The runs go through the Claude Code subscription, so the honest
+sentence is: *"what the run would have cost at API list prices — it came out of a subscription
+quota, not an invoice."* Both halves are load-bearing. ⚠️ Record the **model id** next to it —
+that comes from the run and is what distinguishes the three paths; `provider` is a config label
+(D-033), and `"auth": "subscription"` is a precondition `touchstone doctor` asserts.
+
+**The denominator is the design choice.** Cost per *attempt* rewards an agent that gives up
+quickly. Cost per *correct* triage is the unit an operator actually has — and an agent that
+is cheap and wrong scores badly, which is right.
+
+⛔ **Void attempts are in neither term.** A 429 (`is_error` with `api_error_status`) means the
+attempt did not happen; counting its cost or its failure would let a quota limit look like a
+regression (D-015).
+
+---
+
+## 5. The judged dimension — explanation quality
+
+`arize-phoenix-evals` (D-020), **on Cerebras — never on the Claude quota** (D-016). **Its
+result is written back as an annotation on the span it judged**, so even the judged dimension
+is read from the same substrate as everything else.
+
+- Runs on `verdict.reasoning`: is the explanation supported by evidence the agent actually
+  retrieved? (Cross-check the tool spans — a reason citing a metric it never fetched is
+  a fabrication, and **that check is mechanical, not judged.**)
+- ⛔ **Never gates promotion.** Reported beside the others, in its own column.
+- ⚠️ **Ceiling: a smaller judge is a weaker judge.** State it, and state which model. The
+  honest framing is the interesting one — *"the quota goes to the thing being measured, not to
+  a metric that cannot block anything"* — and it is only honest if the trade is named.
+
+**The evidence cross-check is the better half of this section** and it needs no judge at
+all: the reasoning names a metric, the spans say whether it was fetched. **A hallucinated
+citation is detectable structurally.**
+
+---
+
+## 6. The results file
+
+`results/v4.json` — every number in the README comes from one of these.
+
+```json
+{
+  "version": "v4",
+  "benchmark_hash": "9f2a1c…",
+  "benchmark_version": "v2",
+  "regression_version": "v7",
+  "runbook_hash": "c41e7b…",
+  "k": 3,
+  "max_hops": 6,                                        // ⛔ null at v1 — no supervisor (D-038)
+  "model": "⟨the model_usage key, from the run — D-033⟩",
+  "provider": "⟨subscription | cerebras | ollama — from config; the model id is the evidence⟩",
+  "auth": "subscription",
+  "judge": {"provider": "cerebras", "model": "⟨…⟩"},
+  "aggregate": {
+    "correct": 0.0, "all_k": 0.0, "pass_at_1": 0.0,
+    "escalation": {"precision": 0.0, "recall": 0.0, "f1": 0.0},
+    "cost_per_correct_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
+    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0
+  },
+  "cases": [{"id": "inc-001", "correct_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
+
+  "regression": {
+    "locked": 41, "open": 6, "quarantined": 1,
+    "locked_failed": [],
+    "newly_locked": ["r-044"],
+    "cases": [{"id": "r-018", "status": "locked", "correct_k": 5, "attempts": [...]}]
+  }
+}
+```
+
+⛔ **Written by `touchstone score`, never by hand.** The README table is generated from these
+files ([docs/02](02-promotion.md) §2.6). Per-attempt records and the four `status` values:
+[docs/09](09-schemas.md) §6.
+
+⚠️ **`max_hops` is here because it is part of the candidate's identity, not because it is
+interesting** — D-013 makes a candidate `(graph, prompts, parameters, provider, model)`, and two
+rows that differed on the bound while claiming to differ on the graph would be an unattributable
+diff. It is config-sourced, like `provider` and unlike `model` (D-039), and falsifiable against
+the run anyway: **no attempt can report `hops` above it.**
+
+⛔ **`hops_exhausted` counts the attempts that stopped because the ceiling fired, not because the
+supervisor emitted `done`** — the last `touchstone.node.supervisor` span named a specialist and the
+synthesizer ran regardless. Scored attempts only; a `void` run stopped for a quota, not a bound.
+**It is diagnostic and it is not a fifth promotion axis** — condition 3's four are closed (§1 of
+[docs/02](02-promotion.md)). ⚠️ **It only catches the bound being too *small*.** Too large is a
+supervisor that wanders, and that already lands on `cost_per_correct_usd`, which *is* a promotion
+metric — so the two failure directions have separate detectors and neither needs a new one.
+
+⚠️ **`runbook_hash` is separate from `benchmark_hash` because editing a runbook changes v3's
+score and nothing else would record it.** The runbooks are not cases, so they are not in the
+benchmark digest — but retrieval is a versioned capability, and a corpus that changed silently
+between two rows would be indistinguishable from the agent improving.
+
+⛔ **`aggregate` covers the benchmark and nothing else, and the regression block carries no
+aggregate at all.** That asymmetry is deliberate and it is the whole reason the suite can grow
+(D-024): **an average over a case set that changes between runs is not comparable to itself**,
+so the regression tier reports counts and a fail list instead. `locked_failed` non-empty blocks
+the promotion; `newly_locked` names the cases this run just locked shut.
+
+⚠️ **Never put a regression pass rate in the version table.** It would move for two reasons at
+once — the agent changed, and the denominator changed — and a ratio whose denominator moves
+between rows is not comparable down the column, which is the only thing that table is for.
+
+---
+
+## 7. What is deliberately not measured
+
+- ⛔ **MTTR.** No humans, no baseline, no real incidents. **The most tempting number here and
+  the least defensible.**
+- ⛔ **Anything against a human responder.** There is no comparison group.
+- ⛔ **Answer "helpfulness" as a headline.** A judge scoring vibes is what this design exists
+  to avoid; it appears once, in §5, clearly bounded.

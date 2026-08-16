@@ -1,0 +1,53 @@
+[project]
+name = "touchstone"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Sandeep Yadav", email = "sandeepyadav1478@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "arize-phoenix-client~=3.1",
+    "arize-phoenix-otel~=0.17",
+    "claude-agent-sdk~=0.2",
+    "fastapi~=0.141",
+    "httpx~=0.28",
+    "langchain-core~=1.5",
+    "langchain-mcp-adapters~=0.3.2",
+    "langgraph~=1.2",
+    "langgraph-checkpoint-sqlite~=3.1",
+    "mcp~=1.24",
+    "openinference-instrumentation-anthropic~=1.1",
+    "openinference-instrumentation-langchain~=0.1",
+    "openinference-semantic-conventions~=0.1",
+    "opentelemetry-api~=1.44",
+    "opentelemetry-exporter-otlp~=1.44",
+    "opentelemetry-sdk~=1.44",
+    "pydantic~=2.13",
+    "rich~=15.0",
+    "typer~=0.27",
+    "uvicorn~=0.52",
+]
+
+[project.scripts]
+touchstone = "touchstone.cli:app"
+
+[project.optional-dependencies]
+fallback = [
+    "cerebras-cloud-sdk~=1.91",
+    "langchain-cerebras~=0.8",
+    "langchain-ollama~=1.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.4,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "arize-phoenix-evals~=3.4",
+    "pytest~=9.1",
+    "pytest-asyncio~=1.4",
+    "ruff~=0.16",
+]
