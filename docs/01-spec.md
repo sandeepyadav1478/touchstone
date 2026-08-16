@@ -172,14 +172,27 @@ Limits rather than being papered over.
 suite/
 ├── benchmark/
 │   ├── manifest.json    # case ids, seeds, expected causes, provenance, benchmark hash
+│   ├── truth.json       # ⛔ loaded only by the scorer, never by the agent
 │   └── inc-001.json … inc-010.json
 ├── regression/
 │   ├── manifest.json    # same shape + status (open|locked|quarantined|superseded)
+│   ├── truth.json       # ⛔ one per tier — see below
 │   └── r-001.json …     # grows forever, never shrinks
 ├── proposed/            # mine writes here; nothing here gates anything
-├── CHANGELOG.md         # one entry per suite version — what, why, which failures drove it
-└── truth.json           # ⛔ loaded only by the scorer, never by the agent
+└── CHANGELOG.md         # one entry per suite version — what, why, which failures drove it
 ```
+
+⛔ **`truth.json` is inside each tier, not at `suite/` root**, because `benchmark_hash` reads
+`suite_dir / "truth.json"` and `suite_dir` **is** the tier ([docs/09](09-schemas.md) §5). ⚠️ **This
+tree said otherwise until 2026-08-16.** DEF-005 recorded the identical error in `docs/09`'s file
+map and fixed it *there*; nobody swept the other file that draws the same tree. **A correction is
+not applied until it is swept** — and the tell was that both drawings were correct-looking and only
+one had been re-derived.
+
+**`truth.json` carries `required_specialist` per case** — which specialist can see the
+distinguishing signal for that root cause (D-042). 🔴 **It has to be there before the benchmark
+freezes:** the file is hashed byte for byte, so adding the key later is a benchmark version bump
+that orphans every past score. [docs/05](05-scoring.md) §5a.
 
 ⛔ **A case is immutable once written, in either tier.** Fixing a case means adding a new one
 and setting `superseded_by`, never editing it. Only `status` and the append-only `history[]`
@@ -192,7 +205,7 @@ requirement**: it is a gate, not a comparison, so adding to it resets nothing.
 [docs/02](02-promotion.md) §1.
 
 **Every case in either tier carries its own provenance** — `origin`, a required non-empty
-`why`, `added`, `reviewed_by`, the mining trace if it has one, and an append-only `history[]`.
+`why`, `added`, `admitted_by`, the mining trace if it has one, and an append-only `history[]`.
 Full schema and the `touchstone suite show` / `diff` / `log` commands:
 [docs/02](02-promotion.md) §5.
 

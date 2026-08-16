@@ -180,15 +180,21 @@ pipeline already produces:
 
 | Admission gate | The check | Where it comes from |
 |---|---|---|
-| **Reproducible** | fails on **every** one of k attempts, not some | `all_k`, §3 |
-| **Not flaky** | re-run at the same seed reproduces the failure | §6's flaky-case rule |
-| **Not a void** | no `429`, no tool error, no `hops_exhausted` — the attempt actually happened | [docs/05](05-scoring.md) §6 |
+| **Reproducible** | fails on **every** one of k attempts, not some | `all_k` — [docs/05](05-scoring.md) §2 |
+| **Not flaky** | re-run at the same seed reproduces the failure | §4's flaky-case row |
+| **Not a void** | no `429`, no tool error, no `hops_exhausted` — the attempt actually happened | the four attempt statuses, [docs/09](09-schemas.md) §6 |
 | **Distinct** | no case in either tier shares `(root_cause_id, affected_service, seed)` | [docs/01](01-spec.md) §6, invariant 9 |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was
 applying criteria that were written down. `origin` records `mined` and the version that
-produced it; **`reviewed_by` records the gate set that admitted the case, not a name.**
+produced it; **`admitted_by` records the gate set that admitted the case, not a name.**
+
+⚠️ **The field was `reviewed_by` and it is renamed, for the same reason `APPROVAL_THRESHOLD`
+was ([docs/09](09-schemas.md) §10).** A field named after a person is read as a person having
+looked, and the first draft of this section kept the prose above while the JSON below still
+said `"reviewed_by": "sandeep"` — the rename is what stops that recurring. It is **free**: the
+provenance fields are outside `benchmark_hash` by construction ([docs/09](09-schemas.md) §5).
 
 ⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all five is now
 admitted with nobody having looked at it. The recovery path is the regression tier itself: if
@@ -217,7 +223,8 @@ every case carries its own record, in its `manifest.json` entry:
     "confusion": ["cache_stampede", "db_pool_exhausted"],
     "trace_id": "4bf92f35…"
   },
-  "reviewed_by": "sandeep", "reviewed": "2026-09-02",
+  "admitted_by": ["reproducible", "not_flaky", "not_a_void", "distinct", "justified"],
+  "admitted": "2026-09-02",
   "locked_at": "v7",
   "supersedes": null, "superseded_by": null,
   "history": [
@@ -308,6 +315,14 @@ trace, not in a commit message.
 
 - ⛔ **Not learning.** The agent does not update from failures. A human writes each candidate;
   this decides whether it ships. **Never say "self-improving."**
+- ⛔ **No auto-tuner** (D-044). Closed-loop designs elsewhere end with a diagnoser that rewrites
+  prompts automatically. **The reason for declining it is D-013, not principle:** a candidate is
+  `(graph, prompts, parameters, provider, model)` and the version table means something only
+  because **one thing changes per version.** A prompt rewrite is an unbounded number of changes at
+  once, and it **generates candidates faster than the gate can attribute them** — more rows,
+  less information. ✅ **Revival trigger:** an automated generator is admissible the moment its
+  output is *one describable change* that fits the table's **what changed** column — a single
+  parameter, a single named prompt section. **A free-text rewrite never qualifies.**
 - ⚠️ **The *suite* grows automatically; the *agent* does not.** `mine` makes the measurement
   harder, not the agent better — and the two loops turn at different speeds, on purpose. Saying
   "it improves itself" fuses them, and the fused version is the one that is false.

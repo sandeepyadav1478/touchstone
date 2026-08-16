@@ -58,6 +58,13 @@ something you would put on call.
 
 **Both go in the README, even when they differ — especially when they differ.**
 
+⛔ **Never call `all_k` "pass@k".** They are opposite ends of strictness: pass@k conventionally
+means *at least one of k succeeded*; `all_k` means *all k succeeded*. A reader who sees the
+familiar name assumes the lenient metric, and **the gate reads weaker than it is.** `pass@1` above
+is the conventional metric and is correctly named. *(D-041 — the confusion arrived by comparison
+with a published closed-loop eval design that reports pass@k, and it got within one sentence of
+these docs.)*
+
 > From [`tracebench`](https://github.com/sandeepyadav1478/tracebench). Cite it.
 
 ---
@@ -125,6 +132,72 @@ is read from the same substrate as everything else.
 all: the reasoning names a metric, the spans say whether it was fetched. **A hallucinated
 citation is detectable structurally.**
 
+### The rubric, and the three things recorded with every score (D-041)
+
+The criteria are fixed, written down, and scored by an LLM on a **declared** model. A score
+missing any of these is not reportable:
+
+| Recorded | Why |
+|---|---|
+| `judge_model` | A rubric score whose judge is not on the record is a number with no provenance. §6 already carries `judge: {provider, model}` — D-041 makes it **required**, not illustrative |
+| `rubric_hash` | **The rubric is part of the measurement.** Edit a criterion and every past rubric score becomes a different claim — the same argument [docs/09](09-schemas.md) §5 makes about `truth.json` |
+| `criterion_1_agreement` | The calibration, below |
+
+🎯 **Criterion 1 is deliberately a duplicate of the mechanical check above**, and that is what
+makes the rest of the rubric safe to read. The cross-check answers *"does the reasoning cite a
+metric the spans say was never fetched"* structurally, with no model. Criterion 1 asks the judge
+the same question — so **the agreement rate between them is the judge's measured error rate on
+this corpus**, computed on every run, against an answer that is already known.
+
+⛔ **Criteria 2–4 are not reportable on a run whose criterion-1 agreement is not also reported.**
+Not because they are wrong — because with no human anywhere in this loop (D-040), nothing else in
+the system can tell you whether they are right.
+
+### ⛔ Two gates that call the same judge are one gate
+
+A gate stack's strength is the number of **uncorrelated** failure modes in it, never the number of
+rows in the table. Four layers here are independent, and the reason is nameable for each:
+
+| Layer | Cannot fail the way the others do |
+|---|---|
+| The invariants ([docs/01](01-spec.md) §6) | No model call at all — it cannot hallucinate |
+| The evidence cross-check, above | Structural: the span says fetched, or it does not |
+| The deterministic scorer (§1) | Exact match on `root_cause_id` + `affected_service` |
+| The promotion conditions ([docs/02](02-promotion.md) §1) | Arithmetic over the three above |
+
+**The rubric is a fifth entry but not a fifth layer** — it shares its model with any other judged
+check, so they fail together. ⚠️ **A list of seven gates that share one judge is a single point of
+failure wearing a table**, and counting them separately is how a gate stack gets impressive
+without getting stronger.
+
+---
+
+## 5a. The router — measured, never gated (D-042)
+
+**The supervisor is a router and nothing scored it.** It picks the next specialist, `next` is on
+every supervisor span ([docs/04](04-observability.md) §2), and no metric read it — so **a failing
+version could not be attributed to *routed wrong* versus *synthesised wrong*.** That is a hole in
+the one thing this project sells.
+
+It closes with **no judge and no labeller**, because the answer is already computed three times
+over: [docs/01](01-spec.md) §3 gives each root cause its distinguishing evidence,
+[docs/03](03-agent-and-tools.md) §1 assigns the tools to the specialists, and
+[docs/02](02-promotion.md) §2's mine pre-check already tests *"signal present and fetchable"* — and
+then throws the answer away. So `required_specialist` is **planted in `truth.json` by the
+generator**, and router precision/recall per specialist is exact match against `next`. Invariant 1
+is untouched: the agent never reads `truth.json`; only the scorer does.
+
+⛔ **It never becomes a fifth promotion condition.** A router metric measures *which mechanism*
+produced an answer, and gating on a mechanism forbids a version that reaches the right answer a
+different way — the opposite of what the version table is for. It is a reported column, like the
+judged one, for the same reason.
+
+🔴 **The field has a deadline, and it is the reason this is not a phase-2 item.** `truth.json` is
+inside `benchmark_hash` byte for byte ([docs/09](09-schemas.md) §5), so adding a key to it after
+the benchmark freezes is **a benchmark version bump that orphans every past score.** It costs one
+key in `generate.py` (P1.2) and is expensive at every later moment. ⚠️ **It is inert at v1** —
+D-038 makes v1 the synthesizer alone, with no supervisor to route — and that is fine.
+
 ---
 
 ## 6. The results file
@@ -143,12 +216,18 @@ citation is detectable structurally.**
   "model": "⟨the model_usage key, from the run — D-033⟩",
   "provider": "⟨subscription | cerebras | ollama — from config; the model id is the evidence⟩",
   "auth": "subscription",
-  "judge": {"provider": "cerebras", "model": "⟨…⟩"},
+  "judge": {"provider": "cerebras", "model": "⟨…⟩",           // ⛔ required, not illustrative (D-041)
+            "rubric_hash": "7d13ae…"},
   "aggregate": {
     "correct": 0.0, "all_k": 0.0, "pass_at_1": 0.0,
     "escalation": {"precision": 0.0, "recall": 0.0, "f1": 0.0},
     "cost_per_correct_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
-    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0
+    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0,
+
+    // ⛔ diagnostic only — neither of these is a promotion axis
+    "criterion_1_agreement": 0.0,                             // the judge's measured error rate (D-041)
+    "router": {"macro_f1": 0.0,                               // vs required_specialist (D-042)
+               "per_specialist": {"timeline": {"precision": 0.0, "recall": 0.0}}}
   },
   "cases": [{"id": "inc-001", "correct_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
 

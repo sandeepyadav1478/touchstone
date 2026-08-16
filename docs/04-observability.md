@@ -56,16 +56,30 @@ verdict** — every path ends there.
 
 ### Required attributes
 
-The scorer's contract. **A missing attribute is a failed run, not a zero** — silently scoring
-a broken trace as a wrong answer would corrupt the version table.
+**Two contracts, not one — the scorer's and the diagnostician's** (D-043). **A missing attribute
+is a failed run, not a zero** — silently scoring a broken trace as a wrong answer would corrupt the
+version table.
 
-| Span | Attribute | Convention | Used for |
-|---|---|---|---|
-| `touchstone.run` | `version`, `case_id`, `attempt`, `tier`, `benchmark_hash` | ours | Grouping, and the comparability guard |
-| `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | Tool-call count, truncation rate |
-| `LLM` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference** | Cost, and the model on record |
-| `touchstone.verdict` | `root_cause_id`, `affected_service`, `confidence`, `recommended_action`, `blast_radius`, `escalate` | ours | **Correctness and escalation — the primary metrics.** ⚠️ `blast_radius` is here because a mismatch against `recommended_action` and the [docs/01](01-spec.md) §5 table is exactly invariant 4 failing, and the trace is where that becomes visible |
-| `touchstone.node.*` | `hop` on **every** node span, not only the supervisor's — plus the span's own start and end times | ours + OTel intrinsics | **Invariant 14** — no two specialist spans overlap (D-026). `next` stays on the supervisor alone; it is a routing decision, and only one node makes it |
+⛔ **The second contract exists because D-040 removed every human from the running system.** With
+nobody standing inside a run, the trace is the *only* surface a person can act on, and an attribute
+that only the scorer needs is not enough to improve anything. **Both columns are asserted by the
+same test.** A contract enforced for one reader and hoped for by the other is one contract.
+
+| Span | Attribute | Convention | Read by | Used for |
+|---|---|---|---|---|
+| `touchstone.run` | `version`, `case_id`, `attempt`, `tier`, `benchmark_hash` | ours | scorer | Grouping, and the comparability guard |
+| `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | scorer | Tool-call count, truncation rate |
+| `LLM` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference** | scorer | Cost, and the model on record |
+| `LLM` | `llm.prompt_template.template` — **the rendered prompt** | **OpenInference** | 🆕 **human** | ⚠️ **Declared, not inherited.** OpenInference may capture input messages by default; *Why not `gen_ai.*`* below argues that a default is not a contract, and the rest of this table relied on one |
+| `touchstone.verdict` | `root_cause_id`, `affected_service`, `confidence`, `recommended_action`, `blast_radius`, `escalate` | ours | scorer | **Correctness and escalation — the primary metrics.** ⚠️ `blast_radius` is here because a mismatch against `recommended_action` and the [docs/01](01-spec.md) §5 table is exactly invariant 4 failing, and the trace is where that becomes visible |
+| `touchstone.node.*` | `hop` on **every** node span, not only the supervisor's — plus the span's own start and end times | ours + OTel intrinsics | scorer | **Invariant 14** — no two specialist spans overlap (D-026). `next` stays on the supervisor alone; it is a routing decision, and only one node makes it |
+| `touchstone.node.supervisor` | 🆕 `findings_seen` — the finding **headers** it routed on (D-025) | ours | 🆕 **human** | *Why did it route wrong?* Without this the question is unanswerable from the trace, which guts the router metric ([docs/05](05-scoring.md) §5a) at the moment it is most useful |
+| `touchstone.run` | 🆕 `attempt_status`, and `parse_error` when there is one | ours | 🆕 **human** | §1 claims spans make parse failures visible and no attribute named them. `parse_failure` is one of four attempt states ([docs/09](09-schemas.md) §6), scored **wrong** and never retried (D-013) — **a state the trace cannot express is a state nobody can diagnose** |
+
+⚠️ **Stated cost: prompt text is bytes, and these prompts are not small.** No sampling is the rule
+(§6). If the volume becomes a problem the answer is a `prompt_hash` plus the text committed in
+`prompts/` — where it already lives ([docs/09](09-schemas.md) §8) — **never sampling, and never
+dropping the attribute.**
 
 **Invariant 14 needs no new attribute and it does constrain the export.** Start and end are
 OTel intrinsics, so the assertion is *"no specialist span starts before another ends"* over what
@@ -266,7 +280,18 @@ failure table is full of.
 
 ## 6. What is deliberately absent
 
-- ⛔ **No Grafana, no dashboards.** Nobody is watching this in real time. The consumer of the
-  spans is a scorer.
+- ⛔ **No Grafana, no dashboards, and no realtime production monitoring.** Nobody is watching this
+  in real time. The consumer of the spans is a scorer, and now also a human reading them after the
+  fact (§2's second contract).
 - ⛔ **No sampling.** Every run is traced; the volume is ten cases × k.
 - ⛔ **No distributed tracing claim.** One service, one machine. Stated in the README's Limits.
+
+⚠️ **The monitoring row is the one under pressure, so the reason is written out.** A gate list for
+an enterprise agentic system reasonably includes *realtime monitoring in production*. **This
+project has no production and no users** — a dashboard over ten synthetic incidents is a directory
+that looks like a capability, which is the failure [docs/03](03-agent-and-tools.md) names by name.
+
+🎯 **The honest artifact is the substrate, not a dashboard:** the OTLP export *is* what such a
+monitor would run on, and the one-environment-variable backend swap (§4) is the demonstration that
+it would. **That survives *"show me it running."*** A dashboard built for this corpus does not.
+D-043.
