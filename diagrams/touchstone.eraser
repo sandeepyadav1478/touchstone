@@ -282,7 +282,7 @@ Stores [color: blue, icon: hard-drive, label: "8 · what survives the process"] 
   // Kept and marked rather than quietly corrected: a store that is written on every node
   // and read by nothing is the exact shape of a mechanism that looks wired and is not.
   Ckpt [shape: cylinder, icon: database, label: "config.CHECKPOINTS\n.touchstone/checkpoints.db — written after EVERY node\n⚠ UNEXERCISED since D-040 — nothing reads it back yet"]
-  Spans [shape: cylinder, icon: file-text, label: "results/spans/<version>.jsonl\nthe scorer's ONLY input"]
+  Spans [shape: cylinder, icon: file-text, label: "results/spans/(version).jsonl\nthe scorer's ONLY input"]
 }
 
 Agent > Ckpt: after EVERY node
@@ -304,21 +304,25 @@ RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3
 // phase. So all three sit in one box and the orange node inside a blue group is the phase,
 // said the way the legend already says it.
 //
-// 📐 The regroup added no node and removed none, and the canvas went 6313 × 14683 →
-// 7300 × 10742 — 3,941px of height gone, 27% less to scroll. Which GROUP a node is in is a
-// bigger layout input than how many nodes there are. Measured, not predicted; row five of
-// diagrams/README.md.
+// 🔴 A PIXEL CLAIM SAT HERE AND IS WITHDRAWN — the regroup was written up as "3,941px of
+// height gone, 27% less to scroll, which GROUP a node is in is a bigger layout input than
+// how many nodes there are." Both renders came from the long-edited hosted diagram, which
+// the rule ~40 lines above says is a record of edit history and not of content. The rule
+// was in this file, and it was not followed. The D-046 export was ALSO CLIPPED — section
+// 13 missing entirely — and two exports returned the identical hash, so the settle rule
+// declared it good. Settled is not complete. diagrams/README.md findings 2a and row five.
+// ⛔ The regroup stands on its reading argument alone, which is the one it was made for.
 Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens at score time"] {
   // Note what does NOT arrive here: the agent's return value. That absence is what lets CI
   // score a committed JSONL with no credential and no model call.
-  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nTWO outputs — only ONE of them reaches the gate"]
 
   // The dead end IS the mechanism. The old label said "DIAGNOSTIC, never gates", which was
   // the prose promise drawn as though it were a structure. A box with no outgoing edge is
   // the only honest way to draw "nothing downstream may read this" — and it is why a rubric
   // is not a human in the loop: a human gate HALTS the machine, this cannot even be observed
   // by it. ⛔ If an edge ever leaves this node, D-045 has been broken.
-  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/<version>.json\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
+  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
 
   // Phase-2 timed, drawn here anyway: it belongs to scoring, and P2.6a says when.
   // ⚠ It is admissible as a SIXTH promotion condition only at agreement ≥ 0.95 sustained
@@ -356,7 +360,7 @@ C1 > C2 > C3 > C4 > C5
 Promoted [shape: oval, color: green, icon: check, label: "PROMOTE — vN is the champion"]
 Refused [shape: oval, color: red, icon: x, label: "REFUSE — the refusal IS the result\nNEVER fixed by weakening the baseline"]
 
-ScorePy > Gate: results/<version>.json
+ScorePy > Gate: results/(version).json
 C5 > Promoted: all five hold
 Gate > Refused: any ONE fails
 Refused --> Dev: informed by WHICH case broke

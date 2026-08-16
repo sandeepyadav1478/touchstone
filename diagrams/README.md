@@ -23,8 +23,9 @@ gitignored.
 
 | | |
 |---|---|
-| Frame | 7300 × 10742 — **78.4 MP** |
-| On disk | 3.36 MB |
+| Frame | 7343 × 10742 — **78.9 MP** |
+| On disk | 3.60 MB |
+| Method | ⛔ `manually_create_diagram` → export twice → **delete the temp diagram**, per finding 1. Then the four-edge check in finding 2a |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
 
@@ -38,9 +39,20 @@ the only reason they are comparable at all.
 | D-039 → D-040 | **a node removed** from inside a group | 6437 × 13066 → 6752 × 12674 | **+315** | **−392** |
 | D-040 → D-043 | **five labels grew**, no node added or removed | 6752 × 12674 → 6792 × 13470 | +40 | **+796** |
 | D-043 → D-045 | **two nodes and two edges added** | 6792 × 13470 → 6313 × 14683 | **−479** | **+1213** |
-| D-045 → D-046 | **one node moved between groups**, one duplicate edge deleted — **no node added or removed** | 6313 × 14683 → **7300 × 10742** | **+987** | **−3941** |
+| D-045 → D-046 | one node moved between groups, one duplicate edge deleted | ~~6313 × 14683 → 7300 × 10742~~ | ~~+987~~ | ~~−3941~~ |
 
-⛔ **Five edits, five unrelated reflow shapes — so there is no stable-layout claim left to make.**
+🔴 **Row five is WITHDRAWN, and it is the most instructive row in the table.** It was written up as
+*"−3,941px of height, 27% less to scroll, which group a node is in is a bigger layout input than how
+many nodes there are"* — a confident mechanism, from two numbers that do not compare. **Both
+renders were exported from the long-edited hosted diagram**, which finding 1 directly below says is
+a record of edit history rather than of content. The rule was already written, in this file and in
+the diagram's own header, and it was not followed. Worse: the D-046 export was also **clipped**
+(finding 2a), so the 10742 was not even that render's own height. **Re-measured under the stated
+method — create fresh, export twice, check all four edges — the settled frame is 7343 × 10742.**
+There is no honest before/after left, because the *before* would have to be re-measured the same
+way and that diagram is gone.
+
+⛔ **Four edits, four unrelated reflow shapes — so there is no stable-layout claim left to make.**
 The paragraph this replaced said the layout was stable on the strength of the first row alone.
 **One stable re-export is one sample.** ⚠️ **Rows three and four are the ones that should change how
 you read the first two.** Row three added no node and moved no edge, yet moved the height **ten
@@ -49,18 +61,18 @@ narrower**. **The size of a diagram edit in the DSL predicts neither the size no
 reflow** — Eraser re-wraps labels and re-packs columns, and a canvas that grows in content can
 shrink in an axis.
 
-🎯 **Row five is the strongest form of that, and it runs the other way from every intuition here.**
-The node count is *unchanged* — `Judge` moved out of section 13 and into section 9, and one
-duplicate edge went — and the canvas lost **3,941px of height**, more than the other four rows'
-height changes put together, while gaining 987px of width. **Which group a node sits in is a bigger
-layout input than how many nodes there are.** The regroup was made for a reading reason (the whole
-D-045 argument now sits in one box instead of running the height of the canvas) and the layout
-paid it back: **the column is 27% shorter to scroll.** That was not predicted, and it is recorded
-here as a measurement, not as a technique.
+⚠️ **Rows one to four do not name the method they were taken under, and that is now a defect in
+this table rather than a footnote.** Row five was withdrawn precisely because its method was wrong,
+and nothing recorded here says whether the others were created-fresh or exported from a diagram
+mid-edit. **Treat them as suggestive and not as comparable** until a row can say how it was taken.
+🎯 **The fix is a column, not a re-measurement** — any future row that cannot fill it does not go
+in.
 
 🎯 **The reason this table is kept rather than overwritten each time is that it is the only
-falsifiable thing in this file.** Everything else here is an argument; these are five measurements,
-each re-derivable from a committed PNG's IHDR chunk.
+falsifiable thing in this file** — and row five is the proof, because it was falsified. Everything
+else here is an argument; these are measurements, each re-derivable from a committed PNG's IHDR
+chunk. **A withdrawn row left visible is worth more than four kept ones**, since it is the only
+entry that records how the error was made.
 
 ⚠️ **The content bounding box is no longer recorded here.** It came from Eraser's own canvas
 readout, and a figure that cannot be re-derived from the committed PNG is a figure that goes stale
@@ -69,7 +81,7 @@ re-run that.
 
 ⚠️ **The hosted copy is a renderer, not the artifact, and it is deliberately not the same bytes.**
 What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 9,800 chars against the
-file's 29,232. Comments render no pixels, so the picture is identical and the two-thirds of this
+file's 29,662. Comments render no pixels, so the picture is identical and the two-thirds of this
 file that is argument never leaves the repo. ⛔ **Do not read a figure off the hosted copy and do
 not edit it**; an edit there is invisible in every diff this repo has.
 
@@ -109,6 +121,50 @@ cheap precisely because the file is the artifact and the hosted copy is only a r
 Export URLs are content-addressed — `.../elements%3A<sha256>.png`. ⛔ **Export twice and compare the
 URLs; an identical hash means the render has settled.** Before this was understood, two exports of
 one *unchanged* diagram came back at 82.6 MP and 156.2 MP.
+
+### 2a. …and settled is not the same as complete. **The settle rule cannot see a clipped export.**
+
+**2026-08-16.** The D-046 render was exported twice, both calls returned the **identical** hash, it
+was downloaded, committed, pushed, and offered for D-021 approval. It was **missing the whole of
+section 13 and the bottom of section 8** — content ran straight off the bottom edge. *A user
+noticed, on the picture. No check here did.*
+
+⛔ **Two identical hashes prove the render is not STALE. They say nothing about whether it is
+COMPLETE, because a truncated render is perfectly reproducible** — export it a third time and the
+same clipped bytes come back, which is exactly what happened. **The two failure modes look
+identical through the rule that was written for one of them.**
+
+🎯 **The check that does separate them needs no second export and no service.** A complete Eraser
+export has whitespace padding on all four sides; content touching an edge means the canvas was
+clipped there. That is one pixel row and one pixel column per side:
+
+```python
+im = Image.open("diagrams/loop.png").convert("RGB")
+w, h = im.size
+for box in ((0, 0, w, 1), (0, h - 1, w, h), (0, 0, 1, h), (w - 1, 0, w, h)):
+    assert not any(p != (255, 255, 255) for p in im.crop(box).get_flattened_data())
+```
+
+⛔ **It is milestone 7 of `scripts/check-diagram.py`, and it was negative-controlled against the
+exact PNG that shipped** — the guard fails on it and passes on the replacement. **The first six
+milestones all check the source; this is the only one that looks at the render**, which is the half
+a reader actually receives.
+
+⚠️ **Note what the clipping did to a measurement, not just to a picture.** The clipped frame was
+`7300 × 10742` and the settled one is `7343 × 10742` — the *height* matched, so the number looked
+plausible and got written into a reflow row and a decision. **A truncated export does not
+necessarily produce an obviously wrong figure.**
+
+### 2b. `<` and `>` in a label render as `&lt;` and `&gt;`
+
+`results/spans/<version>.jsonl` printed on the canvas as `results/spans/&lt;version&gt;.jsonl` —
+the escape, literally, in four labels. It had been that way for the whole life of the diagram and
+was only seen when the bottom strip was examined at full resolution for the clipping above. **Now
+written `(version)`.** ⚠️ **That change had to be made in `scripts/check-diagram.py` at the same
+time**: its path regex had `<>` in the character class *on purpose*, so switching to parens would
+have silently stopped extracting those four paths and dropped the citation count with no failure —
+the script's own documented failure mode, twice over. Count held at 74 across the change, which is
+how that was confirmed rather than assumed.
 
 ⚠️ **Every before/after pixel figure this file used to carry is withdrawn — not corrected,
 withdrawn**, along with the mechanism they argued for (*"fat labels act as walls the auto-layout
