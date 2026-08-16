@@ -163,7 +163,11 @@ Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1
   GenPy [icon: settings, label: "incidents/generate.py — P1.2\ntruth FIRST, then render"]
   RendPy [icon: layers, label: "incidents/renderers.py — P1.2\nten cause renderers + the deletion path"]
   Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3\nn=10, frozen · manifest.json"]
-  Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash\nNEVER seen by the agent"]
+  // D-042: required_specialist is drawn here because the field has a DEADLINE, not
+  // because it is interesting. truth.json is hashed byte for byte, so the key is free
+  // at P1.2 and a benchmark version bump at any later moment. An implementer working
+  // from this picture has to see it before P1.3 freezes the tier.
+  Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash · one PER TIER\nNEVER seen by the agent\n+ required_specialist per case — BEFORE P1.3 (D-042)"]
 }
 
 DomainPy > GenPy > RendPy > Bench
@@ -264,10 +268,17 @@ Agent > Ends: every attempt lands on exactly one
 // D-037 moved telemetry.py from P2.1 into P1.5. Before that, phase 1 ended with
 // a scorer that had never once read a span the agent actually produced.
 
-TelemetryPy [color: blue, icon: activity, label: "7 · telemetry.py — P1.5 (moved by D-037)\ntouchstone.* — NEVER gen_ai.* (D-017)"]
+// D-043: two contracts, one test. With no human inside a run (D-040) the trace is the
+// only surface a person can act on, so an attribute set that satisfies only the scorer
+// improves nothing. The three human-read attributes are named on the node because they
+// are the ones nobody would infer from "emit spans".
+TelemetryPy [color: blue, icon: activity, label: "7 · telemetry.py — P1.5 (moved by D-037)\ntouchstone.* — NEVER gen_ai.* (D-017)\nTWO contracts, ONE test (D-043)\n+ prompt · findings_seen · attempt_status"]
 
 Stores [color: blue, icon: hard-drive, label: "8 · what survives the process"] {
-  Ckpt [shape: cylinder, icon: database, label: "config.CHECKPOINTS\n.touchstone/checkpoints.db — what --resume reads"]
+  // The picture said "what --resume reads" and docs/06 §3 now says nothing reads it back.
+  // Kept and marked rather than quietly corrected: a store that is written on every node
+  // and read by nothing is the exact shape of a mechanism that looks wired and is not.
+  Ckpt [shape: cylinder, icon: database, label: "config.CHECKPOINTS\n.touchstone/checkpoints.db — written after EVERY node\n⚠ UNEXERCISED since D-040 — nothing reads it back yet"]
   Spans [shape: cylinder, icon: file-text, label: "results/spans/<version>.jsonl\nthe scorer's ONLY input"]
 }
 
@@ -282,7 +293,11 @@ TelemetryPy > Spans
 
 CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.9 adds incidents · triage · run · score"]
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
-ScorePy [color: blue, icon: bar-chart-2, label: "9 · loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)"]
+// The two diagnostic columns are drawn ON the scorer and deliberately NOT wired to Gate.
+// Router P/R (D-042) and the rubric (D-041) are reported, never gated: a router metric
+// measures WHICH MECHANISM produced an answer, and gating on a mechanism forbids a
+// version that gets it right a different way. The absent edge is the point.
+ScorePy [color: blue, icon: bar-chart-2, label: "9 · loop/score.py — P1.6 · NO model call\nspans + truth.json → results/<version>.json (D-007)\nDIAGNOSTIC, never gates: router P/R (D-042) · rubric (D-041)"]
 
 Dev > CliPy
 CliPy > RunPy
@@ -367,7 +382,10 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   PromotePy [icon: award, label: "loop/promote.py — results/index.json"]
   RecordPy [icon: grid, label: "loop/record.py — P2.10\nthe README table, GENERATED"]
   McpPy [icon: link, label: "tools/mcp_server.py — P2.9\nthe same five tools, a second surface"]
-  ApiPy [icon: server, label: "api.py + docker-compose — P2.8"]
+  // D-040 took this node's reason away: the four endpoints were justified by a DURABLE
+  // interrupt, and no node waits any more. Drawn in grey-question form rather than
+  // deleted, because "whether it is built" is an open decision and not this file's call.
+  ApiPy [icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION"]
   Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER\nNEVER a dependency of scoring"]
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
   NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.6 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
