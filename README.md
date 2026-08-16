@@ -6,8 +6,8 @@ Every change to the agent is a *candidate version*. Every candidate is scored ag
 frozen benchmark of incidents whose root causes are known. **A candidate is promoted only if it
 regresses nothing it previously passed** — average improvement is not enough.
 
-And every failure becomes a permanent case: mined from the trace, reviewed once, and added to a
-**regression suite that only grows**. Once a version passes a case, it is locked, and nothing
+And every failure becomes a permanent case: mined from the trace, admitted by five mechanical
+gates with no human in the path, and added to a **regression suite that only grows**. Once a version passes a case, it is locked, and nothing
 that breaks it ships again.
 
 A touchstone never changes. That is the whole idea.
@@ -87,7 +87,7 @@ ambiguous one, and real incidents are ambiguous.
                   ┌──────────── the agent under test ────────────┐
   incident  ──▶   │  supervisor → { logs · metrics · deploys }    │  ──▶  verdict
    (suite)        │      ↓ specialists, LangGraph                 │       + escalate?
-                  │  interrupt() if blast radius > threshold      │
+                  │  escalate = blast radius > threshold         │
                   └───────────────────┬──────────────────────────┘
                                       │ OpenTelemetry spans
                                       ▼
@@ -96,11 +96,17 @@ ambiguous one, and real incidents are ambiguous.
                   │            │  benchmark — frozen, hashed, n=10
                   │            │  ⛔ changing it resets every comparison
                   │            │
-                  └─▶ mine ──▶ human review ──▶ regression — grows, never shrinks
-                     failures    one batch      ✅ adding to it resets nothing
-                                 decision       🔒 a case locks the first time a
-                                                   promoted version passes it
+                  └─▶ mine ──▶ admission ──▶ regression — grows, never shrinks
+                     failures    5 gates,     ✅ adding to it resets nothing
+                                 mechanical   🔒 a case locks the first time a
+                                                 promoted version passes it
 ```
+
+⛔ **No human is a step in that picture, and none is a state in the agent.** Nothing pauses for
+approval: blast radius sets a scored `escalate` flag, and a mined case is admitted by five
+mechanical gates ([docs/02](docs/02-promotion.md) §5) rather than by somebody signing off on a
+batch. **People improve this system by rewriting it** — reading traces, changing prompts, adding
+cases — which is what everything below is instrumented for.
 
 **Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
 must not move. The regression suite only ever answers *"did something that used to work stop
@@ -109,16 +115,16 @@ invalidating anything. That asymmetry is what makes `mine` affordable enough to 
 [docs/02](docs/02-promotion.md) §1.
 
 **The spans are the score.** The scorer does not read the agent's prose — it reads the trace:
-which tools were called, how many tokens, what the verdict span carried, whether the run
-stopped at the approval interrupt. Instrumentation is not a dashboard here; it is the
-measurement substrate.
+which tools were called, how many tokens, what the verdict span carried, whether the agent
+escalated. Instrumentation is not a dashboard here; it is the measurement substrate — and with
+nobody standing inside a run, it is also the **only** place a person can see what happened.
 
 | Doc | What it covers |
 |---|---|
 | [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the three model paths, `touchstone doctor` |
-| [docs/01-spec.md](docs/01-spec.md) | The incident model, the verdict, the generator, 14 invariants |
+| [docs/01-spec.md](docs/01-spec.md) | The incident model, the verdict, the generator, 13 live invariants numbered to 14 |
 | [docs/02-promotion.md](docs/02-promotion.md) | The two tiers, the promotion rule, the six stages, case provenance, the negative control |
-| [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The graph, three specialists, five read-only tools, the approval interrupt |
+| [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The graph, three specialists, five read-only tools, escalation as a scored field |
 | [docs/04-observability.md](docs/04-observability.md) | Span schema, OpenInference conventions, why the scorer reads spans |
 | [docs/05-scoring.md](docs/05-scoring.md) | The four metrics, `all_k`, exact-match vs judged |
 | [docs/06-api.md](docs/06-api.md) | CLI, HTTP surface, compose |

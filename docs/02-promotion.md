@@ -153,33 +153,48 @@ flowchart TB
   MINE --> GEN["generate.py · plant the distinguishing signal<br/>the label comes from the planted cause — no judge, no labeller"]
   GEN --> CHECK["mechanical pre-checks<br/>dedupe by signature · signal present and fetchable · seed determinism"]
   CHECK --> PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
-  PROP --> HUMAN{"⛔ human review — the last step<br/>one batch decision, not one per label"}
-  HUMAN -->|reject| DROP["discarded · the reason is recorded, not the case"]
-  HUMAN -->|approve| REG["regression suite · status: open<br/>✅ no baseline reset"]
+  PROP --> ADMIT{"⛔ admission gates — all five, mechanical<br/>reproducible · not flaky · not a void · distinct · justified"}
+  ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
+  ADMIT -->|all five hold| REG["regression suite · status: open<br/>✅ no baseline reset"]
   REG -->|"first all_k under a promoted version"| LOCK["status: locked · gates from here"]
-  HUMAN -->|"promote to benchmark · rare"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
+  ADMIT -->|"promote to benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
 ```
 
-#### ⛔ Human review stays, and it is the last step
+#### ⛔ Admission is mechanical, and no human is a step in it
 
-**Not because humans label better — because a wrong label entering silently is poison.** A bad
-case gates *correct* behaviour forever, and you would debug it as an agent regression. §4 calls
-a wrong label the most valuable defect this project can produce; that is only true if somebody
-finds it.
+A wrong case gates *correct* behaviour forever, and you would debug it as an agent regression.
+§4 calls a wrong label the most valuable defect this project can produce. **So the last stage
+before a case can gate anything is the strictest one — it is just not a person.**
 
-**But review is a batch approval over machine-prepared cases, never a labelling task**, and
-the difference is what makes it scale:
+⚠️ **This used to be a batch human review, and the argument for it was that "a wrong label
+entering silently is poison."** That is true and it is why the step existed. It does not apply
+here, for a reason specific to this domain: **nothing is labelled at mine time.** A mined case
+is one the generator produced with its root cause planted before the agent ever saw it (§2), so
+the label was correct before the failure happened. There is no labelling act to get wrong —
+which this document already said: *review is a batch approval over machine-prepared cases,
+never a labelling task.*
 
-- **The label is free.** The generator starts from `db_pool_exhausted` and *derives* the
-  symptoms — the answer key exists before the case does. In a normal eval loop this is the
-  expensive step and it is where an LLM judge gets used to scale; **this domain deleted it by
-  construction** ([docs/01](01-spec.md) §4).
-- **The mechanical checks run first.** Duplicate signature, missing distinguishing signal,
-  non-deterministic seed, a signal no tool can reach — all rejected before a human sees them.
-- **What is left is one question**: *is this case fair?* One sitting per batch, not per case.
+**What that review was actually doing is admission control** — *is this failure worth locking
+into the suite forever?* — and every one of its criteria is computable from artefacts the
+pipeline already produces:
 
-⛔ **Approval is per batch and is recorded.** Silence is not approval, same rule as
-[docs/07](07-diagrams.md) §6.
+| Admission gate | The check | Where it comes from |
+|---|---|---|
+| **Reproducible** | fails on **every** one of k attempts, not some | `all_k`, §3 |
+| **Not flaky** | re-run at the same seed reproduces the failure | §6's flaky-case rule |
+| **Not a void** | no `429`, no tool error, no `hops_exhausted` — the attempt actually happened | [docs/05](05-scoring.md) §6 |
+| **Distinct** | no case in either tier shares `(root_cause_id, affected_service, seed)` | [docs/01](01-spec.md) §6, invariant 9 |
+| **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
+
+**Four of the five were already specified machinery**, which is the tell: the reviewer was
+applying criteria that were written down. `origin` records `mined` and the version that
+produced it; **`reviewed_by` records the gate set that admitted the case, not a name.**
+
+⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all five is now
+admitted with nobody having looked at it. The recovery path is the regression tier itself: if
+it ever refuses a promotion on a case that inspection shows should not have been admitted,
+review comes back as an **offline batch that quarantines** — never as a step a run waits on.
+D-040.
 
 #### Provenance — every case says why it exists and when it arrived
 

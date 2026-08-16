@@ -97,11 +97,11 @@ class RootCause(StrEnum):
     NOISY_NEIGHBOR            = "noisy_neighbor"
     INSUFFICIENT_EVIDENCE     = "insufficient_evidence"
 
-class BlastRadius(IntEnum):        # ordered, so the gate is a comparison
+class BlastRadius(IntEnum):        # ordered, so escalation is a comparison
     NONE         = 0
     ONE_HUMAN    = 1
     ONE_SERVICE  = 2
-    SERVICE_LIVE = 3               # ← the approval threshold
+    SERVICE_LIVE = 3               # ← at or above this, the verdict escalates
     SERVICE_ALL  = 4
     DOWNSTREAM   = 5
 
@@ -117,17 +117,21 @@ class Action(StrEnum):
     def blast_radius(self) -> BlastRadius:
         return _BLAST[self]
 
-APPROVAL_THRESHOLD = BlastRadius.SERVICE_LIVE
+ESCALATION_THRESHOLD = BlastRadius.SERVICE_LIVE
 ```
 
-**`BlastRadius` is an `IntEnum` so that the gate in [docs/03](03-agent-and-tools.md) §3 is
-literally `action.blast_radius >= APPROVAL_THRESHOLD`** — one comparison, no table lookup at the
-decision point, and invariant 5 is a test over six enum members rather than over prose. The
-mapping in `_BLAST` is the table from [docs/01](01-spec.md) §5, transcribed once.
+**`BlastRadius` is an `IntEnum` so that escalation ([docs/03](03-agent-and-tools.md) §3) is
+literally `verdict.escalate = action.blast_radius >= ESCALATION_THRESHOLD`** — one comparison, no
+table lookup at the decision point, and invariant 4 is a test over six enum members rather than
+over prose. The mapping in `_BLAST` is the table from [docs/01](01-spec.md) §5, transcribed once.
 
 ⛔ **The threshold is a named constant, not the literal `3` and not a config value.** A tunable
-approval threshold is a policy the system could learn, and [docs/01](01-spec.md) §5 says this one
-is hand-written on purpose.
+threshold is a policy the system could learn, and [docs/01](01-spec.md) §5 says this one is
+hand-written on purpose.
+
+⚠️ **It was called `APPROVAL_THRESHOLD` until D-040.** The rename is not cosmetic: nothing
+approves anything now, and a constant whose name promises a gate that does not exist is how a
+reader concludes the system has one.
 
 ---
 
@@ -320,8 +324,7 @@ first.
   "confidence": 0.82,
   "correct": true,
   "escalated": false, "expected_escalate": false,
-  "interrupted": false,
-  "recommended_action": "scale_workers",
+  "recommended_action": "scale_workers", "blast_radius": 2,
   "tool_calls": 6, "budget_exceeded": false, "truncated_reads": 1,
   "hops_exhausted": false,
   "tokens": {"prompt": 8412, "completion": 391},
@@ -404,21 +407,21 @@ if any, come from cases generated with a different seed and are recorded in `DEC
 ```
 src/touchstone/
   domain.py            §1–4 here + docs/01 §2 — write first, everything imports it
-  config.py            env vars (§10 below), paths, APPROVAL_THRESHOLD, the interval constant
+  config.py            env vars (§10 below), paths, ESCALATION_THRESHOLD, the interval constant
   models.py            the SDK wrapper, ~60 lines — docs/00 §2
   telemetry.py         span tree, required attributes, exporter setup — docs/04     [phase 1, P1.5]
                        ⛔ console + file exporters only; the Phoenix container is P2.8.
                        Moved out of phase 2 by D-037 — a phase that emits no span
                        ends with a scorer that has never read one.
   cli.py               typer app; every command in docs/06 §1
-  api.py               fastapi; the five endpoints in docs/06 §2                    [phase 2]
+  api.py               fastapi; the four endpoints in docs/06 §2 — ⚠️ its reason is open (D-040)
   incidents/
     generate.py        truth first, then render — docs/01 §4
     renderers.py       ten cause renderers + the deletion path for insufficient_evidence
     signature.py       Signature extraction                                         [deferred]
   agent/
-    graph.py           StateGraph, edges, checkpointer, interrupt
-    nodes.py           supervisor, three specialists, synthesizer, gate
+    graph.py           StateGraph, edges, checkpointer. ⛔ no interrupt (D-040)
+    nodes.py           supervisor, three specialists, synthesizer — five, no gate node
     state.py           AgentState, Finding, FindingHeader (§4)
   tools/
     read.py            four of the five read-only tools — the incident's own state
@@ -444,7 +447,7 @@ suite/                 benchmark/ · regression/ · proposed/ · CHANGELOG.md
 history/               v5 only — docs/01 §4                                         [deferred]
 results/               one json per version + index.json + negative-control.md
 diagrams/              the D-021 artifacts, committed before their implementation
-tests/unit/            the 14 invariants, zero model calls, under 2 seconds
+tests/unit/            13 invariants numbered to 14 (5 retired, D-040), zero model calls, under 2s
 tests/evals/           judged dimension only — never gates
 ```
 
@@ -480,7 +483,9 @@ in [docs/06](06-api.md) §3 exists to catch.
   a candidate belongs in git under a version number, not in a doc.
 - ⛔ **`n` and `k` stay at 10 and 3.** Changing either is a decision with a cost (D-024, D-030),
   not a schema detail.
-- ⚠️ **No `Verdict` validator is specified beyond the type.** Whether `escalate=True` with a
-  non-null `root_cause_id` is a schema error or a scored wrong answer is decided by invariant 4's
-  test in phase 1 — and it should be decided *there*, against a real agent's failure mode, rather
-  than guessed here.
+- ⚠️ **No `Verdict` validator is specified beyond the type.** Whether an `escalate` that
+  disagrees with `recommended_action`'s blast radius is a schema error or a scored wrong answer
+  is decided by invariant 4's test in phase 1 — and it should be decided *there*, against a real
+  agent's failure mode, rather than guessed here. ⛔ **The two are not interchangeable**: a schema
+  error voids the attempt, a wrong answer counts against the version. Guessing that here would
+  put a number in the table that nobody derived.

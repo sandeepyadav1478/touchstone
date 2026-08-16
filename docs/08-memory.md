@@ -30,11 +30,11 @@ here, and the verdict differs on every one.
 **Rows 2–4 are D-022 and nothing there changed.** Row 5 is what D-022 missed, and it is the
 whole of this file.
 
-⛔ **Two more were considered and cut.** *Memory of operator approve/decline decisions at the
-interrupt* is genuinely valuable in production — approval fatigue is a real operational cost —
-but suite runs **auto-decline** the interrupt ([docs/03](03-agent-and-tools.md) §3), so there is
-no operator signal to remember and nothing to measure. *Caching tool results across attempts* is
-a cache, not memory, and it would corrupt the tool-call metric.
+⛔ **Two more were considered and cut.** *Memory of operator approve/decline decisions* is
+genuinely valuable in production — approval fatigue is a real operational cost — but **there is
+no operator here to produce that signal**: D-040 removed every point at which a run waits on a
+person, so nothing emits an approve/decline event and there is nothing to measure. *Caching tool
+results across attempts* is a cache, not memory, and it would corrupt the tool-call metric.
 
 ---
 
@@ -276,7 +276,7 @@ already owns that machinery, so the write path is D-024's pipeline pointed at a 
 | | |
 |---|---|
 | **Who may write** | ⛔ Not the agent. A candidate memory is emitted **only from a run whose verdict scored correct against the answer key** — in production, from an incident a human closed with a confirmed cause |
-| **Where it lands** | `proposed`, never `resolved`. Batch human review promotes it, same step and same required `--why` as `touchstone suite review` |
+| **Where it lands** | `proposed`, never `resolved`. The same five mechanical admission gates promote it as promote a mined case ([docs/02](02-promotion.md) §5) — ⛔ **no human step, and the `why` is still required**, written by whatever produced it |
 | **What refuses it** | Promotion condition 2, unchanged. A memory that lifts average correctness while breaking one previously-passing case is exactly what a poisoned memory looks like, and the gate already rejects that candidate. No new rule |
 | **old vs new** | **Supersession, never deletion** — `superseded` is already a case status (D-024). A memory about a rewritten service is not wrong, it is *expired*, and the record has to keep the difference. `TTLConfig.default_ttl` ages out what nobody retrieves |
 | **Retractability** | Invariant 11's fields — `why`, `added`, `origin` — plus the `run_id` and trace. ⛔ **A memory you cannot trace is a memory you cannot retract** |

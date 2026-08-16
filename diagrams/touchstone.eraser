@@ -177,9 +177,14 @@ GenPy > Truth
 //    byte-identical, the delta measures the investigation layer and nothing
 //    else. The check runs at P1.4 — if the prompt needs an "if there are no
 //    findings…" branch, these are not the same node and D-038 flips.
-// HumanGate is drawn INSIDE this group, greyed to phase 2, because that is
-// where it runs — between synthesizer and END. Filing it with the phase-2
-// surfaces would have hidden that it is an agent node.
+// ⛔ There is NO gate node here, and its absence is a decision (D-040). An
+//    earlier revision drew HumanGate between Synthesizer and END, holding a
+//    LangGraph interrupt() for blast_radius ≥ restart_service. It is deleted:
+//    nothing in this system executes an action (docs/01 §7), and the measured
+//    path auto-declined the interrupt on every suite run — so the pause only
+//    ever existed on a branch no number came from. Blast radius now sets
+//    verdict.escalate, which the scorer reads as an axis. A human rewrites this
+//    machine; a human is never a state in it.
 
 Agent [color: blue, icon: cpu, label: "2 · agent/ — P1.8 · graph.py · nodes.py · state.py\nStateGraph + SqliteSaver, checkpointed after EVERY node"] {
   Supervisor [shape: hexagon, icon: git-branch, label: "supervisor — routes on `next`\nONE per hop, never a fan-out (D-026)"]
@@ -188,14 +193,14 @@ Agent [color: blue, icon: cpu, label: "2 · agent/ — P1.8 · graph.py · nodes
     SpResource [icon: activity, label: "resource — what is saturated?\nget_metrics · get_logs"]
     SpDependency [icon: share-2, label: "dependency — us, or something we call?\nget_topology · get_metrics"]
   }
-  Synthesizer [icon: check-square, label: "synthesizer — no tools, it DECIDES\nv1 is THIS NODE ALONE (D-038)"]
-  HumanGate [color: orange, icon: user-check, label: "the gate node — plain code, NO LLM\ninterrupt if blast_radius ≥ restart_service (D-024)"]
+  Synthesizer [icon: check-square, label: "synthesizer — no tools, it DECIDES\nv1 is THIS NODE ALONE (D-038)\nsets escalate if blast_radius ≥ restart_service (D-040)"]
 }
 
 Supervisor > Specialists: one per hop
 Specialists > Supervisor: hops += 1
 Supervisor > Synthesizer: next == done, or hops ≥ MAX_HOPS (D-039)
-Synthesizer > HumanGate
+// Synthesizer has no outgoing edge on purpose: it IS the terminal node (D-040).
+// Where the attempt lands is section 6, reached by the group edge Agent > Ends.
 
 // ── 3 · THE STATE ─────────────────────────────────────────────────────────────
 // The write side is D-012: exactly one reduced key. The read side is D-025, and

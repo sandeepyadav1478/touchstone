@@ -19,7 +19,7 @@ is load-bearing and stays correct.
 | Tool calls made | invisible | counted, with arguments |
 | Tokens spent | needs threading through every call | on the LLM span, free |
 | Where the time went | one total | per node, per tool |
-| Whether it stopped at the interrupt | needs a flag | a span that is present or absent |
+| Why the agent escalated | one boolean, no context | the whole path that led to it |
 | Retries, parse failures | swallowed | visible |
 
 **And the practical reason:** the agent's structure changes between versions — v1 has one
@@ -44,9 +44,15 @@ touchstone.run                      run_id, version, case_id, attempt, tier, ben
     │   └── LLM
     ├── touchstone.node.synthesizer
     │   └── LLM
-    ├── touchstone.verdict          ← exactly one, per invariant 3
-    └── touchstone.gate             blast_radius, requires_approval, interrupted
+    └── touchstone.verdict          ← exactly one, per invariant 3
+                                      root_cause_id, affected_service, confidence,
+                                      recommended_action, blast_radius, escalate
 ```
+
+⛔ **There is no `touchstone.gate` span, because there is no gate node** (D-040). `blast_radius`
+moved onto `touchstone.verdict`, where it belongs: it is a property of the action the agent
+chose, not of a separate step that inspected it. **The run has no terminal span other than the
+verdict** — every path ends there.
 
 ### Required attributes
 
@@ -58,8 +64,7 @@ a broken trace as a wrong answer would corrupt the version table.
 | `touchstone.run` | `version`, `case_id`, `attempt`, `tier`, `benchmark_hash` | ours | Grouping, and the comparability guard |
 | `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | Tool-call count, truncation rate |
 | `LLM` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference** | Cost, and the model on record |
-| `touchstone.verdict` | `root_cause_id`, `affected_service`, `confidence`, `escalate` | ours | **Correctness and escalation — the primary metrics** |
-| `touchstone.gate` | `blast_radius`, `interrupted` | ours | Interrupt behaviour |
+| `touchstone.verdict` | `root_cause_id`, `affected_service`, `confidence`, `recommended_action`, `blast_radius`, `escalate` | ours | **Correctness and escalation — the primary metrics.** ⚠️ `blast_radius` is here because a mismatch against `recommended_action` and the [docs/01](01-spec.md) §5 table is exactly invariant 4 failing, and the trace is where that becomes visible |
 | `touchstone.node.*` | `hop` on **every** node span, not only the supervisor's — plus the span's own start and end times | ours + OTel intrinsics | **Invariant 14** — no two specialist spans overlap (D-026). `next` stays on the supervisor alone; it is a routing decision, and only one node makes it |
 
 **Invariant 14 needs no new attribute and it does constrain the export.** Start and end are
@@ -206,9 +211,9 @@ sequenceDiagram
         T->>PHX: touchstone.tool.* {name, result_size, truncated}
         Note over G,T: no two specialist spans overlap — invariant 14
     end
-    G->>PHX: touchstone.verdict {root_cause_id, affected_service, escalate}
-    G->>PHX: touchstone.gate {blast_radius, interrupted}
+    G->>PHX: touchstone.verdict {root_cause_id, affected_service, blast_radius, escalate}
     deactivate G
+    Note over G,PHX: the run ends here — nothing waits, no gate span (D-040)
 
     Note over G,SC: ⛔ no arrow here — the verdict is never returned to the scorer
 

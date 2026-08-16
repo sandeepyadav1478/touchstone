@@ -23,19 +23,27 @@ gitignored.
 
 | | |
 |---|---|
-| Frame | 6437 × 13066 |
-| Content bounding box | 6387 × 13010 — **83.1 MP** |
-| On disk | 3.3 MB |
+| Frame | 6752 × 12674 — **85.6 MP** |
+| On disk | 3.44 MB |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
 
-⚠️ **The frame grew by exactly 80px and the width did not move at all** when D-039 replaced the
-open-question node. That is the layout being stable, and it is only checkable because both figures
-were taken at the same `imageQuality` — see finding 3.
+⚠️ **The previous row read `6437 × 13066` and it is superseded, not corrected.** D-040 removed
+the `HumanGate` node and the render **reflowed in both axes at once — +315 wide, −392 tall**, for
+a net +1.5 MP. ⛔ **That is the counter-example to the paragraph this replaced**, which said the
+layout was stable because D-039 moved the height by 80px and the width by nothing. **One stable
+re-export is not evidence of a stable layout**; it is one sample, and removing a node from inside
+a group is a different kind of edit from swapping one node's label. Both figures were taken at the
+same `imageQuality` — see finding 3, which is the only reason they are comparable at all.
+
+⚠️ **The content bounding box is no longer recorded here.** It came from Eraser's own canvas
+readout, and a figure that cannot be re-derived from the committed PNG is a figure that goes stale
+without anyone noticing. **The frame is measured from `loop.png`'s IHDR chunk** and anyone can
+re-run that.
 
 ⚠️ **The hosted copy is a renderer, not the artifact, and it is deliberately not the same bytes.**
-What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 8,791 chars against the
-file's 24,016. Comments render no pixels, so the picture is identical and the two-thirds of this
+What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 8,680 chars against the
+file's 24,450. Comments render no pixels, so the picture is identical and the two-thirds of this
 file that is argument never leaves the repo. ⛔ **Do not read a figure off the hosted copy and do
 not edit it**; an edit there is invisible in every diff this repo has.
 
@@ -101,6 +109,11 @@ previous one at 2. Re-exported at 2 it is 6437 × 13066 — same width, +80px.
 by the identical factor** (here 1.500077 and 1.500000); a layout change does not. Run it against
 finding 1's pair — 6388 × 12786 → 9338 × 16401 is 1.462 and 1.283 — and that finding survives,
 which is why it is still stated above rather than withdrawn.
+
+✅ **The D-040 render is a third data point and the test calls it correctly.** 6437 × 13066 →
+6752 × 12674 is **1.049 and 0.970** — not merely unequal but *opposite in sign*, which no
+`imageQuality` change can produce. **A ratio pair that straddles 1.0 is a layout change and
+nothing else**, and it is the cheapest check in this file.
 
 ⛔ **So `imageQuality` joins `background` and `theme` as a setting that must be stated with any
 figure taken from an export.** Three settings now, and each one was found the same way: a number

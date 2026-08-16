@@ -4,14 +4,23 @@
 
 Two surfaces. **The CLI is the primary one** — it is what the loop runs and what CI calls.
 
-**The HTTP service exists for one reason, and it is not "so this is a system rather than a
-script."** The approval gate is a **durable** interrupt: the graph stops, the process may exit,
-and the resume arrives later — possibly from somewhere else entirely. **A request/response
-surface is the only place that property is visible.** `POST /triage` → `202` + `run_id`, the
-process is free to die, `POST /runs/{id}/approve` from a different client resumes it off the
-checkpointer. In the CLI the same mechanism looks like two commands in one terminal and reads as
-convenience. ⛔ **If that path is not demonstrated, the five endpoints below earn nothing and
-should not be built** — the acceptance check is in §2.
+🔴 **The HTTP service has lost the reason it was designed for, and this section says so instead
+of quietly keeping it.** It existed to make one property visible: the approval gate was a
+**durable** interrupt — the graph stopped, the process could exit, and the resume arrived later
+from somewhere else entirely, which a request/response surface shows and a CLI disguises as two
+commands in one terminal. **D-040 deleted that gate.** No node waits, so nothing needs resuming,
+so `POST /triage` is now a request that returns a verdict.
+
+⛔ **This document's own rule was *"if that path is not demonstrated, the five endpoints earn
+nothing and should not be built."* The path no longer exists, which is the stronger version of
+the same test.** What remains — `/triage`, `/versions`, `/healthz` — is a thin wrapper over CLI
+verbs that already work in the loop and in CI. **Whether it gets built at all is an open
+decision, not a settled one**, and it stays open rather than being resolved here by the person
+who happened to be editing this file. It is deferred past v0.2.0 either way (D-030).
+
+⚠️ **The checkpointer is a separate question and is not cut by D-040.** `.touchstone/` also
+carries run state for a process that dies mid-run; whether anything still needs that is a phase-1
+measurement, not a claim made here.
 
 ---
 
@@ -36,24 +45,29 @@ touchstone record                                  # → regenerates the README 
 # touchstone suite log                             # every suite version: what entered, why, when
 # touchstone suite show r-018                      # one case: origin, why, the mining trace, history
 # touchstone suite diff v6..v7                     # what changed between two suite versions
-# touchstone suite review                          # the human step: proposed/ → regression/, one batch
+# touchstone suite admit                           # runs the five admission gates: proposed/ → regression/
 # touchstone suite quarantine r-031 --why "…"      # stops it gating; --why is required
 
 # single incident
 touchstone triage inc-007 --version v4             # one run, prints the verdict
-touchstone approve <run_id> --yes                  # resumes an interrupted run
 ```
+
+⛔ **There is no `touchstone approve`, and there is no `suite review`.** No run ever pauses, so
+there is nothing to resume; `suite admit` applies the five mechanical gates in
+[docs/02](02-promotion.md) §5 and records which one rejected a case. **A human improves this
+system by rewriting it — reading traces, changing prompts, adding cases — never by standing
+inside a run** (D-040).
 
 ⚠️ **`--truth` prints the answer key.** It exists for debugging and it is the one command that
 must never appear in a doc example whose output is pasted into the README.
 
 **When the `suite` verbs are built, `suite show` is the one that makes a growing suite
-defensible** — every case answers *why is this here, who approved it, and what failure produced
-it* ([docs/02](02-promotion.md) §5). ⛔ There is never a `touchstone suite unlock`. Overriding a
+defensible** — every case answers *why is this here, which gates admitted it, and what failure
+produced it* ([docs/02](02-promotion.md) §5). ⛔ There is never a `touchstone suite unlock`. Overriding a
 locked case is a hand edit plus a `DECISIONS.md` entry, on purpose: a gate with a convenient off
 switch is not a gate.
 
-⚠️ **The seven commented lines are the fast route's largest cut, and it is safe for one reason:
+⚠️ **The six commented lines are the fast route's largest cut, and it is safe for one reason:
 with no `mine`, no case ever enters the suite, so the baseline cannot reset** — which is the whole
 problem D-024 solves. **D-024 stands as a design decision and is unbuilt, not withdrawn.**
 
@@ -71,22 +85,24 @@ FastAPI. Small on purpose.
 
 | Method | Path | Does |
 |---|---|---|
-| `POST` | `/triage` | Submit an incident, get a verdict. `202` + `run_id` if it interrupts |
-| `GET` | `/runs/{run_id}` | Status, verdict, trace id |
-| `POST` | `/runs/{run_id}/approve` | Resume an interrupted run |
+| `POST` | `/triage` | Submit an incident, get the verdict. Synchronous — the run always terminates |
+| `GET` | `/runs/{run_id}` | Status, verdict, trace id — for a run submitted earlier |
 | `GET` | `/versions` | The version table as JSON — the README's source |
 | `GET` | `/healthz` | Liveness |
 
-**`/triage` is async.** A triage takes tens of seconds and may stop at an interrupt; a
-synchronous endpoint would have to lie about one or the other.
+⛔ **Two endpoints are gone with D-040**: `POST /runs/{run_id}/approve`, and the `202` + `run_id`
+shape of `/triage`. Both existed only to expose a pause that no longer happens.
 
-- [ ] 🔴 **The acceptance check that makes this surface worth building:** `POST /triage` on an
-      incident whose action is ≥ `restart_service`, **kill the container**, bring it back, then
-      `POST /runs/{id}/approve` and get the completed verdict. ⛔ **Until that has run, the
-      durability claim is a mechanism nobody exercised.** It needs the Phoenix-style rule about
-      persistence applied to the
-      checkpointer too: **the SQLite file is a mounted volume, or the run dies with the process
-      and this check cannot pass.**
+⚠️ **A triage still takes tens of seconds**, so a synchronous `/triage` is a slow request — an
+honest one, but slow. If that turns out to matter, the fix is a job queue with a polled
+`/runs/{run_id}`, **which is a different mechanism from a durable interrupt and would need its
+own reason.** It is not one this project has yet.
+
+- [ ] 🔴 **This surface no longer has an acceptance check, because the one it had tested the
+      interrupt.** It was: submit an incident whose action is ≥ `restart_service`, kill the
+      container, bring it back, approve, get the verdict. **Nothing replaces it, and that is the
+      finding** — a surface whose only distinguishing test is gone is a surface with no argument
+      for existing. See the note at the top of this file.
 
 ---
 
@@ -99,8 +115,9 @@ services:
   phoenix:     # trace backend — ports 6006 (UI + OTLP/HTTP) and 4317 (gRPC)
 ```
 
-⛔ **Three services, and `ollama` is deliberately not one of them** — see the table below. The
-loop needs only `phoenix`; `touchstone` and `mcp` exist for the durable-interrupt path.
+⛔ **Three services, and `ollama` is deliberately not one of them** — see the table below. **The
+loop needs only `phoenix`**; `touchstone` and `mcp` exist for the HTTP surface, whose own
+justification is the open question at the top of this file (D-040).
 
 ⚠️ **Phoenix needs `PHOENIX_SQL_DATABASE_URL` or a mounted `PHOENIX_WORKING_DIR`.** Without one
 of them the traces die with the container, and every past row of the version table loses the
@@ -121,7 +138,7 @@ flowchart TB
   end
 
   subgraph compose["docker compose"]
-    API["touchstone · FastAPI<br/>the five endpoints"]
+    API["touchstone · FastAPI<br/>the four endpoints"]
     MCP["mcp · the same five tools<br/>FastMCP on mcp 1.x — D-031"]
     PHX["phoenix<br/>6006 UI + OTLP/HTTP · 4317 gRPC"]
   end
@@ -142,10 +159,14 @@ flowchart TB
   API --> CKV[("checkpoint volume<br/>langgraph SQLite")]
 ```
 
-⛔ **Both volumes are load-bearing and each one fails silently.** Without the Phoenix volume the
-traces die with the container and every past row of the version table loses its evidence. Without
-the **checkpoint** volume the durable-interrupt check below cannot pass — the run dies with the
-process, and the five endpoints earn nothing.
+⛔ **The Phoenix volume is load-bearing and it fails silently.** Without it the traces die with
+the container and every past row of the version table loses its evidence — the failure mode is
+that everything keeps working and the evidence quietly stops existing.
+
+⚠️ **The checkpoint volume no longer has a check behind it.** It was there so a killed container
+could resume at the approval interrupt; D-040 deleted the interrupt. It is drawn because
+`.touchstone/` still holds run state for a process that dies mid-run — **but nothing currently
+reads it back, so treat it as unexercised until something does.**
 
 ### The four things this picture had to decide
 
@@ -156,7 +177,7 @@ evening starts with docker and the fast route is not fast.
 | Question the diagram asked | Settled |
 |---|---|
 | **Does the CLI reach the tools over MCP, or import them?** | ⭢ **Over MCP, on stdio**, spawning the server as a subprocess. `langchain-mcp-adapters` returns LangChain tools either way, so binding MCP tools costs about what binding local functions costs — and it means **the numbers in the version table actually traversed the protocol.** ⛔ The alternative, importing in the CLI and serving MCP only from the API, would leave the MCP path exercised by nothing that gets measured |
-| **Does the CLI share the checkpoint volume?** | ⭢ **No.** The CLI keeps `.touchstone/checkpoints.db` on the host; the container keeps its own on the volume. Sharing one SQLite file across a host process and a container is a locking problem bought for nothing — **the durability claim lives on the HTTP path** and §2's acceptance check is written against it |
+| **Does the CLI share the checkpoint volume?** | ⭢ **No.** The CLI keeps `.touchstone/checkpoints.db` on the host; the container keeps its own on the volume. Sharing one SQLite file across a host process and a container is a locking problem bought for nothing. ⚠️ **The answer survives D-040; its reason does not.** It was *"the durability claim lives on the HTTP path"* — there is no durability claim now. What still holds is the locking argument, which never depended on the interrupt |
 | **Is `ollama` in the compose file?** | ⭢ **No — cut.** It was an orphan node here, with no arrow to anything, which is the diagram saying what the prose would not: the judge runs on Cerebras and ollama was a third fallback. It stays documented in [docs/00](00-stack.md) as *use the host's if running*, and **a compose service nothing connects to is maintenance bought for nothing** |
 | **One Phoenix project or two?** | ⭢ **One**, `touchstone`. A run span carries `version`, `case_id`, `tier` and `benchmark_hash`, so the scorer selects on those; a stray `POST /triage` demo simply matches no manifest entry. **Two project ids would mean the scorer had to know which surface produced a run**, which is exactly the coupling [docs/04](04-observability.md) §1 exists to avoid |
 

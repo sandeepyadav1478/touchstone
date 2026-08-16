@@ -234,9 +234,14 @@ system learns.
 | `rollback_deploy` | one service, all traffic | **yes** |
 | `failover_datastore` | everything downstream | **yes** |
 
-Anything at or above `restart_service` stops the graph at a LangGraph `interrupt()` and waits
-for `touchstone approve`. **Escalation is not failure** — it is a scored outcome, and on
-`insufficient_evidence` cases it is the *correct* one.
+Anything at or above `restart_service` sets `verdict.escalate`. **It does not stop the graph,
+and nothing waits for a human** — the run completes, the verdict records that a human would
+have had to authorise the action, and the scorer treats that flag as one of its axes (D-040).
+**Escalation is not failure** — it is a scored outcome, and on `insufficient_evidence` cases it
+is the *correct* one.
+
+⚠️ **"Requires approval" is a property of the action, not a step in the pipeline.** The
+column above is what the agent must *recognise*; §7 is why there is nothing to authorise.
 
 ---
 
@@ -250,8 +255,8 @@ meaning what they say.**
 | 1 | The agent never sees `GroundTruth` | A test renders the full agent context for all cases and asserts no truth field appears in it |
 | 2 | Every tool is read-only | No tool function may write; asserted by signature review and a no-mutation test double |
 | 3 | Exactly one `verdict` span per run | Span assertion in the run test |
-| 4 | `escalate=True` ⟹ no action executed | Unit test on the action dispatcher |
-| 5 | Any action ≥ `restart_service` hits an interrupt before executing | Graph test, no model call needed |
+| 4 | **Any `recommended_action` at or above `restart_service` ⟹ `escalate=True`** | A unit test walks the §5 table, renders a verdict for each action and asserts the flag. No model call. ⚠️ **Rewritten by D-040** — it used to read *"`escalate=True` ⟹ no action executed"* and name a dispatcher, which does not exist and never will (§7). An invariant over an absent component is vacuous: it passes because nothing can violate it. This version asserts the thing §5 actually claims |
+| 5 | ~~Any action ≥ `restart_service` hits an interrupt before executing~~ | ⛔ **Retired by D-040, and kept in place rather than renumbered** — the other thirteen are cited by number across `docs/`, so closing the gap would silently redirect every one of those citations. It was vacuous on two counts: nothing executes, so *"before executing"* names an event that cannot occur, and the interrupt it guarded is deleted. Its surviving content is invariant 4 |
 | 6 | Same seed ⟹ byte-identical incident | Regenerate twice, compare bytes |
 | 7 | A frozen case is never modified | `manifest.json` hash check in CI |
 | 8 | Correctness never reads `verdict.reasoning` | The scorer takes structured fields only; asserted by passing garbage prose and an intact `root_cause_id` |

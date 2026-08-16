@@ -182,8 +182,8 @@ is the 28th and runs as a container** — the Python side only talks to it.
 
 | Package | Version | Job | ⛔ Not for |
 |---|---|---|---|
-| `langgraph` | `1.2.11` | The graph, state, `interrupt()`, `max_hops` | — |
-| `langgraph-checkpoint-sqlite` | `3.1.1` | **The checkpointer the approval interrupt needs.** A separate package — forgetting it is the classic phase-1 stall | — |
+| `langgraph` | `1.2.11` | The graph, state, `max_hops`. ⛔ **Not `interrupt()`** — no node waits (D-040) | — |
+| `langgraph-checkpoint-sqlite` | `3.1.1` | Run state for a process that dies mid-run. A separate package — forgetting it is the classic phase-1 stall. ⚠️ **It lost its original justification with D-040** and is kept pending a phase-1 answer on whether anything reads it back | — |
 | `langchain-core` | `1.5.4` | Messages, `@tool` schemas, the `BaseChatModel` interface the wrapper implements | ⛔ not the orchestrator |
 | `claude-agent-sdk` | `0.2.137` | **Path A — the subscription-backed model** | — |
 | `pydantic` | `2.13.4` | `Incident`, `Verdict`, `GroundTruth`; the JSON schema fed to `output_format` | — |

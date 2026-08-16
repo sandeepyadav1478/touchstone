@@ -20,13 +20,15 @@ versions of. Keep it small enough that a change is attributable.
      └─────────┼─────────┘
                ▼  (after the loop exits)
         ┌─────────────┐
-        │ synthesizer │  → Verdict
+        │ synthesizer │  → Verdict  (blast radius ≥ restart_service ⇒ escalate=True)
         └──────┬──────┘
                ▼
-        ┌─────────────┐
-        │    gate     │  blast radius ≥ restart_service? → interrupt()
-        └─────────────┘
+              END
 ```
+
+⛔ **There is no gate node, and no node waits on anything.** The synthesizer sets
+`verdict.escalate` from the [docs/01](01-spec.md) §5 table and the graph terminates. Every
+path from `supervisor` reaches `END` without leaving the process — D-040.
 
 LangGraph, `StateGraph`, SQLite checkpointer. The supervisor picks the next specialist or
 decides it has enough; `max_hops` bounds the loop and is a versioned parameter — **`config.MAX_HOPS`,
@@ -52,7 +54,7 @@ a diagram to be *checkable* on, caught in review of the docs rather than of the 
 | `incident` | the runner, once | everyone |
 | `findings` | **each specialist, append-only** (`Annotated[list, add]`, D-012) | ⛔ **the synthesizer only** |
 | `hops` | supervisor | supervisor |
-| `verdict` | synthesizer | gate, scorer |
+| `verdict` | synthesizer | the scorer, after the run ends |
 
 ⛔ **A specialist never reads another specialist's finding.** Its prompt is the incident plus its
 own prior tool results. The supervisor sees finding *headers* — who has reported, and whether it
@@ -129,8 +131,8 @@ list order is decided by which model call returns first, so **the same case can 
 manufacturing the class of failure the instrument exists to detect.
 
 ⚠️ **This is a spec diagram, not the committed artifact, and it is deliberately partial.** It is
-the v2 state, and it carries no failure paths — parse failure, tool error, interrupt, void
-run. [docs/07](07-diagrams.md) §2 calls a happy-path-only diagram *"the single most common way
+the v2 state, and it carries no failure paths — parse failure, tool error, a died process, a
+void run. [docs/07](07-diagrams.md) §2 calls a happy-path-only diagram *"the single most common way
 this gate gets faked"*, so the phase-1 artifact had to add them before any node was written.
 Naming the gap here is what stops this picture being mistaken for that one.
 
@@ -234,24 +236,32 @@ the schemas already exist, so this is an adapter and a compose service, not a su
 
 ---
 
-## 3. The approval interrupt
+## 3. Escalation — a field, not a pause
 
-Actions at or above `restart_service` ([docs/01](01-spec.md) §5) stop the graph:
+Actions at or above `restart_service` ([docs/01](01-spec.md) §5) set a flag on the verdict:
 
 ```python
-if action.blast_radius >= BlastRadius.SERVICE_LIVE:
-    decision = interrupt({"action": action, "verdict": verdict})
+verdict.escalate = action.blast_radius >= BlastRadius.SERVICE_LIVE
 ```
 
-The run halts at a checkpoint. `touchstone approve <run_id> --yes|--no` resumes it. The
-interrupt is a real LangGraph pause, not a printed warning — **the process can exit and the
-run resumes from the checkpointer.**
+That is the whole mechanism. The run does not stop, nothing waits, and the graph reaches
+`END` on every path.
 
-⚠️ **In suite runs the interrupt is auto-declined** and recorded as `escalated`. Otherwise
-scoring would need a human in the loop k times per case. **The interactive path is tested
-separately** in `tests/unit/test_interrupt.py`, and the distinction is stated in the results
-file — an interrupt that only ever gets auto-answered in the measured path is exactly the kind
-of thing that quietly becomes decorative.
+⛔ **No human is ever a state in this machine.** Escalation is a *claim the agent makes* —
+"this needs authorisation I do not have" — and like every other claim it is scored
+([docs/05](05-scoring.md) §4, escalation F1). It is not a request the pipeline blocks on.
+
+⚠️ **This replaced a LangGraph `interrupt()` and a `touchstone approve` command, and the
+reason is worth stating rather than hiding.** The measured path already auto-declined that
+interrupt on every suite run — otherwise scoring would have needed a human k times per case —
+so the pause existed only on a path no number came from. A gate that the measured graph
+routes around is not a safety property; it is an untested branch that makes the shipped
+system differ from the one in the version table. And nothing here executes an action anyway
+([docs/01](01-spec.md) §7), so there was never anything to authorise.
+
+**A human improves this system by rewriting it** — reading traces, changing prompts, adding
+cases — never by standing inside a run. That is the whole reason
+[docs/04](04-observability.md) records what it records.
 
 ---
 

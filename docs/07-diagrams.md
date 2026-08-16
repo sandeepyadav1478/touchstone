@@ -49,12 +49,12 @@ Every diagram must show, and be *checkable* on:
 |---|---|
 | **Every node, named exactly as it is named in code** | A diagram whose names drift from the code stops being reviewable the first time it is wrong |
 | **Every edge, and what makes it fire** | Conditional edges are where LangGraph bugs live. `supervisor → synthesizer` is not an edge; *"supervisor → synthesizer when hops ≥ max_hops or supervisor emits done"* is |
-| **Every store, and who writes to it** | Checkpointer, span store, results files, both suite manifests — and ⚠️ the two are not symmetric: `suite/benchmark/` has no writer at all after generation, `suite/regression/` has exactly one (`touchstone suite review`). Two writers to one store is a design question and it must be visible |
+| **Every store, and who writes to it** | Checkpointer, span store, results files, both suite manifests — and ⚠️ the two are not symmetric: `suite/benchmark/` has no writer at all after generation, `suite/regression/` has exactly one (`touchstone suite admit`). Two writers to one store is a design question and it must be visible |
 | **Every boundary the change crosses** | Process, container, network, subscription. Each one is a failure mode and a cost |
 | **State: what is in it and which fields are reduced** | D-012 says `findings` uses a reducer and nothing else does. **That is a diagram fact**, and it is the kind that silently changes |
 | **State: which node reads which key** | ⚠️ This row was missing, and the gap had already cost something. A reducer is the write side; D-025 is a decision about the read side, and the doc that should have carried it had a picture saying fan-out over a sentence saying routing. A key with two writers is a design question; a key with an unintended reader is a silent one — the reader inherits framing and nothing in the run reports it. ✅ [docs/03](03-agent-and-tools.md) §1 |
 | **What is *not* changing** | Greyed out, explicitly. **The delta is the claim** — a diagram that shows only the new part hides whether anything else moved |
-| **The failure paths** | Parse failure, tool error, interrupt, void run (429). ⛔ **A happy-path-only diagram is the single most common way this gate gets faked** |
+| **The failure paths** | Parse failure, tool error, a died process, void run (429). ⛔ **A happy-path-only diagram is the single most common way this gate gets faked** |
 
 **And one line of prose above it, always:** *"this changes X so that Y; nothing else moves."*
 If that sentence needs an "and", the change is two changes and gets two diagrams.
@@ -68,7 +68,7 @@ Four kinds, and the change decides which. Most changes need one; a phase usually
 | Kind | Use it for | Eraser type |
 |---|---|---|
 | **Graph / flowchart** | The agent graph, any node or edge change, the scoring pipeline | `flowchart-diagram` |
-| **Sequence** | Anything crossing a boundary — a suite run, the MCP round trip, the interrupt-and-resume path, a fallback provider switch | `sequence-diagram` |
+| **Sequence** | Anything crossing a boundary — a suite run, the MCP round trip, a fallback provider switch | `sequence-diagram` |
 | **Entity / schema** | The two suite manifests, the span attributes, the results file, `Verdict` | `entity-relationship-diagram` |
 | **Infrastructure** | The compose topology, the CI job, where Phoenix and the MCP server live | `cloud-architecture-diagram` |
 
