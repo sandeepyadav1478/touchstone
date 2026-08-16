@@ -25,7 +25,7 @@ gitignored.
 |---|---|
 | Frame | 7887 × 12420 — **98.0 MP** |
 | On disk | 4.21 MB |
-| Method | ⛔ `manually_create_diagram` → export twice → **delete the temp diagram**, per finding 1. Then the four-edge check in finding 2a |
+| Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
 
@@ -125,9 +125,26 @@ of further editing walks it back.
 **Same bytes. 88% more area.** ⚠️ **Those two are of each other, not of the render above** — they
 were taken before the specialist labels gained their tool line, which is the 0.5 MP between 81.7
 and the settled 82.2. **A pair is only a pair against the DSL it was measured on**, which is the
-whole reason the earlier figures had to be withdrawn. ⛔ **The rule: `manually_create_diagram` from the committed file,
-export from the new one, delete it.** Never export from a diagram you have been editing. It is
-cheap precisely because the file is the artifact and the hosted copy is only a renderer.
+whole reason the earlier figures had to be withdrawn. ⛔ **The rule: delete the hosted diagram,
+`manually_create_diagram` from the committed file, export from the new one — and KEEP it.** Never
+`manually_update_diagram`, and never export from a diagram you have been editing.
+
+🔴 **This rule used to end "delete it", and that was wrong in a way that took a fortnight to show
+up.** It optimised for the export and said nothing about the workspace, so the hosted diagram was
+simply left behind: on **2026-08-16** it sat **seven fixes** behind `touchstone.eraser` — no `Inv`,
+no `Regr`, no purple legend row — and it is the copy that *looks* canonical when someone opens the
+workspace. ⛔ **A stale renderer nobody has marked stale is worse than no renderer**, because the
+file being the real artifact is a fact about this repo that the workspace does not display.
+**Delete-and-recreate is the same call sequence with the delete moved to the front**, so keeping
+both copies honest costs nothing.
+
+⚠️ **The trigger is a change to RENDERED CONTENT, not a change to the file.** Comments do not render.
+Strip `//` lines from both versions and compare — if they match, the PNG *and* the hosted copy are
+still correct and re-uploading buys nothing. That check is what established that the convention-1
+correction needed no re-export at all. 📐 The **file** ID is stable across a replace and only the
+**diagram** ID changes, so a workspace bookmark keeps working.
+
+It is cheap precisely because the file is the artifact and the hosted copy is only a renderer.
 
 ### 2. Export races the re-render, so every measurement needs two of them
 

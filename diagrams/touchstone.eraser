@@ -66,8 +66,26 @@ title touchstone — the loop that has to get better
 //     A hosted Eraser diagram keeps its element positions across updates and
 //     only lays out fully when it is CREATED. So an old diagram's canvas is a
 //     record of its edit history, and no amount of editing walks it back.
-//     Therefore: `manually_create_diagram` from THIS FILE, export from the new
-//     one, delete it. Never export from a diagram you have been editing.
+//     Therefore: `manually_create_diagram` from THIS FILE and export from the
+//     new one. ⛔ NEVER `manually_update_diagram`, and never export from a
+//     diagram you have been editing.
+//
+//     ⛔ AND THE HOSTED DIAGRAM IS REPLACED, NOT LEFT BEHIND. Delete the old
+//        one, create the new one, KEEP it. The rule here used to end "delete
+//        it", which optimised for the export and quietly let the workspace go
+//        stale: on 2026-08-16 the hosted copy sat seven fixes behind this file,
+//        and it is the copy that LOOKS canonical when someone opens the
+//        workspace. A renderer nobody has marked stale is worse than no
+//        renderer. Delete-and-recreate is the same call sequence as before with
+//        the delete moved to the front, so it costs nothing and keeps both
+//        copies honest.
+//     ⚠ THE TRIGGER IS A CHANGE TO RENDERED CONTENT, NOT A CHANGE TO THIS FILE.
+//        Comments do not render. Strip `//` lines from both versions and compare;
+//        if they match, the PNG and the hosted copy are both still correct and
+//        re-uploading buys nothing. That check is what proved this very edit
+//        needed no re-export.
+//     📐 The file ID is stable across a replace and only the diagram ID changes,
+//        so a workspace bookmark keeps working.
 //     Cheap, because this file is the artifact and the hosted copy is a
 //     renderer — see docs/07 §5 rule 1.
 //     ⛔ AND WHEN MEASURING ANYTHING: export TWICE, compare the returned URLs.
