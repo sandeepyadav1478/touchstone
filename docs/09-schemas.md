@@ -449,7 +449,21 @@ results/               one json per version + index.json + negative-control.md
 diagrams/              the D-021 artifacts, committed before their implementation
 tests/unit/            13 invariants numbered to 14 (5 retired, D-040), zero model calls, under 2s
 tests/evals/           judged dimension only — never gates
+scripts/               🆕 tooling that checks the OTHER files — not imported by anything
+  check-diagram.py     the D-021 guard: 7 milestones over diagrams/*.eraser, and the only
+                       one that reads the RENDER rather than the source (milestone 7)
+  check-links.py       every markdown link resolves — against git, not the working tree
+  p0-deps.sh           the phase 0 install, one command
+  p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
 ```
+
+⚠️ **`scripts/` was missing from this map until 2026-08-16, and the diagram guard is what
+found it** — `check-diagram.py` rejected a node citing its own path, because milestone 4 checks
+every path against this list. Four committed files, ~26 KB, referenced by **no** doc: a
+`grep -rn 'scripts/' docs/ ROADMAP.md` returned nothing at all. The cause is structural rather
+than clerical — this map places *"the files the phases name"*, and **nothing that only checks
+the work is ever named by a phase**, so the map could not see it by construction. Any tooling
+added later lands in the same blind spot; put it here when it lands.
 
 ⚠️ **`domain.py` and `doctor.py` are the only two files with a fixed order.** Everything else
 follows the build order in `ROADMAP.md`, which is the ordering that keeps the scorer independent

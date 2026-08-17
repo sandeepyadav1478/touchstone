@@ -11,15 +11,20 @@ title touchstone — the loop that has to get better
 //      ⚠ THIS RULE READ "COLOUR IS PHASE, AND NOTHING ELSE — ONE exception:
 //        section 11" UNTIL 2026-08-16, AND THAT WAS MEASURABLY FALSE. Counted
 //        off the DSL rather than remembered:
-//          · red    10 nodes, NOT ONE of them a phase — and it has had its own
+//          · red    12 nodes, NOT ONE of them a phase — and it has had its own
 //                   legend row the whole time ("an invariant, or a never"). So
 //                   the biggest exception was in the key, and the header still
 //                   said there was one exception and named a different one.
-//          · grey   6 nodes, and only Life and V5 are "deferred, or cut".
-//                   Boundary, Voided, Incomplete and C5 are none of those.
-//          · none   34 nodes carry no colour at all, so the phase is read off
+//          · grey    7 nodes, and only Life and V5 are "deferred, or cut".
+//                   Boundary, Voided, Incomplete, Admit and C5 are none of those.
+//          · none   39 nodes carry no colour at all, so the phase is read off
 //                   the Pn.n in the label — which is the real mechanism, and
 //                   convention 3 is where it is actually written down.
+//        ⚠ RE-COUNTED 2026-08-16 after section 14 landed: 86 declarations, and
+//          the three figures above moved by +2 / +1 / +5 in one pass. They were
+//          10 / 6 / 34 an hour earlier. ⛔ A census written into prose goes stale
+//          on the NEXT edit — re-derive it from the DSL before quoting it, never
+//          step it by hand. The command is in diagrams/README.md.
 //        ⛔ The rule was not wrong when written; it was written about the
 //           schedule colours and then read as a claim about every colour. A
 //           convention stated more strongly than it is true gets enforced
@@ -232,10 +237,23 @@ Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1
   // at P1.2 and a benchmark version bump at any later moment. An implementer working
   // from this picture has to see it before P1.3 freezes the tier.
   Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash · one PER TIER\nNEVER seen by the agent\n+ required_specialist per case — BEFORE P1.3 (D-042)"]
+  // ⛔ THIS IS THE HALLUCINATION CHECK, AND IT IS A CLASS RATHER THAN A CHECKER — which is
+  //    why a search for one finds nothing. `insufficient_evidence` appeared ZERO times in this
+  //    file while docs/01 §3 calls it "the most important class", and phase 1's exit gate
+  //    names case 09 specifically to force it into the suite.
+  //    🎯 The design is the interesting part: there is NO hallucination detector anywhere in
+  //    this system, on purpose. A detector is a second model with a second failure mode and
+  //    nothing to check IT against. Instead the honest "I do not know" is planted in the
+  //    answer key like any other cause, so refusing to guess is a CORRECT answer that a case
+  //    can require — scored by exact match, no judge, same as everything else.
+  //    ⚠ It follows that an agent which never says it cannot tell scores WRONG on case 09.
+  //    That is the whole mechanism, and it was invisible on the canvas.
+  Insuf [shape: document, color: red, icon: circle, label: "insufficient_evidence — docs/01 §3, the most important class\nthe honest 'I do not know', and it is a CORRECT answer\n⛔ NO hallucination detector anywhere — the CLASS is the check\ncase 09 requires it — named in phase 1's exit gate"]
 }
 
 DomainPy > GenPy > RendPy > Bench
 GenPy > Truth
+GenPy > Insuf: planted like any other cause — one of the ten (docs/01 §3)
 
 // ── 2 · THE AGENT ─────────────────────────────────────────────────────────────
 // v1 is Synthesizer ALONE, findings == []. Deliberately weak: a baseline that
@@ -381,7 +399,13 @@ Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens a
   // describes a demo, all_k describes something you would put on call." A diagram that
   // shows only the headline number has quietly dropped the sentence that makes it mean
   // anything, and P3.1 requires both reported ESPECIALLY when they differ.
-  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nall_k is the HEADLINE · pass@1 reported beside it, docs/05 §2\nBOTH, even when they differ — especially then\nTWO outputs — only ONE of them reaches the gate"]
+  // ⛔ AND THAT FIX WAS STILL HALF OF IT. docs/05 has FOUR scored axes — §1 correctness,
+  //    §2 all_k, §3 escalation F1, §4 cost per correct — and `F1` appeared ZERO times in
+  //    this file, comments included. Two of the four reached the canvas and one more
+  //    (cost per correct) only ever appeared downstream on C4, where it reads as a budget
+  //    rule rather than as something the scorer computes. Naming the SET on the node is
+  //    what stops the next axis going missing: a reader can now count four and check.
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nFOUR axes, docs/05 §1–4: correctness · all_k · escalation F1 · cost per correct\nall_k is the HEADLINE · pass@1 beside it, docs/05 §2 — BOTH, especially when they differ\nTWO outputs — only ONE of them reaches the gate"]
 
   // The dead end IS the mechanism. The old label said "DIAGNOSTIC, never gates", which was
   // the prose promise drawn as though it were a structure. A box with no outgoing edge is
@@ -462,7 +486,20 @@ Inv --> Gate: asserts compare.py reads NO field inside diagnostics{} — the cod
 //    writer is a design claim; an undrawn store is that claim made invisible.
 Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.6, DEFERRED (D-030)"] {
   MinePy [icon: filter, label: "loop/mine.py · loop/suite.py\nfailures → suite/proposed/"]
-  Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\nthe five gates: reproducible · not_flaky · not_a_void · distinct · justified\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
+  // ⛔ THE FIVE ADMISSION GATES WERE A LINE OF TEXT INSIDE THIS LABEL, and the promotion
+  //    gate's five conditions are five nodes on a chain. Same kind of object — an AND of
+  //    mechanical checks — drawn two different ways, so only one of them read as a gate.
+  //    A reader could not see that admission is also all-or-nothing, and a text list has no
+  //    place to hang the thing that matters about gate 5: the `why` is required and there is
+  //    still no human step (D-040). Structure is what makes the AND checkable.
+  Admit [color: grey, icon: filter, label: "the five admission gates — ALL five, docs/02 §5"] {
+    A1 [icon: repeat, label: "1 · reproducible"]
+    A2 [icon: activity, label: "2 · not_flaky"]
+    A3 [icon: slash, label: "3 · not_a_void"]
+    A4 [icon: git-branch, label: "4 · distinct"]
+    A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED\n⛔ written by whatever produced it, NEVER by a human step (D-040)"]
+  }
+  Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
   SOpen [icon: circle, label: "open — does NOT gate"]
   SLocked [color: red, icon: lock, label: "locked — GATES FOREVER, one-way\nset automatically on the first PROMOTED all_k"]
   SQuar [icon: pause-circle, label: "quarantined — human, reason REQUIRED"]
@@ -470,8 +507,10 @@ Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.
 }
 
 ScorePy --> MinePy: the failures, mined
-MinePy > Regr: suite/proposed/ → the FIVE admission gates, ALL five (docs/02 §5)
-Regr > SOpen: admitted — enters as open, and admitted_by records the GATE SET, never a name (D-040)
+MinePy > A1: suite/proposed/ → the gates, ALL five must hold (docs/02 §5)
+A1 > A2 > A3 > A4 > A5
+A5 > Regr: all five held — admitted_by records the GATE SET, never a name (D-040)
+Regr > SOpen: admitted — enters as open
 SOpen > SLocked: a promoted version scores it all_k
 SOpen > SQuar: human
 SLocked > SQuar: human, with a reason
@@ -531,6 +570,55 @@ Spans --> Phoenix
 //    ApiPy stays unwired on purpose: it has nothing to point at until it is decided.
 McpPy --> Tools: the SAME five, re-exposed — NOT a second implementation (D-019)
 Spans --> CI
+
+// ── 14 · THE GATES THE PROJECT PASSES, NOT THE ONES THE AGENT PASSES ─────────
+// ⛔ EVERY GATE ABOVE IS ONE THE AGENT GOES THROUGH. These are the gates THE WORK
+//    goes through, and this file had none of them: `exit gate` appeared ZERO times
+//    in it, comments included, while ROADMAP.md carries four of them and 37
+//    conditions. A picture that draws the machine's quality gates and not the
+//    project's own is claiming the discipline runs in one direction only — and
+//    this project's entire pitch is that it runs in the other one too.
+//
+// 🎯 THE LABELS CARRY AN EVIDENCE FRACTION, NOT A RULE LIST, and that is the
+//    point of drawing them at all. Counted off ROADMAP.md: a condition is
+//    MACHINE-ATTESTED if it names a command or an artifact — `touchstone doctor`,
+//    a byte-identical `results/v1.json`, `uv run pytest`, a `git grep` that must
+//    return nothing. 17 of 37 do. The other 20 are a person ticking a box, which
+//    is the weakest evidence anywhere in this project and is INVISIBLE in a
+//    checklist, because a ticked box looks identical either way.
+//    ⛔ P2 IS THE WEAK ONE — 6 of 16 — AND IT IS THE GATE THAT SHIPS v0.1.0.
+//    Putting the fraction on the node makes the soft gate the first thing a
+//    reader sees, which a list of 16 ticks structurally cannot do.
+//    ⚠ The fraction is a claim about WORDING, not about rigour: it counts
+//      conditions that name something a machine can produce. A hand-ticked box
+//      may still be checked carefully, and an attested one can still be attested
+//      to the wrong thing (rule 19 — machine-attested means the run happened,
+//      never that it was correct). It is a floor on evidence, and the direction
+//      of its error is that it FLATTERS: every unnamed artifact counts against.
+//
+// ⚠ ROADMAP.md IS THE AUTHORITY for all 37. These nodes carry counts plus the
+//   conditions that actually block; a second copy of a checkable list is exactly
+//   the drift D-036 exists to stop, and it is why the other 33 are not here.
+//
+// ⛔ DiagGate IS DRAWN AS A DIAMOND AND SITS BEFORE THE CHAIN, because it gates
+//    the START of a phase while the other four gate the END. docs/07 is titled
+//    "the gate no phase starts without" and D-021 is the reason this file exists
+//    — and `D-021` appeared ZERO times in it. A diagram omitting the rule that
+//    requires the diagram is the most self-referential blind spot available, and
+//    it survived every pass because nobody looks for the frame inside the picture.
+
+DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "⛔ STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + scripts/check-diagram.py — 7 milestones, every citation resolved\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
+
+Gates [icon: check-square, label: "14 · the four phase exit gates — 37 conditions · 17 machine-attested"] {
+  P0Gate [color: green, icon: check-circle, label: "phase 0 exit — 5 conditions, 2 ATTESTED\n✅ PASSED: D-001 carries the live `touchstone doctor` output, verbatim\nthe model id came off ResultMessage.model_usage on a real call (D-033)"]
+  P1Gate [color: blue, icon: check-square, label: "phase 1 exit — 9 conditions, 7 ATTESTED — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\n`git grep` the scorer for the agent's return type and find NOTHING (D-007)\ncase 09 — insufficient_evidence — is in the suite"]
+  P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — 16 conditions, 6 attested\n🔴 THE WEAKEST GATE, AND IT IS THE ONE THAT SHIPS v0.1.0\n10 of 16 are a person ticking a box"]
+  P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — 7 conditions, 2 attested\nthe REJECTED candidate is the deliverable — a gate seen to block"]
+}
+
+DiagGate > Gates: blocks the START of every phase — the other four block the end
+P0Gate > P1Gate > P2Gate > P3Gate
+NegControl --> P2Gate: the proof the gate can reject (docs/02 §3)
 
 // ── THE OPEN QUESTIONS — TWO. ONE IS DRAWN, ONE CANNOT BE ────────────────────
 // docs/07 §6: a diagram with no open questions is usually a diagram nobody

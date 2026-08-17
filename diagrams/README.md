@@ -11,7 +11,7 @@ not. The PNG is committed alongside so the file renders for a reader who will no
 
 | file | shows | gates |
 |---|---|---|
-| [`touchstone.eraser`](touchstone.eraser) | **The whole system, in thirteen numbered sections, on one canvas** — the frozen corpus · the agent graph · the state · the tools · the process boundaries · how an attempt ends · telemetry · what survives · the scorer · **the gate, all five promotion conditions** · **the case lifecycle, `open → locked` one-way** · the version ladder · the phase-2 surfaces | phase 1, and phase 2 |
+| [`touchstone.eraser`](touchstone.eraser) | **The whole system, in fourteen numbered sections, on one canvas** — the frozen corpus · the agent graph · the state · the tools · the process boundaries · how an attempt ends · telemetry · what survives · the scorer · **the gate, all five promotion conditions** · **the case lifecycle, `open → locked` one-way** · the version ladder · the phase-2 surfaces · **the four phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
 | [`loop.png`](loop.png) | The render of the above, exported from Eraser. **A convenience, never the record** | — |
 
 **Two files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
@@ -23,8 +23,8 @@ gitignored.
 
 | | |
 |---|---|
-| Frame | 7887 × 12420 — **98.0 MP** |
-| On disk | 4.21 MB |
+| Frame | 7953 × 16738 — **133.1 MP** |
+| On disk | 5.49 MB |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
 | Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
@@ -41,6 +41,16 @@ the only reason they are comparable at all.
 | D-043 → D-045 | **two nodes and two edges added** | 6792 × 13470 → 6313 × 14683 | **−479** | **+1213** |
 | D-045 → D-046 | one node moved between groups, one duplicate edge deleted | ~~6313 × 14683 → 7300 × 10742~~ | ~~+987~~ | ~~−3941~~ |
 | the audit fixes | **+2 nodes** (`Inv`, `Regr`), **+3 edges**, one legend row, one node recoloured | 7343 × 10742 → **7887 × 12420** | **+544** | **+1678** |
+| the gate audit | **+13 declarations, +2 groups, +6 edge lines** — §14's `DiagGate` and four exit gates, `Insuf`, the five admission gates broken out of a label | 7887 × 12420 → **7953 × 16738** | **+66** | **+4318** |
+
+✅ **Row seven is the second pair, and having two of them is worth more than the second one is.**
+Both were taken the same way, so for the first time this table can compare a comparison. **It kills
+the per-node reading with data rather than with caution:** row six added 2 declarations for +1678px
+of height and row seven added 13 for +4318 — **839px per declaration against 332**, a factor of 2.5
+apart. Whatever the height is a function of, it is not the node count, and the warning under row six
+("do not read +1678 as a per-node cost") now has a measurement behind it instead of a hedge.
+⚠️ **Width did almost nothing** — +66px on the edit that added the most content of any row here —
+so the two axes are not responding to the same thing, and nothing here says what either responds to.
 
 ✅ **Row six is the first pair in this table that is a pair.** Both frames were taken the same
 way — create fresh, export twice, confirm the hashes match, check all four edges — so this is the
@@ -63,7 +73,7 @@ re-measured the same way and that diagram is gone. ✅ **Row six is the one that
 only exists because the settled 7343 × 10742 above became a *before* the moment the next edit
 landed. The withdrawal is what made the next comparison possible.
 
-⛔ **Five live rows, five unrelated reflow shapes — so there is no stable-layout claim left to
+⛔ **Six live rows, six unrelated reflow shapes — so there is no stable-layout claim left to
 make.**
 The paragraph this replaced said the layout was stable on the strength of the first row alone.
 **One stable re-export is one sample.** ⚠️ **Rows three and four are the ones that should change how
@@ -77,7 +87,8 @@ shrink in an axis.
 this table rather than a footnote.** Row five was withdrawn precisely because its method was wrong,
 and nothing recorded here says whether the others were created-fresh or exported from a diagram
 mid-edit. **Treat them as suggestive and not as comparable** until a row can say how it was taken.
-✅ **Row six can say it** — it is the first one that can, which is why it is marked and they are not.
+✅ **Rows six and seven can say it** — row six was the first that could, which is why they are
+marked and rows one to five are not.
 🎯 **The fix is a column, not a re-measurement** — any future row that cannot fill it does not go
 in.
 
@@ -92,11 +103,45 @@ readout, and a figure that cannot be re-derived from the committed PNG is a figu
 without anyone noticing. **The frame is measured from `loop.png`'s IHDR chunk** and anyone can
 re-run that.
 
-⚠️ **The hosted copy is a renderer, not the artifact, and it is deliberately not the same bytes.**
-What gets pushed is `touchstone.eraser` **with every `//` line stripped** — 9,800 chars against the
-file's 29,662. Comments render no pixels, so the picture is identical and the two-thirds of this
-file that is argument never leaves the repo. ⛔ **Do not read a figure off the hosted copy and do
-not edit it**; an edit there is invisible in every diff this repo has.
+⚠️ **The hosted copy is a renderer, not the artifact.** ⛔ **Do not read a figure off it and do not
+edit it**; an edit there is invisible in every diff this repo has.
+
+🔴 **A correction, and it is the same failure as row five.** This paragraph said the hosted copy is
+"deliberately not the same bytes" and that what gets pushed is the file **with every `//` line
+stripped** — 9,800 chars against 29,662. **Measured 2026-08-16, that is false: the upload is the
+file, verbatim, comments included**, byte-identical across all 49,289 of them. Eraser strips the
+comments *on render*, which is why the picture looks the same and why the claim survived. ⚠️ **The
+two figures were also both stale** — the strip is now 13,391 chars of 47,250 — so the sentence was
+wrong about the mechanism *and* about the numbers, and the numbers going stale is what got it
+looked at. **The comment-strip is a diffing tool, not the transport**: it is how you decide whether
+a re-export is needed (below), and nothing more.
+
+### Re-deriving the census, because the diagram tells you to
+
+`touchstone.eraser`'s convention 1 quotes a node census and says **"re-derive it from the DSL
+before quoting it, never step it by hand — the command is in `diagrams/README.md`."** ⛔ **It was
+not, for one edit.** A pointer to a command that does not exist is worse than no pointer, because
+it reads as though someone checked. Here it is:
+
+```bash
+# 86 declarations · 15 groups · 57 edge lines · 39 of the 86 carry no colour
+body() { grep -vE '^\s*//' diagrams/touchstone.eraser; }
+body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -v '^legend' | wc -l   # declarations
+body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -v '^legend' | grep -c '{[[:space:]]*$'
+body | grep -cE '^[A-Za-z][A-Za-z0-9_]* *(<>|-->|>)'                          # edge lines
+body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -oE 'color: [a-z]+' | sort | uniq -c
+body | wc -m                                  # rendered chars — the re-export trigger
+```
+
+⚠️ **`legend` is excluded and that is the whole reason this has to be written down.** It matches
+the declaration shape exactly, so counting it gives **87**, and 86 versus 87 is precisely the kind
+of drift nobody can adjudicate a week later. The legend is a key, not a node. **A census figure
+that cannot be reproduced from a recorded query should be discarded rather than corrected.**
+
+🎯 **The last line is the one that gets used most.** Comments render no pixels, so a re-export is
+triggered by a change to `body`, **never by a change to the file**. Compare it against
+`git show HEAD:diagrams/touchstone.eraser | grep -vE '^\s*//' | wc -m`; if they match, `loop.png`
+and the hosted copy are both still correct and re-uploading buys nothing.
 
 ⚠️ **It is a column you scroll**, so read it top to bottom; section 1 is the corpus and every later
 section follows the order an attempt actually moves through. ⛔ **That figure was taken under the
