@@ -7,6 +7,13 @@ title touchstone — one attempt, and every boundary it crosses
 //   drawn, draw that one." ⛔ We drew the flowchart first — the kind that section
 //  calls "easy and usually already right in your head". This is the correction.
 //
+//  ⛔ IT LIVES IN ITS OWN ERASER FILE, AND THAT IS NOT FILING (DEF-022). Eraser
+//     lays every diagram in one file onto ONE shared canvas at the same origin, so
+//     the flowchart and this page rendered ON TOP OF EACH OTHER and neither could
+//     be read. There is no position parameter in the MCP — create takes fileId,
+//     type and code, nothing else — so one file per diagram is the only separation
+//     available. ⚠ The flowchart keeps lEXSFoZ7vOTFMYclaqr1; this is C9LfwhW1XqfTtkpdynD0.
+//
 //  ⛔ IT REPLACES A DRAWING RATHER THAN ADDING ONE. docs/04 §4a carried a Mermaid
 //     sequence of the same run; it is gone, and §4a points here. Two sequence
 //     diagrams of one run is the drift D-036 exists to stop, and the one that

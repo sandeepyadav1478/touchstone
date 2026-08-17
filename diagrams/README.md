@@ -37,7 +37,7 @@ same mistake at a smaller scale.
 | Padding, all four sides | 27 / 27 / 28 / 23 | 27 / 23 / 27 / 40 |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below | same, and **`background` bit** — see below |
-| Hosted | **two diagrams in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
+| Hosted | ⛔ **one diagram per Eraser file** — they shared a file until 2026-08-17 and **rendered on top of each other** (DEF-022, finding 6). `no-link-access`. The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
 
 ⛔ **`background: true` is not cosmetic, and omitting it produces a failure that reads as a
 different failure.** The default is a transparent canvas. `PIL`'s `.convert("RGB")` turns every
@@ -198,7 +198,7 @@ taken any other way is not comparable to this one.
 
 ---
 
-## Five findings about the tool, and every one of them is the same failure
+## Six findings about the tool, and every one of them is the same failure
 
 **None is about touchstone. They are here because the tool accepts something, echoes it back
 unchanged, and renders something else** — and every check that reads the *source* or the
@@ -209,6 +209,12 @@ on its own documents.
 absent**, and the second kind is worse: a wrong number gets re-derived by anyone who quotes it,
 while a missing message has nothing to be re-derived *from*. Both were found by eye, on a render,
 after every automated check had passed.
+
+🔴 **Finding 6 is a third kind, and it is the one that got furthest.** Nothing was wrong with the
+number, the source or the export — the content was **present, correct and unreadable**, and it was
+found by *the reader*, after the render had been checked pixel by pixel and handed over for
+approval. It is the only finding here that no amount of care on the exported PNG could have
+reached, because it is not a property of the export.
 
 ### 1. Eraser's canvas size is a record of edit history, not of content
 
@@ -384,6 +390,29 @@ it.
 ⚠️ **Same family as DEF-015**, where a `]` in a flowchart label truncated this guard's own regex —
 but that was a *reader* and this is the *renderer*, and **truncation leaves evidence while deletion
 does not**.
+
+### 6. 🔴 Two diagrams in one Eraser file share one canvas, at the same origin
+
+**Measured 2026-08-17, and reported by the reader rather than by any check here.** `sequence.eraser`
+was created into the same Eraser file as the flowchart. Eraser lays every diagram in a file onto
+**one canvas starting at the same origin**, so the two drawings rendered **on top of each other** and
+neither could be read in the app. There is no position parameter anywhere in the MCP —
+`manually_create_diagram` takes `fileId`, `diagramType` and `code`, and that is the whole surface.
+
+⛔ **The fix is one Eraser file per diagram**, and it is the only separation the API offers. The
+flowchart kept its file; the sequence moved to a new one, was re-created from the committed
+`.eraser`, and the new export is **pixel-identical** to the committed `sequence.png` —
+`ImageChops.difference(...).getbbox()` is `None`, so the move changed nothing about the picture. The
+old copy was deleted only *after* that comparison passed. ⚠️ The PNG bytes differ while the pixels
+do not; **byte-comparing two PNGs of the same drawing is not a valid check** — encoder metadata
+alone will fail it.
+
+🎯 **The lesson, and it is about what "verified" covered.** Every check in this repo reads the
+**exported PNG**, which is per-diagram and was perfect. The overlap exists only in the **app canvas**,
+which is the thing a human is sent to open. *The artifact that was verified and the artifact that
+was handed over were not the same rendering* — and the gap is invisible from the side that was
+checked. ⛔ The same asymmetry as findings 4 and 5: the check and the failure live in different
+representations.
 
 ### …and the one that is not a tool finding: the port dropped a participant
 
