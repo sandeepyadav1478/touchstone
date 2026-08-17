@@ -13,21 +13,39 @@ not. The PNG is committed alongside so the file renders for a reader who will no
 |---|---|---|
 | [`touchstone.eraser`](touchstone.eraser) | **The whole system, in fourteen numbered sections, on one canvas** — the frozen corpus · the agent graph · the state · the tools · the process boundaries · how an attempt ends · telemetry · what survives · the scorer · **the gate, all five promotion conditions** · **the case lifecycle, `open → locked` one-way** · the version ladder · the phase-2 surfaces · **the four phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
 | [`loop.png`](loop.png) | The render of the above, exported from Eraser. **A convenience, never the record** | — |
+| [`sequence.eraser`](sequence.eraser) | **One attempt, and every boundary it crosses** — eleven lifelines, ordered by distance from the developer's process. It draws the three things a flowchart structurally cannot: the **order** of the four telemetry wiring steps, the checkpoint landing *after every node*, and the scorer running later, in another process, from a file. **Its load-bearing element is a message that is not there** — nothing goes between `Graph` and `Score` in either direction | phase 1 |
+| [`sequence.png`](sequence.png) | The render of that. Same status: a convenience | — |
 
-**Two files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
+**Four files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
 drew the same system in six encodings — **was deleted 2026-08-15** by
 D-036, which also records why, and what it cost. `.check.log` is a run log,
 gitignored.
 
-### The settled render, measured 2026-08-16
+⚠️ **The second diagram is a REPLACEMENT, and that is what keeps this directory from becoming the
+poster again.** [docs/04](../docs/04-observability.md) §4a carried a Mermaid `sequenceDiagram` of
+the same run until 2026-08-17. It is gone and §4a points here. **The count went two → four because
+one drawing moved and got a render, not because a third view was added** — D-036 deleted the poster
+for having six encodings of one system, and adding sequence-as-a-second-source would have been the
+same mistake at a smaller scale.
 
-| | |
-|---|---|
-| Frame | 7953 × 16738 — **133.1 MP** |
-| On disk | 5.49 MB |
-| Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a |
-| Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below |
-| Hosted | **one diagram in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them |
+### The settled renders, measured 2026-08-17
+
+| | `loop.png` | `sequence.png` |
+|---|---|---|
+| Frame | 7953 × 16738 — **133.1 MP** | 5069 × 6252 — **31.7 MP** |
+| On disk | 5.49 MB | 1.88 MB |
+| Padding, all four sides | 27 / 27 / 28 / 23 | 27 / 23 / 27 / 40 |
+| Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
+| Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below | same, and **`background` bit** — see below |
+| Hosted | **two diagrams in one file**, `no-link-access`. ⛔ The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
+
+⛔ **`background: true` is not cosmetic, and omitting it produces a failure that reads as a
+different failure.** The default is a transparent canvas. `PIL`'s `.convert("RGB")` turns every
+transparent pixel **black**, so `scripts/check-diagram.py` milestone 7 finds content on all four
+edges and reports the render as **CLIPPED** — sending you to re-render a diagram that rendered
+perfectly. Measured 2026-08-17: `sequence.png` came back 0/0/0/0 instead of 27/23/27/40. The guard
+now checks the alpha channel first and says `nobg`, because *a guard that fails for the wrong
+reason costs more than one that does not fire.*
 
 ⚠️ **Every row above is superseded, not corrected**, and the history is kept because *the reflow
 is the finding*. All five figures were taken at the same `imageQuality` — see finding 3, which is
@@ -51,6 +69,15 @@ apart. Whatever the height is a function of, it is not the node count, and the w
 ("do not read +1678 as a per-node cost") now has a measurement behind it instead of a hedge.
 ⚠️ **Width did almost nothing** — +66px on the edit that added the most content of any row here —
 so the two axes are not responding to the same thing, and nothing here says what either responds to.
+
+⛔ **The sequence diagram has a before/after too, and it stays OUT of this table.** Adding the
+`Tools` lifeline and its three messages took `sequence.png` from **4629 × 5554 to 5069 × 6252** —
++440 wide, +698 tall. It is a clean pair, taken by the same method, and it belongs to a **different
+layout engine**: a sequence diagram's width is a function of participant count and its height of
+message count, which is precisely the per-node relationship the rows above spent three renders
+failing to find in the flowchart. **Putting both in one table would produce an average of two
+things that do not average** — the same fused-denominator error the citation guard exists for,
+committed on the apparatus instead of on the claims.
 
 ✅ **Row six is the first pair in this table that is a pair.** Both frames were taken the same
 way — create fresh, export twice, confirm the hashes match, check all four edges — so this is the
@@ -138,6 +165,27 @@ the declaration shape exactly, so counting it gives **87**, and 86 versus 87 is 
 of drift nobody can adjudicate a week later. The legend is a key, not a node. **A census figure
 that cannot be reproduced from a recorded query should be discarded rather than corrected.**
 
+And for `sequence.eraser`, where the same trap is waiting under a different name:
+
+```bash
+# 11 participants · 26 messages · 6 of them self · 6 dashed returns · 4 blocks · 3,716 rendered chars
+body() { grep -vE '^\s*//' diagrams/sequence.eraser; }
+body | grep -E '^[A-Za-z][A-Za-z0-9_]* *\[' | grep -vE '^(loop|alt|else) ' | wc -l   # participants
+body | grep -cE '^\s*[A-Za-z][A-Za-z0-9_]* *(-->|>) *[A-Za-z]'                       # messages
+body | grep -cE '^\s*(loop|alt|else) *\['                                            # blocks
+body | wc -m                                          # rendered chars — the re-export trigger
+```
+
+⛔ **`loop`, `alt` and `else` are the `legend` of this file.** They open with `[` in column 1 and
+match the participant shape exactly, so counting without the exclusion gives **14 participants for
+11 lifelines** — and 11 is independently confirmed by the colour tally, which sums to
+`blue 7 · grey 2 · orange 1 · red 1`. **Two files, two different keywords, the same
+off-by-a-keyword**; the parallel is the reason both commands are printed rather than described.
+
+✅ **The message count cross-foots against the guard**: `scripts/check-diagram.py` milestone 8
+reports *"26 message labels scanned"* from an independent parser. **Two counts derived by different
+code agreeing is worth more than either one stated twice.**
+
 🎯 **The last line is the one that gets used most.** Comments render no pixels, so a re-export is
 triggered by a change to `body`, **never by a change to the file**. Compare it against
 `git show HEAD:diagrams/touchstone.eraser | grep -vE '^\s*//' | wc -m`; if they match, `loop.png`
@@ -150,11 +198,17 @@ taken any other way is not comparable to this one.
 
 ---
 
-## Three findings about the tool, and all three are the same failure
+## Five findings about the tool, and every one of them is the same failure
 
-**Neither is about touchstone. Both are here because a number was quoted for three drafts before
-anyone checked what it measured** — which is this project's own thesis landing on its own
-documents.
+**None is about touchstone. They are here because the tool accepts something, echoes it back
+unchanged, and renders something else** — and every check that reads the *source* or the
+*reproducibility* of the render passes while it happens. That is this project's own thesis landing
+on its own documents.
+
+⚠️ **Findings 1–3 are about a number that was wrong. Findings 4–5 are about content that was
+absent**, and the second kind is worse: a wrong number gets re-derived by anyone who quotes it,
+while a missing message has nothing to be re-derived *from*. Both were found by eye, on a render,
+after every automated check had passed.
 
 ### 1. Eraser's canvas size is a record of edit history, not of content
 
@@ -276,6 +330,72 @@ nothing else**, and it is the cheapest check in this file.
 figure taken from an export.** Three settings now, and each one was found the same way: a number
 came out wrong and the tool, not the diagram, turned out to be the variable. **That is three for
 three** — every measurement problem in this file has been the apparatus.
+
+### 4. `note over` is accepted, stored, echoed back, and rendered as nothing
+
+Measured 2026-08-17, on a live probe before any of it reached `sequence.eraser`. A sequence diagram
+containing `note over A,B: …` and `note over B: …` was created without an error, the API's own
+`code` field returned **both lines verbatim**, and the render contained **zero pixels** for either.
+
+⚠️ **This mattered because the port was about to happen.** The Mermaid in
+[docs/04](../docs/04-observability.md) §4a carried **four** `Note over` lines, and **three of them
+were the load-bearing claims** — invariant 1 (ground truth stays shut), invariant 14 (no two
+specialist spans overlap), and *"no arrow here — the verdict is never returned to the scorer."* A
+faithful-looking port would have kept every arrow, dropped every reason, and passed the citation
+guard, the settle rule and the four-edge check, because **nothing we run reads a render for
+meaning**. Each note is now a message label or a block label, marked ⛔ in the source where it lands.
+
+📐 **What is supported, all probed on a live render before use:** participant attributes (`icon`,
+`color`), `>`, `-->`, self-messages, `loop`, `alt`/`else`. `opt` renders and is not used.
+
+⚠️ **`title` is a third directive that does not reach the PNG.** `sequence.eraser` opens with
+`title touchstone — one attempt, and every boundary it crosses`, and the export's first content row
+is the participant boxes — top padding 27px, no caption. The line is kept because it names the
+diagram in the hosted workspace and reads as a header in the source, but ⛔ **nothing a PNG reader
+sees says what the picture is.** If the drawing ever needs to be self-describing when detached from
+this repo, that has to be a participant or a block label, like everything else here.
+
+### 5. 🔴 An opening `[` in a message label deletes the whole message
+
+**The sharpest finding in this directory, and the only one no existing check could have caught.**
+Measured on a five-message probe: a label containing `setting_sources=[]` rendered **nothing**, a
+label containing a lone `[` rendered **nothing**, a label containing a lone `]` rendered **fine**,
+and the plain labels either side rendered fine. The parser reads `[` as the start of an attribute
+block and swallows the line.
+
+⛔ **It bit `sequence.eraser` on its first render, on the single most important message in it:**
+`Models > Claude` — the process boundary, which is the whole reason a sequence diagram was drawn
+rather than a second flowchart. And:
+
+- the DSL **round-tripped verbatim** in the API response,
+- **two exports returned an identical content hash** — the render had settled,
+- **all four edges were clear** — the render was complete,
+- the citation guard **passed**.
+
+**A whole message vanished and every check in this repo passed it.** It was found by counting arrows
+in the picture.
+
+🎯 **So `scripts/check-diagram.py` milestone 8 is a static grep of the source**, and it has to be:
+every other milestone reads the render or reads a document, and the render is a picture of the wrong
+thing that looks entirely correct. The check is deliberately **asymmetric** — `]` is measured
+harmless, and making it symmetric "to be safe" would flag correct labels and teach people to ignore
+it.
+
+⚠️ **Same family as DEF-015**, where a `]` in a flowchart label truncated this guard's own regex —
+but that was a *reader* and this is the *renderer*, and **truncation leaves evidence while deletion
+does not**.
+
+### …and the one that is not a tool finding: the port dropped a participant
+
+Neither of the two above caught the real defect in `sequence.eraser`. **The first version had no
+`tools/` lifeline at all** (DEF-021) — the Mermaid it replaced had one, `touchstone.tool.*` is one
+of the four span families in [docs/04](../docs/04-observability.md) §2, and two scored metrics are
+computed from spans the picture did not draw. Every milestone passed, because milestones 1–5 check
+that what **is** written resolves and milestone 8 catches what the renderer **ate**. *Nothing checks
+for a participant nobody typed.*
+
+🎯 **The rule it produced: a replacement is audited against the thing it replaces, not against the
+spec.** The spec agreed with both versions — it always will, which is exactly why it cannot referee.
 
 ---
 

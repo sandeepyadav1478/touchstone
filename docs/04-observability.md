@@ -188,9 +188,9 @@ scoring — and two copies of the truth is how the version table starts lying.
 **The sequence docs/07 §7 calls the important one**, because it is where the design either does or
 does not survive: the scorer and the agent never speak.
 
-✅ **Everything in this picture is phase 1 except `CMP` (`compare.py`, `P2.4`)**, which needs a
-second version before it means anything. **`PHX` was `[phase 2]` until 2026-08-15** and
-D-037 moved `telemetry.py` to `P1.5` — so phase 1 now ends with the
+✅ **Everything in this picture is phase 1 except `Cmp` (`compare.py`, `P2.4`)**, which needs a
+second version before it means anything. **The telemetry lifeline was `[phase 2]` until 2026-08-15**
+and D-037 moved `telemetry.py` to `P1.5` — so phase 1 now ends with the
 emitter, the scorer, and a `results/v1.json` built from spans the agent actually produced.
 
 ⛔ **The phase-2 half is the *backend*, not the emission.** `P1.5` ships the console and file
@@ -201,43 +201,36 @@ which is the whole of D-014.
 the scorer at spans, which only makes sense if phase 1 had read return values, the option D-007
 rejected by name. `P2.2` is struck. **DEF-004, closed.***
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant CLI as touchstone run
-    participant GEN as generate.py
-    participant G as graph (v_n)
-    participant T as tools
-    participant PHX as Phoenix
-    participant SC as score.py
-    participant CMP as compare.py
+📐 **The picture is [`diagrams/sequence.eraser`](../diagrams/sequence.eraser), rendered to
+[`diagrams/sequence.png`](../diagrams/sequence.png).** A Mermaid `sequenceDiagram` stood here until
+2026-08-17 and was **replaced, not supplemented** — two sequence diagrams of one run is exactly the
+drift D-036 exists to stop, and a `.eraser` source is the one that gets rendered, guarded by
+`scripts/check-diagram.py`, and kept in sync with the hosted workspace. **Every line of the argument
+above and below this paragraph is the original's; only the drawing moved.**
 
-    CLI->>GEN: seed from manifest
-    GEN-->>CLI: Incident (agent-visible)
-    Note over GEN,CLI: GroundTruth stays in truth.json — invariant 1
+**Three things the replacement says that the Mermaid could not:**
 
-    CLI->>G: triage(incident)
-    activate G
-    G->>PHX: touchstone.run {version, case_id, attempt, tier, benchmark_hash}
-    loop until done or max_hops
-        G->>PHX: touchstone.node.supervisor {hop, next}
-        G->>T: one specialist, one hop
-        T->>PHX: touchstone.tool.* {name, result_size, truncated}
-        Note over G,T: no two specialist spans overlap — invariant 14
-    end
-    G->>PHX: touchstone.verdict {root_cause_id, affected_service, blast_radius, escalate}
-    deactivate G
-    Note over G,PHX: the run ends here — nothing waits, no gate span (D-040)
+- **`agent/models.py` → the `claude` subprocess → the network** is drawn as two separate boundaries.
+  The Mermaid had a `tools` participant and no model layer at all, so the *one* crossing that makes
+  this a sequence diagram rather than a flowchart was missing from it.
+- **The checkpoint lands after every node**, on its own lifeline to `.touchstone/checkpoints.db` —
+  and the label says that nothing reads it back yet, which is a fact about *today* that a spec
+  diagram usually hides.
+- **The telemetry wiring is three numbered self-messages on `telemetry.py`.** §3 above is the
+  authority for the order; the drawing now asserts it in the same shape the code will have.
 
-    Note over G,SC: ⛔ no arrow here — the verdict is never returned to the scorer
+⚠️ **And one thing it deliberately narrows.** The Mermaid drew the scorer calling
+`get_spans_dataframe()` against Phoenix; the replacement draws it reading **committed JSONL**. Both
+are real — the code block at the top of this section is the local path, D-014 is the CI path — but
+**only the file path is load-bearing**, because it is the one that has to work with no credential.
+Drawing the Phoenix read as *the* way the scorer gets spans is what makes D-014 look optional.
 
-    SC->>PHX: get_spans_dataframe(project="touchstone")
-    PHX-->>SC: spans
-    SC->>SC: read truth.json · compute correct
-    SC-->>CMP: results/v_n.json
-    CMP->>CMP: 5 conditions vs the incumbent
-    CMP-->>CLI: promoted / rejected + the case that blocked it
-```
+⛔ **`note over` is not available.** Eraser accepts it, round-trips it verbatim in the API response,
+and renders nothing at all — measured 2026-08-17. The Mermaid's four `Note over` lines therefore
+became message labels and block labels, which is why the replacement's labels are longer than a
+sequence diagram's usually are. **Three of those four notes carried the load-bearing claims**
+(invariant 1, invariant 14, and the missing arrow below), so a port that kept the arrows and let the
+notes fall would have looked complete and asserted nothing.
 
 ⛔ **The missing arrow is the design.** The scorer reads spans, never a return value — which is
 what lets CI score a committed JSONL with no model call (D-014), and what stops `score.py` from
@@ -245,8 +238,9 @@ inheriting the agent's shape. **If a return value ever reaches the scorer, both 
 gone and nothing fails visibly.**
 
 ⚠️ **`truth.json` is loaded by the scorer and by nothing else in this picture.** It has no edge to
-the graph, the tools or Phoenix — the same reason there is no arrow from a container to `suite/`
-in [docs/06](06-api.md) §3.
+the graph, to `tools/` or to the exporter — the same reason there is no arrow from a container to
+`suite/` in [docs/06](06-api.md) §3. In the replacement it is a **self-message on `Score`**, which
+is the strongest form the claim can take in a sequence diagram: a self-message has no other end.
 
 ---
 
