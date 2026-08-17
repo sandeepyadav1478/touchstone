@@ -33,12 +33,16 @@ title touchstone — the loop that has to get better
 //
 //      🔴 ONE COLOUR IS STILL WRONG AND IT IS AN OPEN QUESTION, NOT A FIX:
 //        green's key says "phase 0 — shipped" and green is on `Scored` and
-//        `Promoted` — the two GOOD OUTCOMES, neither of them phase 0. The only
-//        node naming a P0 artifact is `CliPy` ("cli.py — P0 shipped `doctor`")
-//        and it is BLUE, because it is mostly P1.9. So either CliPy goes green
-//        and green is the phase, or the outcomes keep it and the key stops
-//        claiming a phase. ⛔ That is a schedule decision, not a drawing one,
-//        so it is NOT being made here — see the open-questions section.
+//        `Promoted` — the two GOOD OUTCOMES, neither of them phase 0.
+//        ⚠ UPDATED 2026-08-17. This read "the ONLY node naming a P0 artifact is
+//          `CliPy`, and it is BLUE" — true when written, and false the moment
+//          `DoctorPy` was drawn. doctor.py is phase 0, it has shipped, and green
+//          is simply the key applied to it. ⛔ THAT DOES NOT ANSWER THE QUESTION,
+//          it makes it legible: green now sits on one true P0 node AND two
+//          outcomes, so the clash is in the picture instead of in this comment.
+//        So either the outcomes give green up, or the key stops claiming a phase.
+//        ⛔ That is a schedule decision, not a drawing one, so it is NOT being
+//        made here — see the open-questions section.
 //
 //      TWO documented non-phase uses, both stated where they are used:
 //        · section 11, where colour is case STATUS. It says so there.
@@ -331,11 +335,20 @@ Agent > ModelsPy: every node call
 ModelsPy > CLIProc > ApiEndpoint
 
 // ── 6 · HOW AN ATTEMPT ENDS ───────────────────────────────────────────────────
-// Exactly one status per attempt. budget_exceeded is ORTHOGONAL — it lands
-// beside any of these, never instead of one.
 // The split that earns its keep is ours-versus-theirs: parse_failure is the
 // agent's OWN output and scores as wrong; void is OUR infrastructure and counts
 // toward nothing. Merge them and a bad week of 429s reads as a worse agent.
+//
+// ⛔ `budget_exceeded` LIVED IN THIS COMMENT AND NOWHERE ELSE UNTIL 2026-08-17,
+//    which is the P1.4 failure recorded 120 lines below — "it lived in a comment,
+//    and a comment renders no pixels" — recurring in the section that comes FIRST.
+//    The line said it is orthogonal, lands beside any status, never instead of one.
+//    Every word of that was true and the picture asserted none of it: a reader saw
+//    four statuses and no flag. ⚠ A rule written down once does not fire on the next
+//    instance by itself; the only reason this one was caught is that a reader asked
+//    whether every node was present, and the answer came off the DSL rather than off
+//    the prose. There is still no guard for "a concept with no node" and there cannot
+//    be one, because the set of concepts is the judgement the diagram is FOR.
 
 Ends [color: red, icon: flag, label: "6 · exactly ONE status per attempt — docs/09 §6"] {
   Scored [color: green, icon: check-circle, label: "scored — counts toward everything"]
@@ -345,6 +358,16 @@ Ends [color: red, icon: flag, label: "6 · exactly ONE status per attempt — do
 }
 
 Agent > Ends: every attempt lands on exactly one
+
+// ⛔ DRAWN OUTSIDE `Ends`, AND THE PLACEMENT IS THE WHOLE CLAIM. Inside that box it
+//    would read as a fifth status, and the box is labelled "exactly ONE". It is a FLAG
+//    on the attempt, not an outcome of it: docs/09 §6 carries it as a boolean beside
+//    the status, docs/05 §5 counts it in the aggregate next to hops_exhausted, and
+//    docs/04 §7 says `max_budget_usd` — a hard ceiling IN THE CLI, below the wrapper —
+//    aborts the attempt and records it. A scored attempt can carry it; so can a void.
+BudgetFlag [shape: document, color: red, icon: dollar-sign, label: "budget_exceeded — a FLAG, never a status\nlands BESIDE any of the four, NEVER instead of one\nmax_budget_usd aborts BELOW budget.py — docs/04 §7"]
+
+Agent > BudgetFlag: set on abort — orthogonal to where the attempt lands
 
 // ── 7 & 8 · THE TRACE, AND WHAT SURVIVES THE PROCESS ──────────────────────────
 // D-037 moved telemetry.py from P2.1 into P1.5. Before that, phase 1 ended with
@@ -374,6 +397,21 @@ TelemetryPy > Spans
 // what lets CI score a committed JSONL with no credential and no model call.
 
 CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.9 adds incidents · triage · run · score"]
+
+// ⛔ THE ONLY FILE IN THIS PICTURE THAT IS ACTUALLY ON DISK, AND IT HAD NO NODE. It
+//    appeared as five words inside CliPy's label and five more inside P0Gate's, so the
+//    ONE thing here that has shipped was the one thing a reader could not point at. Of
+//    the 42 file paths this file draws, three exist; a diagram is a specification of
+//    work not yet done and that is fine, but the built part earns a box.
+// ⚠ GREEN IS THE KEY APPLIED, NOT OPEN QUESTION TWO ANSWERED. The key reads "phase 0 —
+//    shipped" and this is a phase-0 file that shipped, so green is simply correct here.
+//    It does NOT settle why `Scored` and `Promoted` are green — they are outcomes and
+//    still are. What changes is that the clash is now VISIBLE IN THE PICTURE rather than
+//    only in a comment: one true P0 node and two outcomes wearing the same colour. The
+//    schedule call stays unmade — see the open-questions section, whose wording this edit
+//    also corrects, because "the only node naming a P0 artifact is CliPy" stopped being true.
+DoctorPy [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN (docs/09 §9)\none of only TWO files with a fixed order — the other is domain.py\n✅ shipped: `touchstone doctor` runs today"]
+
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
 // ⚠ RESTRUCTURED by D-046. Judge used to live in section 13 with the phase-2 "surfaces"
 // and Diag sat here unnumbered, so the one edge carrying the whole D-045 argument ran the
@@ -422,6 +460,7 @@ Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens a
 }
 
 Dev > CliPy
+CliPy > DoctorPy: `touchstone doctor` — the P0 subcommand, and the only one that runs today
 CliPy > RunPy
 Bench > RunPy: the Incident only — NEVER the truth
 RunPy > Agent: invoke(state, thread_id=run_id)
@@ -500,6 +539,16 @@ Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.
     A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED\n⛔ written by whatever produced it, NEVER by a human step (D-040)"]
   }
   Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
+  // ⛔ THE STORE RULE ABOVE FIRED ON `Regr` AND STOPPED ONE FILE SHORT. docs/07 §2 says
+  //    draw EVERY store and its writer; the audit that added Regr added the manifest and
+  //    left the changelog beside it undrawn, so the section showed where a case is KEPT and
+  //    still not where its REASON is kept. Those are different artifacts: the manifest holds
+  //    `why` as a required field per case (docs/02 §4), this holds one entry per suite
+  //    VERSION — what was added, why, and what the agent could not do at the time.
+  // ⚠ GENERATED, THEN REVIEWED — that is the claim, and it is why it is a store and not a
+  //    label. docs/02 §5: "a hand-maintained changelog is how a reason outlives the fact."
+  //    Generation is what keeps it honest; the review is what makes it worth reading.
+  Log [shape: document, icon: file-text, label: "suite/CHANGELOG.md — one entry per suite VERSION\nGENERATED from the manifests by `touchstone suite log`, then REVIEWED\nwhat was added, why, and what the agent could not do at the time"]
   SOpen [icon: circle, label: "open — does NOT gate"]
   SLocked [color: red, icon: lock, label: "locked — GATES FOREVER, one-way\nset automatically on the first PROMOTED all_k"]
   SQuar [icon: pause-circle, label: "quarantined — human, reason REQUIRED"]
@@ -510,6 +559,7 @@ ScorePy --> MinePy: the failures, mined
 MinePy > A1: suite/proposed/ → the gates, ALL five must hold (docs/02 §5)
 A1 > A2 > A3 > A4 > A5
 A5 > Regr: all five held — admitted_by records the GATE SET, never a name (D-040)
+Regr > Log: generated from the manifests, then reviewed — `touchstone suite log`
 Regr > SOpen: admitted — enters as open
 SOpen > SLocked: a promoted version scores it all_k
 SOpen > SQuar: human
@@ -607,7 +657,7 @@ Spans --> CI
 //    requires the diagram is the most self-referential blind spot available, and
 //    it survived every pass because nobody looks for the frame inside the picture.
 
-DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "⛔ STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + scripts/check-diagram.py — 7 milestones, every citation resolved\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
+DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "⛔ STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + diagrams/sequence.png + scripts/check-diagram.py — EIGHT milestones\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
 
 Gates [icon: check-square, label: "14 · the four phase exit gates — 37 conditions · 17 machine-attested"] {
   P0Gate [color: green, icon: check-circle, label: "phase 0 exit — 5 conditions, 2 ATTESTED\n✅ PASSED: D-001 carries the live `touchstone doctor` output, verbatim\nthe model id came off ResultMessage.model_usage on a real call (D-033)"]
@@ -619,6 +669,47 @@ Gates [icon: check-square, label: "14 · the four phase exit gates — 37 condit
 DiagGate > Gates: blocks the START of every phase — the other four block the end
 P0Gate > P1Gate > P2Gate > P3Gate
 NegControl --> P2Gate: the proof the gate can reject (docs/02 §3)
+DoctorPy --> P0Gate: its verbatim output IS D-001 — 1 of the 2 attested conditions
+
+// ── 15 · THE GUARDS — scripts/, and NO phase builds any of them ──────────────
+// ⛔ THIS SECTION EXISTS BECAUSE THE SAME HOLE WAS ALREADY FOUND ONCE, IN THE OTHER
+//    ARTIFACT, AND NOT SWEPT ACROSS. docs/09 §9 says it in its own words: `scripts/`
+//    was missing from the file map until 2026-08-16, four committed files referenced
+//    by no doc at all, and the cause was structural — "this map places the files the
+//    PHASES name, and nothing that only checks the work is ever named by a phase, so
+//    the map could not see it by construction."
+//    🎯 That sentence is true of THIS FILE word for word. Every other node here was
+//    reached by walking a phase, so the guards were invisible to the same sweep for
+//    the same reason, and the fix that closed it in docs/09 §9 was never applied here.
+//    A correction is not applied until it is swept into every artifact that shared the
+//    mechanism — and "the doc map" and "the picture" shared it exactly.
+// ⚠ ONE ASYMMETRY MADE IT VISIBLE: check-diagram.py was already named on DiagGate, as
+//   evidence. So one of the four guards was drawn and three were not — which reads as a
+//   judgement about those three, and no such judgement was ever made.
+// ⛔ NO Pn.n ON ANY OF THESE NODES, ON PURPOSE. There is no phase row to cite: a
+//    `grep` of ROADMAP.md for all four returns nothing. Writing a plausible phase in
+//    would be inventing a schedule, and this file's first convention is that a phase
+//    colour is a claim. They are grey — "deferred, or cut" is wrong for them too, but
+//    the honest reading is on the group label: built already, scheduled by nothing.
+// ⚠ AND EVERY ONE OF THE FOUR IS WIRED, WHICH IS NOT TIDINESS. An unwired leaf is this
+//   file's notation for an open question — that is the whole mechanism holding `ApiPy`
+//   (section 13, and the open-questions section says so). `p0-deps.sh` landed here
+//   edgeless on the first pass and would have read as a fifth thing nobody had decided
+//   on. It is decided, and it is built. The edge into P0Probe is the real ordering:
+//   install, then measure. ⛔ Adding nodes to a notation means checking what the
+//   notation says about the shape you added, not only about the words in the label.
+
+Guards [color: grey, icon: shield, label: "15 · scripts/ — the tooling that checks or sets up the WORK\nfour files, ~26 KB, COMMITTED and NAMED BY NO PHASE (docs/09 §9)"] {
+  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, EIGHT milestones\nthe only check that reads the RENDER, not the source (7)\n8 greps the DSL for what the renderer silently EATS"]
+  CheckLinks [icon: link, label: "check-links.py — every markdown link resolves\n⚠ against GIT, never the working tree — an empty dir passes on disk and 404s in public"]
+  P0Probe [icon: search, label: "p0-probe.py — the two phase 0 measurements\ndocs/00 §8 requires them BEFORE code"]
+  P0Deps [icon: download, label: "p0-deps.sh — the phase 0 install, ONE command"]
+}
+
+CheckDiag > DiagGate: the evidence D-021 asks for
+P0Probe > P0Gate: 2 measurements, taken before the first line
+CheckLinks --> Gates: runs against every gate's citations — blocks none of them
+P0Deps > P0Probe: install first — there is nothing to measure until it is installed
 
 // ── THE OPEN QUESTIONS — TWO. ONE IS DRAWN, ONE CANNOT BE ────────────────────
 // docs/07 §6: a diagram with no open questions is usually a diagram nobody
@@ -646,10 +737,14 @@ NegControl --> P2Gate: the proof the gate can reject (docs/02 §3)
 // 🔴 QUESTION TWO — AND IT BROKE THE RULE ONE LINE ABOVE ON THE SAME PASS THAT
 //    WROTE IT. Convention 1 was checked against the DSL and found false; the
 //    correction surfaced a live question with it: `green` is keyed "phase 0 —
-//    shipped" and sits on `Scored` and `Promoted`, the two good OUTCOMES, while
-//    the only node naming a P0 artifact (`CliPy`) is blue. Either CliPy goes
-//    green, or the key stops claiming a phase. It is a schedule call, so it is
-//    not made here.
+//    shipped" and sits on `Scored` and `Promoted`, the two good OUTCOMES.
+//    ⚠ SWEPT 2026-08-17. This said "the only node naming a P0 artifact (`CliPy`)
+//      is blue"; `DoctorPy` now exists, is phase 0, has shipped, and is green by
+//      the key. The question is unchanged and SHARPER — green is on one real P0
+//      node and two outcomes at once — so what was a colour with no true instance
+//      is now a colour with a true instance and two false ones. Either the
+//      outcomes give it up, or the key stops claiming a phase. Still a schedule
+//      call, so still not made here.
 //    ⛔ IT CANNOT BE PAINTED PURPLE, and that is the finding, not a snag. It is
 //    a question about the KEY — about what a colour means — so there is no node
 //    to colour, and painting one would state the question in the very notation

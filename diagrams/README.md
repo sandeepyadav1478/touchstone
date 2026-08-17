@@ -32,11 +32,12 @@ same mistake at a smaller scale.
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 7953 × 16738 — **133.1 MP** | 5069 × 6252 — **31.7 MP** |
-| On disk | 5.49 MB | 1.88 MB |
-| Padding, all four sides | 27 / 27 / 28 / 23 | 27 / 23 / 27 / 40 |
-| Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
-| Export settings | ⛔ `background: true, theme: light, imageQuality: 2` — **all three are load-bearing**, see below | same, and **`background` bit** — see below |
+| Frame | 6432 × 9528 — **61.3 MP** | 5069 × 6252 — **31.7 MP** |
+| On disk | 2.69 MB | 1.88 MB |
+| Padding, all four sides | 46 / 61 / 61 / 59 | 27 / 23 / 27 / 40 |
+| Content fills | **98.3%** of the frame | **98.7%** |
+| Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
+| Export settings | ⛔ `background: true, theme: light, imageQuality: 1` — 🔴 **quality 2 no longer renders this diagram at all**, finding 7 | ⛔ `background: true, theme: light, imageQuality: 2` — **all three load-bearing**, see below |
 | Hosted | ⛔ **one diagram per Eraser file** — they shared a file until 2026-08-17 and **rendered on top of each other** (DEF-022, finding 6). `no-link-access`. The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
 
 ⛔ **`background: true` is not cosmetic, and omitting it produces a failure that reads as a
@@ -60,6 +61,15 @@ the only reason they are comparable at all.
 | D-045 → D-046 | one node moved between groups, one duplicate edge deleted | ~~6313 × 14683 → 7300 × 10742~~ | ~~+987~~ | ~~−3941~~ |
 | the audit fixes | **+2 nodes** (`Inv`, `Regr`), **+3 edges**, one legend row, one node recoloured | 7343 × 10742 → **7887 × 12420** | **+544** | **+1678** |
 | the gate audit | **+13 declarations, +2 groups, +6 edge lines** — §14's `DiagGate` and four exit gates, `Insuf`, the five admission gates broken out of a label | 7887 × 12420 → **7953 × 16738** | **+66** | **+4318** |
+| the completeness audit | **+8 nodes, +8 edges** — `BudgetFlag`, `DoctorPy`, `Log`, and §15's `Guards` with its four scripts (DEF-023, DEF-025) | 7953 × 16738 → **12864 × 19056** | **+4911** | **+2318** |
+
+⚠️ **Row eight's frame is DERIVED, and it is the first one in this table that is.** The render
+that shipped is `imageQuality: 1` — quality 2 does not render this diagram any more (finding 7) —
+and finding 3 says a quality mismatch invalidates every dimension comparison. So the figure above is
+the settled 6432 × 9528 quality-1 render **doubled**, which finding 3's linear-multiplier property
+licenses and which was re-measured this pass at **exactly 2.0000 on both axes**. ⛔ It is *not* the
+blank quality-2 export's reported frame, even though that number is identical — a failed render's
+self-report is not a measurement of anything.
 
 ✅ **Row seven is the second pair, and having two of them is worth more than the second one is.**
 Both were taken the same way, so for the first time this table can compare a comparison. **It kills
@@ -413,6 +423,42 @@ which is the thing a human is sent to open. *The artifact that was verified and 
 was handed over were not the same rendering* — and the gap is invisible from the side that was
 checked. ⛔ The same asymmetry as findings 4 and 5: the check and the failure live in different
 representations.
+
+### 7. 🔴 Past a size, `imageQuality: 2` stops rendering — and it fails by returning a **blank page**, not an error
+
+Measured 2026-08-17, on the flowchart immediately after §15 was added. Four export calls, same
+diagram, same parameters:
+
+| call | `imageQuality` | result |
+|---|---|---|
+| 1 | 2 | `{"note":"Error rendering diagram"}` |
+| 2 | 2 | `{"note":"Error rendering diagram"}` |
+| 3 | 2 | ✅ a PNG — **12864 × 19056, and 0.013% ink** |
+| 4 | 2 | `{"note":"Error rendering diagram"}` |
+| 5, 6 | 1 | ✅ **6432 × 9528, 4.811% ink, identical hashes** |
+
+⛔ **Call 3 is the dangerous one.** The frame is exactly right — 2.0000× the quality-1 render on both
+axes — and the only content is the legend, in a 447 × 666 box in one corner. It **settled** under
+finding 2 (calls made before and after returned the same content hash), it **passed** the four-edge
+clip test of finding 2a, and it passed every DSL milestone, because the DSL was never wrong. It was
+copied over `loop.png` and was one commit away from being the artifact offered for D-021 approval.
+
+**Two consequences, and the second is the durable one.**
+
+1. **`loop.png` ships at `imageQuality: 1`.** For this diagram the setting the table above called
+   load-bearing is now the setting that breaks it. `sequence.png` is far smaller and stays at 2.
+2. **`check-diagram.py` milestone 7 gained a content-extent check.** Eraser crops to its content, so
+   a complete render's bounding box fills the frame bar the padding — **98.3%** and **98.7%** for the
+   two committed PNGs, **3.5%** for the blank. ⛔ **Ink fraction would be the wrong test** — density
+   varies between diagrams, and a sparse diagram is not a broken one. Extent is what a failed render
+   loses. Confirmed by feeding the blank back in and watching it fail.
+
+🎯 **The lesson, and it generalises past Eraser: every check in this directory was measuring
+reproducibility, and reproducibility is not correctness.** The settle rule compares a render to
+itself. The clip test compares a render to its own edges. The transcription diff compares source to
+source — all 779 lines matched, because the source was fine. **Nothing asked whether the picture had
+a picture in it.** ⛔ Same shape as finding 6 and DEF-021, one layer further out, and the same
+answer: **open the render and look at it.**
 
 ### …and the one that is not a tool finding: the port dropped a participant
 
