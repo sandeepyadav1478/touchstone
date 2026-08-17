@@ -399,7 +399,7 @@ Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens a
   // describes a demo, all_k describes something you would put on call." A diagram that
   // shows only the headline number has quietly dropped the sentence that makes it mean
   // anything, and P3.1 requires both reported ESPECIALLY when they differ.
-  // ⛔ AND THAT FIX WAS STILL HALF OF IT. docs/05 has FOUR scored axes — §1 correctness,
+  // ⛔ AND THAT FIX WAS STILL HALF OF IT (DEF-017). docs/05 has FOUR scored axes — §1 correctness,
   //    §2 all_k, §3 escalation F1, §4 cost per correct — and `F1` appeared ZERO times in
   //    this file, comments included. Two of the four reached the canvas and one more
   //    (cost per correct) only ever appeared downstream on C4, where it reads as a budget
@@ -571,7 +571,7 @@ Spans --> Phoenix
 McpPy --> Tools: the SAME five, re-exposed — NOT a second implementation (D-019)
 Spans --> CI
 
-// ── 14 · THE GATES THE PROJECT PASSES, NOT THE ONES THE AGENT PASSES ─────────
+// ── 14 · THE GATES THE PROJECT PASSES, NOT THE ONES THE AGENT PASSES (D-048) ─
 // ⛔ EVERY GATE ABOVE IS ONE THE AGENT GOES THROUGH. These are the gates THE WORK
 //    goes through, and this file had none of them: `exit gate` appeared ZERO times
 //    in it, comments included, while ROADMAP.md carries four of them and 37
