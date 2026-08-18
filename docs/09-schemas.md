@@ -450,7 +450,7 @@ diagrams/              the D-021 artifacts, committed before their implementatio
 tests/unit/            13 invariants numbered to 14 (5 retired, D-040), zero model calls, under 2s
 tests/evals/           judged dimension only — never gates
 scripts/               🆕 tooling that checks the OTHER files — not imported by anything
-  check-diagram.py     the D-021 guard: 8 milestones over diagrams/*.eraser — 7 reads the
+  check-diagram.py     the D-021 guard: 9 milestones over diagrams/*.eraser — 7 reads the
                        RENDER, 8 greps the DSL for a `[` — which Eraser eats the message for
   check-links.py       every markdown link resolves — against git, not the working tree
   p0-deps.sh           the phase 0 install, one command

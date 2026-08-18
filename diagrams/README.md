@@ -28,28 +28,31 @@ one drawing moved and got a render, not because a third view was added** — D-0
 for having six encodings of one system, and adding sequence-as-a-second-source would have been the
 same mistake at a smaller scale.
 
-### 🔴 `loop.png` IS STALE AS OF 2026-08-18 — D-052 and D-053 changed rendered text
+### ✅ Both renders were refreshed 2026-08-18 — and looking at them is what earned it
 
-Three labels moved: the green legend row, `ApiPy` (purple → grey, and the cut), and `Phoenix`
-(it now carries `docker-compose.yml`). ⛔ **That is rendered content, not comments**, so the
-strip-`//`-and-compare test in finding 1 does not excuse a re-export — it *requires* one. The
-committed PNG shows `api.py` as an open question, and it is a decided cut.
+Both PNGs carried rendered text that D-052, D-053 and **DEF-027** had changed, so both went the
+full way round: delete the hosted diagram → `manually_create_diagram` from the committed file →
+**diff the round-trip** → export → measure ink and extent → **open it and look**.
 
-**The refresh is the full workflow, not an update:** delete the hosted diagram → `manually_create_diagram`
-from this file → export twice at `imageQuality: 1` → check the hash settles → check the content
-extent (finding 7) → **open it and look**. Until that runs, the table below describes the previous
-drawing.
+⛔ **The looking is not ceremony — it is the step that found DEF-027, after every instrument had
+passed the picture.** Nine labels opened with a `⛔` or a `🔴`; the flowchart font has no colour
+emoji, so each one rendered as an identical featureless black bar. The DSL round-tripped byte for
+byte, the hash settled, the extent read 98.4% — and the drawing carried nine marks that meant
+nothing to a reader. Finding 8. The same glyph in the **sequence** diagram rendered as *zero
+pixels*, which is why finding 8 is two failures and not one.
 
-### The settled renders, measured 2026-08-17
+### The settled renders, measured 2026-08-18
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 6432 × 9528 — **61.3 MP** | 5069 × 6252 — **31.7 MP** |
-| On disk | 2.69 MB | 1.88 MB |
-| Padding, all four sides | 46 / 61 / 61 / 59 | 27 / 23 / 27 / 40 |
+| Frame | 6439 × 9505 — **61.2 MP** | 5069 × 6252 — **31.7 MP** |
+| On disk | 2.70 MB | 1.88 MB |
+| Padding, L / T / R / B | 46 / 61 / 61 / 59 | 27 / 27 / 40 / 23 |
 | Content fills | **98.3%** of the frame | **98.7%** |
+| Ink — dark pixels as a share of the frame | 2.95% | 13.76% |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
-| Export settings | ⛔ `background: true, theme: light, imageQuality: 1` — 🔴 **quality 2 no longer renders this diagram at all**, finding 7 | ⛔ `background: true, theme: light, imageQuality: 2` — **all three load-bearing**, see below |
+| Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.21%-ink blank**, finding 9 |
+| ⚠️ The quality that works | **1**, and 2 is an error | **2**, and 1 is a silent blank |
 | Hosted | ⛔ **one diagram per Eraser file** — they shared a file until 2026-08-17 and **rendered on top of each other** (DEF-022, finding 6). `no-link-access`. The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
 
 ⛔ **`background: true` is not cosmetic, and omitting it produces a failure that reads as a
@@ -220,7 +223,7 @@ taken any other way is not comparable to this one.
 
 ---
 
-## Six findings about the tool, and every one of them is the same failure
+## Nine findings about the tool, and every one of them is the same failure
 
 **None is about touchstone. They are here because the tool accepts something, echoes it back
 unchanged, and renders something else** — and every check that reads the *source* or the
@@ -483,6 +486,57 @@ for a participant nobody typed.*
 
 🎯 **The rule it produced: a replacement is audited against the thing it replaces, not against the
 spec.** The spec agreed with both versions — it always will, which is exactly why it cannot referee.
+
+### 8. 🔴 A `⛔` or `🔴` at the start of a label is not text — and what it becomes depends on the diagram type
+
+Measured 2026-08-18, by opening the PNG. Nine labels across the two files opened with `⛔` or
+`🔴`, because that is how this repo's prose marks a hard rule. In the DSL they are ordinary
+characters: they round-trip byte for byte, they pass milestone 1–6, they raise the extent, and
+they are **invisible to every check that reads the source**.
+
+| where | what the reader sees |
+|---|---|
+| `touchstone.eraser` — flowchart | one **featureless black bar**, identical for every glyph. Eraser's flowchart font has no colour emoji, so it draws the fallback box. Nine labels, nine bars, no information |
+| `sequence.eraser` — sequence | **zero pixels.** The glyph is dropped silently — the same family as `note over` in finding 4. `Score`'s label opened with `⛔`; cropping the old render at the `Score` header shows no bar and no gap |
+
+⛔ **The two failures look nothing alike and have the same cause**, which is why neither one
+generalises from the other. A bar is at least *visible* wrongness; a silent drop leaves a label
+that reads as if it were never marked.
+
+**What does render, verified by cropping:** `⚠`, `✅`, `→`, `≥`, `·`, `—`, `–`. The ASCII-adjacent
+punctuation and the two glyphs Eraser has real artwork for are safe; the rest are not. **The fix
+was to delete the glyph and open with the words** — `P2Gate` now reads *"THE WEAKEST GATE, AND IT
+IS THE ONE THAT SHIPS v0.1.0"*, which was the whole meaning of the bar anyway.
+
+🎯 **Milestone 9 is this finding**: it greps the DSL for `⛔` and `🔴` inside a rendered label and
+fails the build. It cannot be a render check — a black bar and a legitimate filled shape are the
+same pixels, and an automated solid-block scan run over the *old* renders found **zero** blobs at
+the two sites where the bars provably were. The detector that cannot see a known-positive is not
+evidence, so the check lives in the source.
+
+⚠️ **Comments are exempt.** `//` lines never reach the canvas, so the glyphs stay in them — which
+is where the rules about the glyphs are written.
+
+### 9. 🔴 The working `imageQuality` is **per diagram**, and it inverts between these two
+
+Finding 7 says quality 2 stops rendering past a size. That was measured on the flowchart and
+generalised — wrongly. Measured 2026-08-18 on both diagrams, **freshly created**, same parameters
+otherwise:
+
+| | `imageQuality: 1` | `imageQuality: 2` |
+|---|---|---|
+| flowchart | ✅ 6439 × 9505, ink 2.95%, extent 97.1% | 🔴 `{"note":"Error rendering diagram"}` |
+| sequence | 🔴 2534 × 3126, **ink 0.21%**, **extent 1.2%** — a near-blank frame with margins 122 / 9 / 2137 / 2775 | ✅ 5069 × 6252, ink 13.76%, extent 97.9% |
+
+⛔ **Both blanks settle.** Two consecutive exports of the sequence at quality 1 returned the
+*identical* content-addressed URL — a failed render is perfectly reproducible, so finding 2's
+settle rule confirms it and finding 7's extent check is the only thing that rejects it. The
+flowchart at least errors out loud; the sequence hands back a real PNG of nothing.
+
+**The rule: export at both qualities, measure ink and extent, keep the one that passes. Never
+carry a quality forward from another diagram, or from this diagram last week.** The flowchart's
+quality-2 error reproduced on a diagram ID created minutes earlier, so it is a property of the
+content, not of a long edit history — and that means it can change when the content does.
 
 ---
 

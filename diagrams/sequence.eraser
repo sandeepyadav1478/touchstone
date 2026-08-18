@@ -54,6 +54,22 @@ title touchstone — one attempt, and every boundary it crosses
 //       guard's own regex — but that was a reader and this is the RENDERER, and
 //       truncation leaves evidence while deletion does not.
 //
+//  🔴 ⛔ A THIRD SILENT DROP, AND THE SAME GLYPH BEHAVES DIFFERENTLY IN THE OTHER
+//     FILE: A ⛔ OR 🔴 IN A RENDERED LABEL. Measured 2026-08-18, DEF-027. In
+//     diagrams/touchstone.eraser those two characters render as ONE identical
+//     featureless black bar — visible, wrong, and readable as a deliberate shape.
+//     HERE THEY RENDER AS ZERO PIXELS. `Score`'s participant label opened with `⛔`
+//     and the mark simply was not in the picture; cropping the previous render at
+//     the `Score` header shows no bar and no gap. It now opens with the words.
+//     ⚠ ONE DEFECT, TWO FAILURE MODES, AND NEITHER GENERALISES FROM THE OTHER.
+//       Having found the bars in the flowchart, the obvious next step was to look
+//       HERE for bars. There are none, and the label was still broken. What the
+//       renderer does with a character it cannot draw is a property of the DIAGRAM
+//       TYPE, so a glyph verified in one file is unverified in the other.
+//     🎯 Milestone 9 covers both files for exactly that reason, and it is a static
+//        grep for the same reason milestone 8 is: a dropped glyph leaves a label
+//        that reads as if it were never marked, and no render check can see it.
+//
 //  📐 WHAT THIS SHOWS THAT diagrams/touchstone.eraser CANNOT. The flowchart draws
 //     what exists and what may reach what. It cannot draw ORDER, and three of this
 //     project's sharpest claims are ordering claims:
@@ -106,7 +122,7 @@ Claude [icon: cloud, color: grey, label: "`claude` CLI subprocess → the Anthro
 Tel [icon: activity, color: blue, label: "telemetry.py — P1.5, moved here by D-037"]
 Ckpt [icon: database, color: grey, label: ".touchstone/checkpoints.db\n⚠ written every node, read back by NOTHING yet"]
 Spans [icon: file-text, color: red, label: "results/spans/(version).jsonl\nthe ONLY thing that crosses from the run to the score"]
-Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)\n⛔ it has no message to or from the graph, on purpose"]
+Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)\nit has no message to or from the graph, on purpose"]
 Cmp [icon: filter, color: orange, label: "loop/compare.py — P2.4, the gate"]
 
 // ── the wiring, and ORDER IS THE ENTIRE CONTENT (docs/04 §3) ──────────────────

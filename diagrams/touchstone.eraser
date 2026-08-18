@@ -113,6 +113,29 @@ title touchstone — the loop that has to get better
 //        landing on its own documents — which is why the wrong version is
 //        recorded here rather than quietly replaced.
 //
+//  ⛔ AND NO ⛔ OR 🔴 INSIDE A LABEL — MEASURED 2026-08-18, DEF-027. Eraser's render
+//     font carries no colour emoji, so both of those fall back to ONE identical
+//     featureless bar: `🔴 THE WEAKEST GATE` came out `▮ THE WEAKEST GATE` on P2Gate and
+//     `⛔ CUT by D-052` came out `▮ CUT by D-052` on ApiPy. Two marks meaning different
+//     things — a never, and a warning about this project — collapse into one mark
+//     meaning nothing, and the reader cannot even tell which was intended.
+//     ⚠ IN THIS FILE IT IS NOT THE SILENT-DROP FAMILY, AND THAT IS WHY IT SURVIVED. A swallowed
+//       message leaves a hole a grep can find (milestone 8). This leaves the sentence
+//       intact and mangles one character inside it, so the DSL round-trips, the hash
+//       settles, the extent check reads 98.4% — every instrument passes a picture with
+//       nine bars in it. It was caught by LOOKING, same as DEF-020 and DEF-026.
+//     ⛔ THE BLOCKLIST IS TWO CHARACTERS AND MUST STAY TWO. Measured on the same render:
+//       ⚠ renders as a real warning triangle, ✅ as a check, and → ≥ · — – all render
+//       correctly. Widening this to "no emoji in labels" would strip glyphs that WORK,
+//       on the theory that they are the same kind of thing. They are not — the
+//       measurement is the boundary, not the intuition.
+//     ⛔ AND THE BAR IS A FLOWCHART BEHAVIOUR ONLY. The same two characters in
+//       diagrams/sequence.eraser render as ZERO pixels — a silent drop, the `note
+//       over` family. One defect, two failure modes; a glyph checked in one file
+//       is unchecked in the other, which is why milestone 9 reads BOTH files.
+//     THESE COMMENTS KEEP THEIR GLYPHS. They render no pixels, so nothing here is at
+//     risk; the rule binds the ~102 rendered labels only, and milestone 9 enforces it.
+//
 //  3 · EVERY NODE NAMES SOMETHING REAL — a path in docs/09 §9's file map, a key
 //      in AgentState, or a status in docs/09 §6. If a name here cannot be
 //      pointed at in this repo, it does not belong in this diagram.
@@ -241,7 +264,7 @@ legend [position: top-left] {
 // D-044 belongs on this node and nowhere else. The developer is the ONLY writer of a
 // candidate — there is no auto-tuner, and the reason is attribution (D-013), not principle.
 // Saying it here rather than in a floating note keeps it attached to the thing it constrains.
-Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing\n⛔ NO auto-tuner — a human writes every candidate (D-044)"]
+Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing\nNO auto-tuner — a human writes every candidate (D-044)"]
 
 // ── 1 · THE CORPUS — built BEFORE the agent exists ────────────────────────────
 // That ordering is the falsifiability claim. The answer key is planted before
@@ -268,7 +291,7 @@ Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1
   //    can require — scored by exact match, no judge, same as everything else.
   //    ⚠ It follows that an agent which never says it cannot tell scores WRONG on case 09.
   //    That is the whole mechanism, and it was invisible on the canvas.
-  Insuf [shape: document, color: red, icon: circle, label: "insufficient_evidence — docs/01 §3, the most important class\nthe honest 'I do not know', and it is a CORRECT answer\n⛔ NO hallucination detector anywhere — the CLASS is the check\ncase 09 requires it — named in phase 1's exit gate"]
+  Insuf [shape: document, color: red, icon: circle, label: "insufficient_evidence — docs/01 §3, the most important class\nthe honest 'I do not know', and it is a CORRECT answer\nNO hallucination detector anywhere — the CLASS is the check\ncase 09 requires it — named in phase 1's exit gate"]
 }
 
 DomainPy > GenPy > RendPy > Bench
@@ -468,13 +491,13 @@ Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens a
   // the only honest way to draw "nothing downstream may read this" — and it is why a rubric
   // is not a human in the loop: a human gate HALTS the machine, this cannot even be observed
   // by it. ⛔ If an edge ever leaves this node, D-045 has been broken.
-  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\n⛔ compare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
+  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\ncompare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
 
   // Phase-2 timed, drawn here anyway: it belongs to scoring, and P2.6a says when.
   // ⚠ It is admissible as a SIXTH promotion condition only at agreement ≥ 0.95 sustained
   //   over ≥ 10 versions, non-systematic disagreements, and n ≥ 50 (D-045 amendment).
   //   Until then the edge below is the only one it gets.
-  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\n🔴 had no build row at all until DEF-009"]
+  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\nhad no build row at all until DEF-009"]
 }
 
 Dev > CliPy
@@ -519,7 +542,7 @@ Refused --> Dev: informed by WHICH case broke
 //    file a reader can open; this one pointed at prose.
 // ⚠ Drawn with `-->` on purpose — the legend reads it as "reads it, does not trigger it".
 //    A test that TRIGGERED the gate would be a different and much weaker thing.
-Inv [shape: document, color: blue, icon: check-square, label: "tests/unit/test_invariants.py — P1.4\n13 LIVE invariants of docs/01 §6, numbered to 14\n⛔ 5 is RETIRED, not renumbered (D-040) — the slot stays EMPTY\n1–8 now · 9–10 v5-only · 11–12 need the regression tier · 13–14 need v2"]
+Inv [shape: document, color: blue, icon: check-square, label: "tests/unit/test_invariants.py — P1.4\n13 LIVE invariants of docs/01 §6, numbered to 14\n5 is RETIRED, not renumbered (D-040) — the slot stays EMPTY\n1–8 now · 9–10 v5-only · 11–12 need the regression tier · 13–14 need v2"]
 
 Inv --> Gate: asserts compare.py reads NO field inside diagnostics{} — the code half of D-045
 
@@ -554,7 +577,7 @@ Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.
     A2 [icon: activity, label: "2 · not_flaky"]
     A3 [icon: slash, label: "3 · not_a_void"]
     A4 [icon: git-branch, label: "4 · distinct"]
-    A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED\n⛔ written by whatever produced it, NEVER by a human step (D-040)"]
+    A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED\nwritten by whatever produced it, NEVER by a human step (D-040)"]
   }
   Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
   // ⛔ THE STORE RULE ABOVE FIRED ON `Regr` AND STOPPED ONE FILE SHORT. docs/07 §2 says
@@ -631,7 +654,7 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   //    defines the notation, it is not a census of what is currently used, and the next
   //    open question needs the colour to already mean something. ⛔ Do not read an unused
   //    key row as a spare colour to reassign.
-  ApiPy [color: grey, icon: server, label: "api.py — ⛔ CUT by D-052, and the trigger was D-040\nthe four endpoints existed to show a DURABLE interrupt; no node waits, so\n`POST /triage` returns what `touchstone triage` already returns"]
+  ApiPy [color: grey, icon: server, label: "api.py — CUT by D-052, and the trigger was D-040\nthe four endpoints existed to show a DURABLE interrupt; no node waits, so\n`POST /triage` returns what `touchstone triage` already returns"]
   Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER, in docker-compose.yml\nNEVER a dependency of scoring\nthe compose file SURVIVES the api.py cut — it was never api.py's (D-052)"]
   // ⚠ Judge WAS here and moved into section 9. It was filed under "the surfaces" because it is
   // phase-2 timed, but this group means ROLE and a judge is not a surface — it sits beside
@@ -691,12 +714,12 @@ Spans --> CI
 //    requires the diagram is the most self-referential blind spot available, and
 //    it survived every pass because nobody looks for the frame inside the picture.
 
-DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "⛔ STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + diagrams/sequence.png + scripts/check-diagram.py — EIGHT milestones\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
+DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + diagrams/sequence.png + scripts/check-diagram.py — NINE milestones\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
 
 Gates [icon: check-square, label: "14 · the four phase exit gates — 37 conditions · 17 machine-attested"] {
   P0Gate [color: green, icon: check-circle, label: "phase 0 exit — 5 conditions, 2 ATTESTED\n✅ PASSED: D-001 carries the live `touchstone doctor` output, verbatim\nthe model id came off ResultMessage.model_usage on a real call (D-033)"]
   P1Gate [color: blue, icon: check-square, label: "phase 1 exit — 9 conditions, 7 ATTESTED — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\n`git grep` the scorer for the agent's return type and find NOTHING (D-007)\ncase 09 — insufficient_evidence — is in the suite"]
-  P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — 16 conditions, 6 attested\n🔴 THE WEAKEST GATE, AND IT IS THE ONE THAT SHIPS v0.1.0\n10 of 16 are a person ticking a box"]
+  P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — 16 conditions, 6 attested\nTHE WEAKEST GATE, AND IT IS THE ONE THAT SHIPS v0.1.0\n10 of 16 are a person ticking a box"]
   P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — 7 conditions, 2 attested\nthe REJECTED candidate is the deliverable — a gate seen to block"]
 }
 
@@ -736,7 +759,7 @@ DoctorPy --> P0Gate: its verbatim output IS D-001 — 1 of the 2 attested condit
 //   notation says about the shape you added, not only about the words in the label.
 
 Guards [color: grey, icon: shield, label: "15 · scripts/ — the tooling that checks or sets up the WORK\nfour files, ~26 KB, COMMITTED and NAMED BY NO PHASE (docs/09 §9)"] {
-  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, EIGHT milestones\nthe only check that reads the RENDER, not the source (7)\n8 greps the DSL for what the renderer silently EATS"]
+  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, NINE milestones\nthe only check that reads the RENDER, not the source (7)\n8 and 9 grep the DSL for what the renderer EATS or MANGLES"]
   CheckLinks [icon: link, label: "check-links.py — every markdown link resolves\n⚠ against GIT, never the working tree — an empty dir passes on disk and 404s in public"]
   P0Probe [icon: search, label: "p0-probe.py — the two phase 0 measurements\ndocs/00 §8 requires them BEFORE code"]
   P0Deps [icon: download, label: "p0-deps.sh — the phase 0 install, ONE command"]
