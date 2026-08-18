@@ -1,7 +1,7 @@
 [project]
 name = "touchstone"
 version = "0.1.0"
-description = "Add your description here"
+description = "A production-incident triage agent that has to get better, and can prove it"
 readme = "README.md"
 authors = [
     { name = "Sandeep Yadav", email = "sandeepyadav1478@gmail.com" }
@@ -50,4 +50,59 @@ dev = [
     "pytest~=9.1",
     "pytest-asyncio~=1.4",
     "ruff~=0.16",
+    "mypy~=1.19",
 ]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# D-054 — the standard is enforced typing, not classes-for-their-own-sake.
+# LangGraph's `add_node` takes a callable, so nodes stay functions; what makes
+# them rigorous is that every signature is checked, not that it is wrapped.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "N",        # pep8-naming
+    "UP",       # pyupgrade — this repo is 3.12+, no legacy typing
+    "B",        # bugbear
+    "A",        # shadowed builtins
+    "C4",       # comprehensions
+    "PT",       # pytest style
+    "SIM",      # simplify
+    "ARG",      # unused arguments — catches a node that ignores `state`
+    "PTH",      # pathlib over os.path
+    "RUF",      # ruff's own
+    "ANN",      # every signature annotated
+    "D",        # docstrings
+]
+ignore = [
+    "D105",     # magic-method docstring — __call__ on a tool is self-describing
+    "D107",     # __init__ docstring — the class docstring covers it
+    "ANN401",   # explicit Any, needed for LangGraph's dict[str, Any] node return
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests document themselves by name; the assertion IS the docstring.
+"tests/**" = ["D103", "D100", "ANN201", "ANN001"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+# The agent SDK and the openinference instrumentors ship no stubs. Untyped
+# THIRD-PARTY code is tolerated; untyped code in `src/` is not.
+ignore_missing_imports = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false

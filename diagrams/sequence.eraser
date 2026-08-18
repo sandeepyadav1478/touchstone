@@ -113,13 +113,13 @@ title touchstone — one attempt, and every boundary it crosses
 //        replaces, not against the spec.** The spec agreed with both versions.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-CLI [icon: terminal, color: blue, label: "cli.py — P0 shipped `doctor`, P1.9 adds the rest"]
+CLI [icon: terminal, color: blue, label: "cli.py — P0\nshipped `doctor`\nroadmap row P1.9\nadds the other four"]
 Run [icon: play, color: blue, label: "loop/run.py — the k-attempt driver"]
 Graph [icon: cpu, color: blue, label: "agent/graph.py — StateGraph + SqliteSaver"]
 Tools [icon: tool, color: blue, label: "tools/read.py + tools/runbooks.py — LOCAL reads, no network\nP2 also serves the same five over MCP (tools/mcp_server.py)"]
 Models [icon: code, color: blue, label: "agent/models.py — a FILE, ~60 lines (DEF-002)"]
 Claude [icon: cloud, color: grey, label: "`claude` CLI subprocess → the Anthropic API\nthe process boundary, then the network one"]
-Tel [icon: activity, color: blue, label: "telemetry.py — P1.5, moved here by D-037"]
+Tel [icon: activity, color: blue, label: "telemetry.py\nroadmap row P1.5\nmoved here by D-037"]
 Ckpt [icon: database, color: grey, label: ".touchstone/checkpoints.db\n⚠ written every node, read back by NOTHING yet"]
 Spans [icon: file-text, color: red, label: "results/spans/(version).jsonl\nthe ONLY thing that crosses from the run to the score"]
 Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)\nit has no message to or from the graph, on purpose"]

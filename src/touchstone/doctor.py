@@ -1,5 +1,6 @@
-"""`touchstone doctor` — the first file in the project, and the one that stops the two
-failures that each cost an evening (docs/00 §6).
+"""`touchstone doctor` — the first file in the project.
+
+It stops the two failures that each cost an evening (docs/00 §6).
 
 1. `ANTHROPIC_API_KEY` set     → every run silently bills an API account instead of the
                                  subscription. Nothing else in the project would notice.
@@ -21,7 +22,7 @@ import subprocess
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 
@@ -35,6 +36,8 @@ COLOUR = {"pass": "green", "warn": "yellow", "fail": "bold red"}
 
 @dataclass
 class Check:
+    """One probe's verdict — what was checked, what was found, what to do about it."""
+
     status: Status
     name: str
     detail: str
@@ -44,7 +47,10 @@ class Check:
 def _claude_cli() -> Check:
     path = shutil.which("claude")
     if not path:
-        return Check("fail", "claude CLI", "not on PATH", "the SDK spawns it — nothing runs without it")
+        return Check(
+            "fail", "claude CLI", "not on PATH",
+            "the SDK spawns it — nothing runs without it",
+        )
     try:
         out = subprocess.run(
             [path, "--version"], capture_output=True, text=True, timeout=20, check=True
@@ -57,7 +63,10 @@ def _claude_cli() -> Check:
 def _subscription_auth() -> Check:
     creds = Path.home() / ".claude" / ".credentials.json"
     if not creds.exists():
-        return Check("fail", "subscription auth", "~/.claude/.credentials.json missing", "run `claude` once and log in")
+        return Check(
+            "fail", "subscription auth", "~/.claude/.credentials.json missing",
+            "run `claude` once and log in",
+        )
     mode = oct(creds.stat().st_mode & 0o777)[2:]
     return Check("pass", "subscription auth", f"~/.claude/.credentials.json present (mode {mode})")
 
@@ -78,7 +87,10 @@ def _lockfile() -> Check:
     lock = config.ROOT / "uv.lock"
     pyproject = config.ROOT / "pyproject.toml"
     if not lock.exists():
-        return Check("fail", "uv.lock", "missing", "a version table nobody can reproduce is anecdote")
+        return Check(
+            "fail", "uv.lock", "missing",
+            "a version table nobody can reproduce is anecdote",
+        )
     data = tomllib.loads(pyproject.read_text())
     direct = (
         len(data["project"]["dependencies"])
@@ -91,7 +103,10 @@ def _lockfile() -> Check:
 def _cerebras() -> Check:
     if os.environ.get("CEREBRAS_API_KEY"):
         return Check("pass", "CEREBRAS_API_KEY", "present — path B available")
-    return Check("warn", "CEREBRAS_API_KEY", "absent", "path B unavailable, the judge has no fallback")
+    return Check(
+        "warn", "CEREBRAS_API_KEY", "absent",
+        "path B unavailable, the judge has no fallback",
+    )
 
 
 def _http(url: str, name: str, hint: str) -> Check:
@@ -102,7 +117,7 @@ def _http(url: str, name: str, hint: str) -> Check:
     return Check("pass", name, url)
 
 
-def model_check(usage_by_model: dict, total_cost_usd: float) -> Check:
+def model_check(usage_by_model: dict[str, Any], total_cost_usd: float) -> Check:
     """Which model actually answered — matched by name, never by position.
 
     ⛔ The id is a KEY of `model_usage`; there is no `canonicalModel` field in the Python SDK
@@ -152,7 +167,12 @@ async def _probe() -> list[Check]:
         usage = await client.get_context_usage()
 
     if result is None or result.is_error:
-        return [Check("fail", "model", "no result from a live probe", str(result and result.errors))]
+        return [
+            Check(
+                "fail", "model", "no result from a live probe",
+                str(result and result.errors),
+            )
+        ]
 
     checks = [model_check(result.model_usage or {}, result.total_cost_usd or 0.0)]
 
@@ -166,7 +186,8 @@ async def _probe() -> list[Check]:
             Check(
                 "fail",
                 "setting_sources",
-                f"{len(memory)} memory file(s), {len(agents)} agent(s), {len(mcp)} MCP tool(s) loaded",
+                f"{len(memory)} memory file(s), {len(agents)} agent(s), "
+                f"{len(mcp)} MCP tool(s) loaded",
                 f"the agent under test is reading this machine: {names}. Must be []",
             )
         )
@@ -175,7 +196,8 @@ async def _probe() -> list[Check]:
             Check(
                 "pass",
                 "setting_sources",
-                f"[] — 0 memory files, 0 agents, 0 MCP tools ({usage.get('totalTokens', '?')} ctx tokens)",
+                f"[] — 0 memory files, 0 agents, 0 MCP tools "
+                f"({usage.get('totalTokens', '?')} ctx tokens)",
             )
         )
     return checks
@@ -190,7 +212,10 @@ def run(probe: bool = True) -> int:
     if probe:
         checks += asyncio.run(_probe())
     else:
-        checks.append(Check("warn", "model", "not probed", "--no-probe was passed; D-001 needs a live id"))
+        checks.append(Check(
+            "warn", "model", "not probed",
+            "--no-probe was passed; D-001 needs a live id",
+        ))
     checks += [
         _cerebras(),
         _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "path C unavailable"),
@@ -211,7 +236,10 @@ def run(probe: bool = True) -> int:
         console.print(f"\n[bold red]✗ {len(failed)} blocking[/] — fix before running anything.")
         return 1
     if probe:
-        console.print("\n[green]✓ green.[/] Paste this output verbatim into your decision record (D-001).")
+        console.print(
+            "\n[green]✓ green.[/] Paste this output verbatim into your "
+            "decision record (D-001)."
+        )
     else:
         console.print("\n[green]✓ green[/], but unprobed — D-001 needs a run with the live call.")
     return 0

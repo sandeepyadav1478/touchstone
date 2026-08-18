@@ -8,6 +8,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # the SDK is a runtime dependency; this import is only for the annotation
+    from claude_agent_sdk import SettingSource
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -47,7 +51,10 @@ MAX_HOPS = 6
 # developer's CLAUDE.md is not the agent that ships, and its scores measure the
 # machine it ran on. `touchstone doctor` MEASURES this rather than trusting it:
 # get_context_usage()['memoryFiles'] must come back empty. D-034.
-SETTING_SOURCES: list[str] = []
+# ⛔ NOT `list[str]`. The SDK's own annotation is `list[SettingSource] | None`, and mypy
+# --strict rejected the loose one (D-054) — an isolation setting that type-checks against
+# any string is one a typo can widen without complaint.
+SETTING_SOURCES: list[SettingSource] = []
 
 # Anthropic via the Claude Code subscription (D-001). Its absence is asserted, not hoped.
 API_KEY_ENV = "ANTHROPIC_API_KEY"

@@ -18,8 +18,11 @@ app = typer.Typer(
 
 @app.callback()
 def _root() -> None:
-    """Keeps `doctor` a subcommand. Typer promotes a lone command to the root otherwise,
-    and every command added later would silently change the CLI's shape."""
+    """Keep `doctor` a subcommand.
+
+    Typer promotes a lone command to the root otherwise, and every command added
+    later would silently change the CLI's shape.
+    """
 
 
 @app.command()

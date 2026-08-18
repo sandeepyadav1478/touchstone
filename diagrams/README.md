@@ -49,7 +49,8 @@ pixels*, which is why finding 8 is two failures and not one.
 | On disk | 2.70 MB | 1.88 MB |
 | Padding, L / T / R / B | 46 / 61 / 61 / 59 | 27 / 27 / 40 / 23 |
 | Content fills | **98.3%** of the frame | **98.7%** |
-| Ink — dark pixels as a share of the frame | 2.95% | 13.76% |
+| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.14%** | **4.50%** |
+| ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.21%-ink blank**, finding 9 |
 | ⚠️ The quality that works | **1**, and 2 is an error | **2**, and 1 is a silent blank |
@@ -223,7 +224,7 @@ taken any other way is not comparable to this one.
 
 ---
 
-## Nine findings about the tool, and every one of them is the same failure
+## Ten findings about the tool, and nearly every one is the same failure
 
 **None is about touchstone. They are here because the tool accepts something, echoes it back
 unchanged, and renders something else** — and every check that reads the *source* or the
@@ -525,8 +526,14 @@ otherwise:
 
 | | `imageQuality: 1` | `imageQuality: 2` |
 |---|---|---|
-| flowchart | ✅ 6439 × 9505, ink 2.95%, extent 97.1% | 🔴 `{"note":"Error rendering diagram"}` |
-| sequence | 🔴 2534 × 3126, **ink 0.21%**, **extent 1.2%** — a near-blank frame with margins 122 / 9 / 2137 / 2775 | ✅ 5069 × 6252, ink 13.76%, extent 97.9% |
+| flowchart | ✅ 6439 × 9505, ink 1.14%, extent 96.8% | 🔴 `{"note":"Error rendering diagram"}` |
+| sequence | 🔴 2534 × 3126, **ink 0.07%**, **extent 1.2%** — a near-blank frame with margins 122 / 10 / 2137 / 2776 | ✅ 5069 × 6252, ink 4.50%, extent 97.7% |
+
+⚠️ **Ink is quoted at one threshold — `convert("L") < 200`, share of all pixels — and the first
+pass of this table used a looser one, reading 2.95 / 0.21 / 13.76.** Nothing about the images
+changed; the comparator did. **The extent column was identical under both**, and that is exactly
+why extent, not ink, is what `scripts/check-diagram.py` milestone 7 asserts. *A ratio needs the
+command that produced it named in the same table.*
 
 ⛔ **Both blanks settle.** Two consecutive exports of the sequence at quality 1 returned the
 *identical* content-addressed URL — a failed render is perfectly reproducible, so finding 2's
@@ -537,6 +544,34 @@ flowchart at least errors out loud; the sequence hands back a real PNG of nothin
 carry a quality forward from another diagram, or from this diagram last week.** The flowchart's
 quality-2 error reproduced on a diagram ID created minutes earlier, so it is a property of the
 content, not of a long edit history — and that means it can change when the content does.
+
+### 10. A sequence participant box is a fixed ~13-character column, and the font's `9` reads as `q`
+
+Found 2026-08-18 the only way any of these are found — someone read the picture and asked what
+`P1.q` meant. It was `P1.9`, a `ROADMAP.md` build row. Eraser's render font draws `9` with a
+curled descender and `0` slashed, so a bare roadmap-row citation is genuinely ambiguous to the
+person who **wrote the roadmap**.
+
+⛔ **And the box does not widen for its content.** Measured off the same crop: `tools/read.py`
+(13 chars) fits on one line, `agent/graph.py` (14) breaks as `agent/graph.p` / `y`, and
+`tools/runbooks.py` (17) breaks as `tools/runbook` / `s.py`. The wrap is by *character*, not by
+word, so **any token over ~13 characters splits mid-path**.
+
+**What was fixed:** the digit now travels with the words that identify it — `cli.py — P0` /
+`shipped \`doctor\`` / `roadmap row P1.9` / `adds the other four`. Even misread, "roadmap row"
+says where to look it up.
+
+⛔ **What was deliberately not fixed: the mid-token path breaks.** The obvious repair — an explicit
+`\n` inside the path — is the one thing that must not be done. The guard unescapes `\n` to a space
+before matching citations (`scripts/check-diagram.py:118`), and its own comment records the day a
+newline silently dropped the citation count 62 → 61 with no failure reported. **A cosmetic wrap is
+cheaper than a citation the guard can no longer see.** Six labels carry an over-long path and all
+six stay whole.
+
+⚠️ **Milestone 5 caught the first attempt at this fix.** Rewriting `P0` as "phase 0" made the label
+read better and broke the check that `cli.py` must state what shipped, which greps for the literal
+`P0`. *The guard rejected an edit made to improve the drawing* — which is the whole point of having
+one.
 
 ---
 
