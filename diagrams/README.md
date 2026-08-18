@@ -41,18 +41,29 @@ byte, the hash settled, the extent read 98.4% — and the drawing carried nine m
 nothing to a reader. Finding 8. The same glyph in the **sequence** diagram rendered as *zero
 pixels*, which is why finding 8 is two failures and not one.
 
+✅ **And "comments do not render" is now measured rather than asserted — 2026-08-18.** The rule at
+the head of [`touchstone.eraser`](touchstone.eraser) says the re-upload trigger is a change to
+*rendered* content, so a comment-only edit needs no new PNG. That had never been tested. The hosted
+flowchart was found two comment edits behind the committed file, deleted, recreated from the file,
+and exported twice to a settled hash — and the result came back **6439 × 9505, ink 1.14%, padding
+46 / 61 / 61 / 58: every figure identical to the committed `loop.png`**, with **878 pixels differing
+at all (0.0014%) and four differing by more than 8 levels**. That is antialiasing jitter, not a
+drawing. ⛔ **So `loop.png` was deliberately NOT replaced** — swapping 2.8 MB of git history for four
+pixels is churn, and the honest record is that the picture did not move. The *hosted* copy was
+replaced, because that one had genuinely drifted.
+
 ### The settled renders, measured 2026-08-18
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
 | Frame | 6439 × 9505 — **61.2 MP** | 5069 × 6252 — **31.7 MP** |
 | On disk | 2.70 MB | 1.88 MB |
-| Padding, L / T / R / B | 46 / 61 / 61 / 59 | 27 / 27 / 40 / 23 |
-| Content fills | **98.3%** of the frame | **98.7%** |
+| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 46 / 61 / 61 / **58** | 27 / 27 / 40 / 23 |
+| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.3%** of the frame | **98.7%** |
 | Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.14%** | **4.50%** |
-| ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs |
+| ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs. ⛔ **AND THE SWEEP STOPPED ONE ROW SHORT — found 2026-08-18, on the pass that recreated the hosted flowchart.** The two rows above use a *third* comparator (`ImageChops.difference` against the corner pixel), not `< 200` and not the loose threshold, and neither said so. Measured at `< 200` the same padding reads **65 / 61 / 61 / 62** and **28 / 28 / 40 / 30**; at the loose threshold, **46 / 61 / 61 / 58** and **27 / 27 / 40 / 23**. Three comparators, three answers, one unlabelled row. The bottom cell also read **59** against a measured **58** — an off-by-one that no threshold explains and that survived because the row it sits in had no method to check it against |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
-| Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.21%-ink blank**, finding 9 |
+| Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.07%-ink blank**, finding 9 |
 | ⚠️ The quality that works | **1**, and 2 is an error | **2**, and 1 is a silent blank |
 | Hosted | ⛔ **one diagram per Eraser file** — they shared a file until 2026-08-17 and **rendered on top of each other** (DEF-022, finding 6). `no-link-access`. The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
 
