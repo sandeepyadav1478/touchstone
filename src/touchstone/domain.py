@@ -101,6 +101,13 @@ _BLAST: dict[Action, BlastRadius] = {
 ESCALATION_THRESHOLD = BlastRadius.SERVICE_LIVE
 
 
+# The supervisor's routing target, and the same three names the prompt contract uses for `next`
+# (docs/09 §8). It is a `Literal` rather than a `StrEnum` because it is the *edge* vocabulary of
+# the graph: `next` also takes "done", which is not a specialist, so an enum here would either be
+# missing a member or carry one that no specialist answers to.
+Specialist = Literal["timeline", "resource", "dependency"]
+
+
 # ---------------------------------------------------------------------------
 # The evidence surface — docs/09 §1. ⛔ The whole agent-visible world.
 # ---------------------------------------------------------------------------
@@ -129,12 +136,17 @@ class Series(BaseModel):
     total: int | None = None
 
 
+# The closed level set, named because two modules need it: `LogLine` validates against it and
+# the generator's log helpers take it as a parameter. Spelling it twice is how the sets drift.
+LogLevel = Literal["DEBUG", "INFO", "WARN", "ERROR"]
+
+
 class LogLine(BaseModel):
     """One rendered log line. The level set is closed so a tool can filter on it."""
 
     at: datetime
     service: str
-    level: Literal["DEBUG", "INFO", "WARN", "ERROR"]
+    level: LogLevel
     message: str
 
 
@@ -208,6 +220,14 @@ class GroundTruth(BaseModel):
 
     `resolvable=False` means the correct verdict is escalation, and `rationale` is for the
     report only: the scorer never reads prose.
+
+    ⚠️ `required_specialist` names which specialist can *see* the distinguishing evidence, and it
+    is written by the generator, which already computed it and used to throw it away (D-042). It
+    is `None` exactly when `resolvable` is False, because the deletion path removed the signal
+    there is no specialist for. ⛔ It is a **reported** column and never a promotion condition
+    (docs/05 §5a): gating on a mechanism forbids a version that reaches the right answer another
+    way. 🔴 It has to exist before P1.3 freezes the tier — `truth.json` is inside `benchmark_hash`
+    byte for byte, so a key added afterwards orphans every past score.
     """
 
     incident_id: str
@@ -215,6 +235,7 @@ class GroundTruth(BaseModel):
     affected_service: str
     resolvable: bool
     rationale: str
+    required_specialist: Specialist | None
 
 
 class Verdict(BaseModel):

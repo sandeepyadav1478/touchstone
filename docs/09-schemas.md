@@ -118,7 +118,21 @@ class Action(StrEnum):
         return _BLAST[self]
 
 ESCALATION_THRESHOLD = BlastRadius.SERVICE_LIVE
+
+# Two closed sets that are `Literal`s rather than enums, and the reason differs for each.
+Specialist = Literal["timeline", "resource", "dependency"]
+LogLevel   = Literal["DEBUG", "INFO", "WARN", "ERROR"]
 ```
+
+**`Specialist` is a `Literal` because it is the *edge* vocabulary of the graph.** The
+supervisor's `next` also takes `"done"` (§8), which is not a specialist — so an enum here would
+either be missing a member or carrying one that no specialist answers to. It is the type of
+`GroundTruth.required_specialist` ([docs/01](01-spec.md) §2) and of the router's own output, and
+naming it once is what keeps those two from drifting apart.
+
+**`LogLevel` is a `Literal` because two modules need the same closed set**: `LogLine` validates
+against it and the generator's log helpers take it as a parameter. Spelling a four-member set
+twice is how sets drift — and the generator is the one place that could widen it silently.
 
 **`BlastRadius` is an `IntEnum` so that escalation ([docs/03](03-agent-and-tools.md) §3) is
 literally `verdict.escalate = action.blast_radius >= ESCALATION_THRESHOLD`** — one comparison, no
@@ -426,7 +440,10 @@ src/touchstone/
   cli.py               typer app; every command in docs/06 §1
   api.py               fastapi; the four endpoints in docs/06 §2 — ⚠️ its reason is open (D-040)
   incidents/
-    generate.py        truth first, then render — docs/01 §4
+    generate.py        truth first, then render — docs/01 §4. Also the TOPOLOGY, the ten-case
+                       SUITE, `write_suite`, and ⛔ `benchmark_hash` (§5): the hash lives beside
+                       the thing it hashes, because a digest defined away from its generator is
+                       a digest that survives a change to the generator (D-060)
     renderers.py       ten cause renderers + the deletion path for insufficient_evidence
     signature.py       Signature extraction                                         [deferred]
   agent/
@@ -454,6 +471,7 @@ runbooks/              13 markdown files (§7)
 suite/                 benchmark/ · regression/ · proposed/ · CHANGELOG.md
                        ⛔ truth.json lives INSIDE each tier — §5's hash reads
                        suite_dir/truth.json, and suite_dir is the tier (DEF-005)
+  benchmark/README.md  🆕 what each frozen case is for, and what v1 does NOT measure
 history/               v5 only — docs/01 §4                                         [deferred]
 results/               one json per version + index.json + negative-control.md
 diagrams/              the D-021 artifacts, committed before their implementation

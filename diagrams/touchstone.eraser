@@ -276,14 +276,14 @@ Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1
   //    put it — so domain.py imports neither LangGraph nor the SDK and the scorer can
   //    import it without importing the agent. D-055.
   DomainPy [icon: file-text, label: "domain.py — P1.1 ✅ shipped\npydantic models, docs/09 §1–3 + §4's Usage\n16 models + 3 enums · the graph state is NOT here"]
-  GenPy [icon: settings, label: "incidents/generate.py — P1.2\ntruth FIRST, then render"]
-  RendPy [icon: layers, label: "incidents/renderers.py — P1.2\nten cause renderers + the deletion path"]
-  Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3\nn=10, frozen · manifest.json\nNO writer after generation — the asymmetry is in section 11"]
+  GenPy [icon: settings, label: "incidents/generate.py — P1.2 ✅ shipped\ntruth FIRST, then render · TOPOLOGY · the ten-case SUITE\nbenchmark_hash + write_suite live HERE — beside what they hash (D-060)"]
+  RendPy [icon: layers, label: "incidents/renderers.py — P1.2 ✅ shipped\nten cause renderers + the deletion path\nevidence splits ambient / distinguishing — the split DERIVES required_specialist (D-058)"]
+  Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3 ✅ shipped\nn=10, FROZEN at hash 4c935f06 · manifest.json · README.md\n⚠ config_drift and noisy_neighbor are drawn but NEVER scored as themselves (D-061)\nNO writer after generation — the asymmetry is in section 11"]
   // D-042: required_specialist is drawn here because the field has a DEADLINE, not
   // because it is interesting. truth.json is hashed byte for byte, so the key is free
   // at P1.2 and a benchmark version bump at any later moment. An implementer working
   // from this picture has to see it before P1.3 freezes the tier.
-  Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash · one PER TIER\nNEVER seen by the agent\n+ required_specialist per case — BEFORE P1.3 (D-042)"]
+  Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash · one PER TIER\nNEVER seen by the agent\n✅ required_specialist landed BEFORE P1.3 froze it — Specialist | None (D-042, D-058)"]
   // ⛔ THIS IS THE HALLUCINATION CHECK, AND IT IS A CLASS RATHER THAN A CHECKER — which is
   //    why a search for one finds nothing. `insufficient_evidence` appeared ZERO times in this
   //    file while docs/01 §3 calls it "the most important class", and phase 1's exit gate

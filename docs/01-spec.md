@@ -61,12 +61,23 @@ class GroundTruth(BaseModel):      # ⛔ never rendered into agent context
     affected_service: str
     resolvable: bool               # False → the correct verdict is escalation
     rationale: str                 # for the report, never for scoring
+    required_specialist: Specialist | None   # D-042 — reported, never gated
 ```
 
-⚠️ **`alert.service` is deliberately not the answer.** In roughly half the suite the alarm
-fires downstream of the cause — the API pages because the database is saturated. An agent
-that answers with the alerting service scores near zero, which is the intended behaviour: it
-is the single most common naive triage failure.
+⚠️ **`alert.service` is deliberately not the answer.** In **four of benchmark v1's eight
+answerable cases** the alarm fires downstream of the cause — the API pages because the database
+is saturated. An agent that answers with the alerting service scores near zero, which is the
+intended behaviour: it is the single most common naive triage failure. ⛔ The count is derived
+from the generated suite by `tests/unit/test_invariants.py`, not maintained by hand; the test
+asserts a floor of three so that the trap cannot quietly disappear.
+
+**`required_specialist` names which of the three could have answered**, and it is written by the
+generator rather than assigned by hand: whichever specialist's tools reach the *distinguishing*
+evidence bucket is the one recorded ([docs/09](09-schemas.md) §2 for the type). It is `None`
+exactly when `resolvable` is `False` — not "unknown", but *"no specialist could have settled it,
+because the signal was deleted"*. ⛔ **It is reported and never gated** ([docs/05](05-scoring.md)
+§5a): a version that reaches the right answer by a different route is not wrong, and gating on
+mechanism would forbid exactly the improvements this project exists to find.
 
 ### The verdict
 
@@ -168,6 +179,53 @@ approximately, and **six of the eleven classes not at all**: `db_pool_exhausted`
 `insufficient_evidence`. **Those six are built from the mechanism and from the vendor
 documentation that describes it** — which is the honest position, and it belongs in the README's
 Limits rather than being papered over.
+
+### What the read actually produced — 2026-08-18, and one finding overturned the log renderer
+
+⚠️ **Recorded because a source table says what a corpus is *for*, never what it *said*.** The
+table above stood for two weeks before anything was read against it, and the read moved the
+design. Every figure below is a count from a command in this section, not a recollection.
+
+**The finding that changed the renderer: a real log stream is a wall of routine `INFO`, and
+`ERROR` is usually absent entirely.** Counted over the 2,000-line samples committed in Loghub
+itself:
+
+```bash
+curl -sS https://raw.githubusercontent.com/logpai/loghub/master/<name>/<name>_2k.log \
+  | grep -oE '\b(INFO|WARN|WARNING|ERROR|DEBUG|FATAL)\b' | sort | uniq -c
+```
+
+| corpus | lines | INFO | WARN | ERROR |
+|---|---|---|---|---|
+| OpenStack (`nova-api` / `nova-compute`) | 1,999 | 1,969 — **98.5%** | 31 | **0** |
+| HDFS | 2,000 | 1,920 — **96.0%** | 80 | **0** |
+| Zookeeper | 1,999 | 669 — 33.5% | 1,318 — **65.9%** | 13 |
+
+Three things follow, and the renderers obey all three:
+
+1. ⛔ **A tidy cluster of `ERROR` lines at the moment of failure is the stylised-corpus failure
+   D-002 warns about.** Two of the three corpora contain **no `ERROR` line at all** in 2,000
+   lines. The diagnostic signal is normally a *number inside a routine line* — OpenStack's
+   `INFO` lines carry `status: 200 len: 1893 time: 0.2477829`, and the latency is the evidence.
+2. **A distractor is a repeating template, not a unique line.** OpenStack's 31 `WARNING`s are
+   one message (`Unknown base file: /var/lib/nova/instances/_base/…`) repeated; HDFS's 80 are
+   one template (`Got exception while serving blk_… to /10.251.…`). ⚠️ **Chronic noise is what
+   makes a distractor plausible** — a single odd line reads as a clue, the same line 31 times
+   reads as background, and telling those apart is the skill being measured.
+3. **The level mix is not a constant of "logs".** Zookeeper is **66% `WARN` at rest**. A
+   renderer that treats `WARN` as significant everywhere would score that service as broken in
+   its baseline.
+
+**What the other three gave, and what they did not:**
+
+| Source | Read | What came back |
+|---|---|---|
+| RCAEval | `README.md` | The fault taxonomy, verbatim: RE1 `cpu, mem, disk, delay, loss`; RE2 adds `socket`; RE3 is `f1`–`f5`, code-level. ⛔ **The metric column names are *not* reachable** without downloading the datasets from HuggingFace/Figshare, which D-029 forbids — so metric naming came from the OTel demo instead, and that substitution is recorded rather than papered over |
+| OpenTelemetry demo | `opentelemetry.io/docs/demo/architecture/` | The service graph this repo's topology is named after — `frontend`, `checkout`, `cart`, `product-catalog`, `recommendation`, `shipping`, `quote`, `payment`, `email`, `accounting`, `fraud-detection`, `ad`, over `PostgreSQL`, `Valkey`, `Kafka` and `flagd`. **Names, shapes and edges only** |
+| danluu/post-mortems | `README.md` | Its own category index, and the largest *named* category is **Config Errors (~40)**, ahead of Database (~15) and Hardware/Power (~15). ⚠️ That is the one thing the weakest source says that is checkable, and it is the argument for keeping `config_drift` among the eleven |
+
+⛔ **Nothing above was loaded, vendored or added to `pyproject.toml`.** The Loghub samples were
+piped straight to `grep` and deleted; what entered this repo is the table, not a byte of data.
 
 ### The two tiers (D-024)
 
