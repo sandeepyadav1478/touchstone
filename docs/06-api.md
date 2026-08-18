@@ -14,9 +14,17 @@ so `POST /triage` is now a request that returns a verdict.
 ⛔ **This document's own rule was *"if that path is not demonstrated, the five endpoints earn
 nothing and should not be built."* The path no longer exists, which is the stronger version of
 the same test.** What remains — `/triage`, `/versions`, `/healthz` — is a thin wrapper over CLI
-verbs that already work in the loop and in CI. **Whether it gets built at all is an open
-decision, not a settled one**, and it stays open rather than being resolved here by the person
-who happened to be editing this file. It is deferred past v0.2.0 either way (D-030).
+verbs that already work in the loop and in CI.
+
+✅ **DECIDED 2026-08-18: `api.py` is CUT (D-052).** The question stayed open here for one pass
+rather than being resolved by whoever was editing this file, and it was answered by the person
+entitled to answer it. **Everything below is retained as the specification of a thing that will
+not be built** — a cut is a claim, and a reader who asks *"is there an HTTP surface?"* deserves
+the answer plus the reason, not silence.
+
+⛔ **`docker-compose.yml` and the Phoenix service are NOT cut** and P2.8 still requires them. They
+appeared in the same roadmap row and the same diagram label as `api.py`, which is the only reason
+they ever looked like one decision.
 
 ⚠️ **The checkpointer is a separate question and is not cut by D-040.** `.touchstone/` also
 carries run state for a process that dies mid-run; whether anything still needs that is a phase-1

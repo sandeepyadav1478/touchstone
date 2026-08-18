@@ -28,6 +28,18 @@ one drawing moved and got a render, not because a third view was added** — D-0
 for having six encodings of one system, and adding sequence-as-a-second-source would have been the
 same mistake at a smaller scale.
 
+### 🔴 `loop.png` IS STALE AS OF 2026-08-18 — D-052 and D-053 changed rendered text
+
+Three labels moved: the green legend row, `ApiPy` (purple → grey, and the cut), and `Phoenix`
+(it now carries `docker-compose.yml`). ⛔ **That is rendered content, not comments**, so the
+strip-`//`-and-compare test in finding 1 does not excuse a re-export — it *requires* one. The
+committed PNG shows `api.py` as an open question, and it is a decided cut.
+
+**The refresh is the full workflow, not an update:** delete the hosted diagram → `manually_create_diagram`
+from this file → export twice at `imageQuality: 1` → check the hash settles → check the content
+extent (finding 7) → **open it and look**. Until that runs, the table below describes the previous
+drawing.
+
 ### The settled renders, measured 2026-08-17
 
 | | `loop.png` | `sequence.png` |

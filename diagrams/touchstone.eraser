@@ -31,18 +31,23 @@ title touchstone — the loop that has to get better
 //           somewhere it does not apply, which is how ApiPy ended up with a
 //           comment describing a colour it did not have (DEF-013).
 //
-//      🔴 ONE COLOUR IS STILL WRONG AND IT IS AN OPEN QUESTION, NOT A FIX:
-//        green's key says "phase 0 — shipped" and green is on `Scored` and
-//        `Promoted` — the two GOOD OUTCOMES, neither of them phase 0.
-//        ⚠ UPDATED 2026-08-17. This read "the ONLY node naming a P0 artifact is
-//          `CliPy`, and it is BLUE" — true when written, and false the moment
-//          `DoctorPy` was drawn. doctor.py is phase 0, it has shipped, and green
-//          is simply the key applied to it. ⛔ THAT DOES NOT ANSWER THE QUESTION,
-//          it makes it legible: green now sits on one true P0 node AND two
-//          outcomes, so the clash is in the picture instead of in this comment.
-//        So either the outcomes give green up, or the key stops claiming a phase.
-//        ⛔ That is a schedule decision, not a drawing one, so it is NOT being
-//        made here — see the open-questions section.
+//      ✅ GREEN WAS THE ONE WRONG COLOUR AND IT IS SETTLED — D-053, 2026-08-18.
+//        It carried the key "phase 0 — shipped" while sitting on `Scored` and
+//        `Promoted`, the two GOOD OUTCOMES, neither of them phase 0. `DoctorPy`
+//        then made it sharper rather than better: one true P0 node and two
+//        outcomes wearing one colour.
+//        ⛔ THE KEY GAVE WAY, NOT THE NODES. It now reads "phase 0 — shipped, or
+//        a good outcome", which is a documented second meaning instead of an
+//        undocumented one. Stripping green off the outcomes was the tidier fix
+//        and was rejected: the good path reading at a glance is worth more here
+//        than the one-colour-one-meaning rule, and the rule was never absolute —
+//        red and purple already have their own rows, as four lines below say.
+//        ⚠ WHAT THIS COSTS, SAID PLAINLY: green can no longer be read as a
+//        schedule claim on its own, so a green node needs its label checked. That
+//        is a real loss and it is the price of the choice, not an argument that
+//        the choice was free. ⛔ It applies to GREEN ALONE. Any other colour
+//        acquiring a second meaning is DEF-013 recurring, and the giveaway is
+//        that the key will not mention it.
 //
 //      TWO documented non-phase uses, both stated where they are used:
 //        · section 11, where colour is case STATUS. It says so there.
@@ -201,7 +206,14 @@ styleMode shadow
 typeface clean
 
 legend [position: top-left] {
-  [color: green, label: "phase 0 — shipped"]
+  // ⚠ TWO MEANINGS, ON PURPOSE, AND THAT IS D-053 RATHER THAN AN OVERSIGHT. Convention 1
+  //    says a colour is the schedule; this row breaks it deliberately, which is why the key
+  //    now says so out loud instead of leaving a reader to find `Scored` and wonder. The
+  //    alternative — strip green off the two outcomes — was rejected because the good path
+  //    reading at a glance is worth more here than one colour meaning one thing.
+  //    ⛔ IT IS NOT A LICENCE. Green is the ONLY colour with two meanings, both named in
+  //    the key. A second colour doing this quietly is the DEF-013 failure again.
+  [color: green, label: "phase 0 — shipped, or a good outcome"]
   [color: blue, label: "phase 1 — next"]
   [color: orange, label: "phase 2 — v0.1.0"]
   [color: pink, label: "phase 3 — v0.2.0"]
@@ -218,6 +230,10 @@ legend [position: top-left] {
   //    ⚠ "Deferred" and "undecided" are different states and must not share a colour:
   //    deferred means the answer is yes and the date is later; this means nobody has said
   //    yes. Collapsing them is how a question quietly becomes a queued task.
+  //    ⚠ AS OF 2026-08-18 THIS ROW HAS NO INSTANCE — `api.py` was the only purple node
+  //    and D-053 cut it. The row STAYS: a legend defines the notation, it is not a
+  //    census of what is used today, and the next open question should not have to
+  //    re-argue D-047 to get a colour. ⛔ It is not a spare colour to reassign.
   [color: purple, label: "an OPEN QUESTION — nobody has decided yet"]
   [connection: -->, label: "reads it — does not trigger it"]
 }
@@ -403,13 +419,15 @@ CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.9
 //    ONE thing here that has shipped was the one thing a reader could not point at. Of
 //    the 42 file paths this file draws, three exist; a diagram is a specification of
 //    work not yet done and that is fine, but the built part earns a box.
-// ⚠ GREEN IS THE KEY APPLIED, NOT OPEN QUESTION TWO ANSWERED. The key reads "phase 0 —
-//    shipped" and this is a phase-0 file that shipped, so green is simply correct here.
-//    It does NOT settle why `Scored` and `Promoted` are green — they are outcomes and
-//    still are. What changes is that the clash is now VISIBLE IN THE PICTURE rather than
-//    only in a comment: one true P0 node and two outcomes wearing the same colour. The
-//    schedule call stays unmade — see the open-questions section, whose wording this edit
-//    also corrects, because "the only node naming a P0 artifact is CliPy" stopped being true.
+// ⚠ GREEN IS THE KEY APPLIED. This node is a phase-0 file that shipped, so it is green
+//    under the first half of the key — and `Scored` and `Promoted` are green under the
+//    SECOND half, which the key now states out loud (D-053, 2026-08-18).
+//    ⛔ THIS NODE IS WHY THE QUESTION BECAME ANSWERABLE. While green sat only on two
+//    outcomes it had no true instance at all, and the honest reading was "the key is
+//    simply wrong". Drawing one real P0 node turned that into a colour with a true
+//    instance AND two others — a genuine choice between two defensible keys, which is a
+//    thing a reader can decide. **Making a question decidable is different from
+//    answering it, and it is usually the harder half.**
 DoctorPy [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN (docs/09 §9)\none of only TWO files with a fixed order — the other is domain.py\n✅ shipped: `touchstone doctor` runs today"]
 
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
@@ -591,16 +609,30 @@ Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
   PromotePy [icon: award, label: "loop/promote.py — results/index.json"]
   RecordPy [icon: grid, label: "loop/record.py — P2.10\nthe README table, GENERATED"]
   McpPy [icon: link, label: "tools/mcp_server.py — P2.9\nthe same five tools, a second surface"]
-  // D-040 took this node's reason away: the four endpoints were justified by a DURABLE
-  // interrupt, and no node waits any more. Kept rather than deleted, because "whether it
-  // is built" is an open decision and not this file's call.
-  // 🔴 PURPLE, and it was not. This comment used to say it was drawn "in grey-question
-  //    form" — it carried no colour attribute at all and rendered in the default palette,
-  //    so the one node the key had no word for was also the one node whose comment
-  //    described a colour it did not have. Grey would have been wrong too: grey is
-  //    "deferred, or cut", and this is neither. See the legend.
-  ApiPy [color: purple, icon: server, label: "api.py + docker-compose — P2.8\n⚠ lost its reason with D-040 — BUILD IS AN OPEN QUESTION\nnothing waits, so there is nothing to resume and nothing the CLI hides"]
-  Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER\nNEVER a dependency of scoring"]
+  // ✅ CUT, 2026-08-18, D-052. D-040 took the reason away — the four endpoints were
+  //    justified by a DURABLE interrupt and no node waits any more — and this node then
+  //    spent one pass PURPLE, as the file's one open question. The decision is now made,
+  //    so it is GREY and labelled with what cut it, which is how V5 is drawn (D-030).
+  // ⛔ NOT DELETED, and that is the same rule as V5: a cut is a claim, and a claim needs
+  //    somewhere to be checked. A reader who wonders "is there an HTTP surface?" gets an
+  //    answer with a decision ID on it; a deleted node answers nothing and looks like an
+  //    oversight. **The cheapest way to re-add a bad idea is to leave no record of killing it.**
+  // ⚠ docker-compose.yml LEFT THIS LABEL AND MOVED TO `Phoenix`, which is the whole reason
+  //    to read this twice. The compose file was never api.py's — Phoenix needs it, P2.8 still
+  //    needs Phoenix, and cutting the two together would have quietly cut the viewer as well.
+  //    ⛔ When a node dies, check what was riding on its label.
+  // 🔴 PURPLE FOR ONE PASS, AND THE HISTORY IS KEPT. Before that this comment said it was
+  //    drawn "in grey-question form" — it carried no colour attribute at all and rendered in
+  //    the default palette, so the one node the key had no word for was also the one node
+  //    whose comment described a colour it did not have. Grey was wrong THEN: grey is
+  //    "deferred, or cut", and it was neither — it was undecided, which D-047 gave purple.
+  //    ✅ It is now genuinely CUT, so grey is finally the right colour for the right reason.
+  //    ⚠ That leaves PURPLE WITH NO INSTANCE ANYWHERE IN THIS FILE. The row stays: a legend
+  //    defines the notation, it is not a census of what is currently used, and the next
+  //    open question needs the colour to already mean something. ⛔ Do not read an unused
+  //    key row as a spare colour to reassign.
+  ApiPy [color: grey, icon: server, label: "api.py — ⛔ CUT by D-052, and the trigger was D-040\nthe four endpoints existed to show a DURABLE interrupt; no node waits, so\n`POST /triage` returns what `touchstone triage` already returns"]
+  Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER, in docker-compose.yml\nNEVER a dependency of scoring\nthe compose file SURVIVES the api.py cut — it was never api.py's (D-052)"]
   // ⚠ Judge WAS here and moved into section 9. It was filed under "the surfaces" because it is
   // phase-2 timed, but this group means ROLE and a judge is not a surface — it sits beside
   // api.py and CI, which it has nothing to do with. DEF-009 is the reason it exists at all:
@@ -617,7 +649,9 @@ Spans --> Phoenix
 // ⛔ McpPy had NO edge at all, and for this node that is the whole claim. "A second
 //    surface" is a statement about what it points AT — the same five tools, not a
 //    reimplementation of them (D-019). Unwired, it read as a sixth thing to build.
-//    ApiPy stays unwired on purpose: it has nothing to point at until it is decided.
+//    ApiPy stays unwired, and after D-052 that means something different: it had nothing
+//    to point at while it was undecided, and now it is CUT, so it has nothing to point at
+//    permanently. Same shape on the canvas, opposite reason — read the label, not the edge.
 McpPy --> Tools: the SAME five, re-exposed — NOT a second implementation (D-019)
 Spans --> CI
 
@@ -692,8 +726,10 @@ DoctorPy --> P0Gate: its verbatim output IS D-001 — 1 of the 2 attested condit
 //    colour is a claim. They are grey — "deferred, or cut" is wrong for them too, but
 //    the honest reading is on the group label: built already, scheduled by nothing.
 // ⚠ AND EVERY ONE OF THE FOUR IS WIRED, WHICH IS NOT TIDINESS. An unwired leaf is this
-//   file's notation for an open question — that is the whole mechanism holding `ApiPy`
-//   (section 13, and the open-questions section says so). `p0-deps.sh` landed here
+//   file's notation for an open question — that was the whole mechanism holding `ApiPy`
+//   until D-052 answered it, which is why section 13 now leans on its LABEL rather than on
+//   its edges. ⛔ The notation is unchanged and still live; it simply has no instance right
+//   now, exactly as the purple legend row does. `p0-deps.sh` landed here
 //   edgeless on the first pass and would have read as a fifth thing nobody had decided
 //   on. It is decided, and it is built. The edge into P0Probe is the real ordering:
 //   install, then measure. ⛔ Adding nodes to a notation means checking what the
@@ -711,7 +747,25 @@ P0Probe > P0Gate: 2 measurements, taken before the first line
 CheckLinks --> Gates: runs against every gate's citations — blocks none of them
 P0Deps > P0Probe: install first — there is nothing to measure until it is installed
 
-// ── THE OPEN QUESTIONS — TWO. ONE IS DRAWN, ONE CANNOT BE ────────────────────
+// ── THE OPEN QUESTIONS — NONE OPEN, AND THE TWO CLOSED 2026-08-18 ────────────
+// ✅ BOTH WERE ANSWERED BY THE READER, WHICH IS THE ONLY PLACE EITHER COULD HAVE
+//    BEEN ANSWERED — one was a scope call and one was a notation call, and this
+//    file is allowed to make neither on its own.
+//      · api.py — CUT (D-052). Section 13's node is grey and says what cut it.
+//      · green — the KEY gave way (D-053): "phase 0 — shipped, or a good outcome".
+//        The nodes kept their colour; the row now documents the second meaning.
+// ⛔ THE HISTORY BELOW IS KEPT VERBATIM AND IS NOT DECORATION. Both questions
+//    were invisible to a sweep, for two DIFFERENT reasons, and those reasons
+//    outlive the answers — the next question will hide the same two ways.
+//
+// ⚠ SO THE COUNT IS CURRENTLY ZERO, AND ZERO IS THE READING THIS FILE DISTRUSTS
+//   MOST. docs/07 §6: "a diagram with no open questions is usually a diagram
+//   nobody thought about." It is honest here only because both answers arrived as
+//   decisions with IDs, in one sitting, from the person entitled to make them.
+//   ⛔ If this section still says zero several passes from now, that is evidence
+//   nobody has looked, not evidence the design is settled.
+//
+// ── the record of how each one hid ───────────────────────────────────────────
 // docs/07 §6: a diagram with no open questions is usually a diagram nobody
 // thought about. The three this started with are closed — D-037 (the scorer
 // reads spans from phase 1), D-038 (v1 IS the synthesizer node), D-039 (the
@@ -719,8 +773,9 @@ P0Deps > P0Probe: install first — there is nothing to measure until it is inst
 // it explicitly: an "open" question nothing is waiting on is a decision with
 // the record missing, and leaving it drawn as open was a rejected option.
 //
-// 🔴 THIS HEADING READ "AND WHY THE LIST IS NOW EMPTY" AND THAT WAS FALSE.
-//    ONE question is open, it is section 13's `ApiPy`, and the node has said so
+// 🔴 QUESTION ONE — CLOSED BY D-052, AND THIS IS HOW IT HID. The heading here
+//    read "and why the list is now empty" and that was FALSE: one question was
+//    open, it was section 13's `ApiPy`, and the node has said so
 //    in its own label the whole time: whether api.py is built at all, after
 //    D-040 removed the durable interrupt that was its only justification
 //    (ROADMAP P2.8, docs/06 header). The file therefore contained a completeness
@@ -734,8 +789,8 @@ P0Deps > P0Probe: install first — there is nothing to measure until it is inst
 //    🎯 It is now COUNTABLE rather than asserted: a question ABOUT A NODE is the
 //    node, painted purple. Empty list ⟺ no purple in the legend's sense.
 //
-// 🔴 QUESTION TWO — AND IT BROKE THE RULE ONE LINE ABOVE ON THE SAME PASS THAT
-//    WROTE IT. Convention 1 was checked against the DSL and found false; the
+// 🔴 QUESTION TWO — CLOSED BY D-053, AND IT BROKE THE RULE ONE LINE ABOVE ON
+//    THE SAME PASS THAT WROTE IT. Convention 1 was checked against the DSL and found false; the
 //    correction surfaced a live question with it: `green` is keyed "phase 0 —
 //    shipped" and sits on `Scored` and `Promoted`, the two good OUTCOMES.
 //    ⚠ SWEPT 2026-08-17. This said "the only node naming a P0 artifact (`CliPy`)
@@ -743,8 +798,9 @@ P0Deps > P0Probe: install first — there is nothing to measure until it is inst
 //      the key. The question is unchanged and SHARPER — green is on one real P0
 //      node and two outcomes at once — so what was a colour with no true instance
 //      is now a colour with a true instance and two false ones. Either the
-//      outcomes give it up, or the key stops claiming a phase. Still a schedule
-//      call, so still not made here.
+//      outcomes give it up, or the key stops claiming a phase. ✅ ANSWERED
+//      2026-08-18: the key gave way, not the nodes — D-053, and the cost of that
+//      choice is stated in convention 1 rather than hidden here.
 //    ⛔ IT CANNOT BE PAINTED PURPLE, and that is the finding, not a snag. It is
 //    a question about the KEY — about what a colour means — so there is no node
 //    to colour, and painting one would state the question in the very notation
