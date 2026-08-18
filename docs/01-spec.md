@@ -27,8 +27,11 @@ these are the failure modes documented in the Postgres manual and every SRE book
 ## 2. Domain model
 
 Pydantic models, in `src/touchstone/domain.py`. Write this file first. **The models that carry
-meaning are here; the ones that carry data — `Evidence`, `Series`, `LogLine`, `Deploy`, the two
-enums and the graph state — are in [docs/09](09-schemas.md), and `domain.py` holds both.**
+meaning are here; the ones that carry data — `Evidence`, `Series`, `LogLine`, `Deploy` and the
+three enums — are in [docs/09](09-schemas.md) §1–§3, and `domain.py` holds both.** ⛔ **The graph
+state is the exception and it is NOT in `domain.py`** — `Finding`, `FindingHeader` and `AgentState`
+are in `agent/state.py`, per [docs/09](09-schemas.md) §9's file map (D-055). This sentence said
+`domain.py` held them, and said *two* enums where §2 defines three.
 
 ```python
 class ServiceNode(BaseModel):

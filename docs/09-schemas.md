@@ -238,9 +238,17 @@ class Usage(BaseModel):
     duration_ms: int
     duration_api_ms: int
 
+    other_models: dict[str, float] = {}   # every OTHER model_usage key → its cost (§6)
+
     @classmethod
-    def from_result(cls, msg: "ResultMessage") -> "Usage": ...
+    def from_result(cls, msg: "ResultMessage", *, model: str,
+                    provider: Provider) -> "Usage": ...
 ```
+
+⚠️ **`model` and `provider` are REQUIRED keyword arguments, not defaults read from `config`.**
+A default is a second place the pinned model can be wrong, and it is the silent one; it also
+keeps `domain.py` importable with no project dependency at all, so the scorer never drags in
+the agent's configuration to read a results file.
 
 ⛔ **`from_result` matches the key by name and raises when it is absent — it never falls back to
 whatever key is there.** `model_usage` routinely holds a second entry: the CLI's own housekeeping
@@ -406,8 +414,10 @@ if any, come from cases generated with a different seed and are recorded in `DEC
 
 ```
 src/touchstone/
-  domain.py            §1–4 here + docs/01 §2 — write first, everything imports it
-  config.py            env vars (§10 below), paths, ESCALATION_THRESHOLD, the interval constant
+  domain.py            §1–3 + §4's `Usage`, + docs/01 §2 — write first, everything imports it
+  config.py            env vars (§10 below), paths, the interval constant
+                       ⛔ NOT ESCALATION_THRESHOLD — it is in domain.py beside the enum it
+                       compares against, and §2 above says it is not a config value (D-056)
   models.py            the SDK wrapper, ~60 lines — docs/00 §2
   telemetry.py         span tree, required attributes, exporter setup — docs/04     [phase 1, P1.5]
                        ⛔ console + file exporters only; the Phoenix container is P2.8.

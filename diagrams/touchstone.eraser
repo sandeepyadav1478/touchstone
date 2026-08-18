@@ -271,7 +271,11 @@ Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly
 // there is anything to grade, so "correct" is a lookup and never a judgement.
 
 Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1.3"] {
-  DomainPy [icon: file-text, label: "domain.py — P1.1\npydantic models, docs/09 §1–4"]
+  // ⛔ NOT §4 in full. §4 is two things: the graph state and `Usage`. The graph state went
+  //    to agent/state.py — where the file map and the AgentState node in section 3 both
+  //    put it — so domain.py imports neither LangGraph nor the SDK and the scorer can
+  //    import it without importing the agent. D-055.
+  DomainPy [icon: file-text, label: "domain.py — P1.1 ✅ shipped\npydantic models, docs/09 §1–3 + §4's Usage\n16 models + 3 enums · the graph state is NOT here"]
   GenPy [icon: settings, label: "incidents/generate.py — P1.2\ntruth FIRST, then render"]
   RendPy [icon: layers, label: "incidents/renderers.py — P1.2\nten cause renderers + the deletion path"]
   Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3\nn=10, frozen · manifest.json\nNO writer after generation — the asymmetry is in section 11"]
