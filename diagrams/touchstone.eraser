@@ -1,226 +1,145 @@
 title touchstone — the loop that has to get better
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  READ THIS FIRST — three conventions, and the measurements that set them.
+//  READ THIS FIRST — three conventions, then what this redraw changed.
 //
 //  1 · WHERE A NODE CARRIES A PHASE COLOUR, THAT COLOUR IS THE SCHEDULE.
 //      A node coloured for a phase it is not in is the quiet lie the key exists
 //      to stop. The schedule is most of the risk, so that is the colour that has
 //      to be right.
-//
-//      ⚠ THIS RULE READ "COLOUR IS PHASE, AND NOTHING ELSE — ONE exception:
-//        section 11" UNTIL 2026-08-16, AND THAT WAS MEASURABLY FALSE. Counted
-//        off the DSL rather than remembered:
-//          · red    12 nodes, NOT ONE of them a phase — and it has had its own
-//                   legend row the whole time ("an invariant, or a never"). So
-//                   the biggest exception was in the key, and the header still
-//                   said there was one exception and named a different one.
-//          · grey    7 nodes, and only Life and V5 are "deferred, or cut".
-//                   Boundary, Voided, Incomplete, Admit and C5 are none of those.
-//          · none   39 nodes carry no colour at all, so the phase is read off
-//                   the Pn.n in the label — which is the real mechanism, and
-//                   convention 3 is where it is actually written down.
-//        ⚠ RE-COUNTED 2026-08-16 after section 14 landed: 86 declarations, and
-//          the three figures above moved by +2 / +1 / +5 in one pass. They were
-//          10 / 6 / 34 an hour earlier. ⛔ A census written into prose goes stale
-//          on the NEXT edit — re-derive it from the DSL before quoting it, never
-//          step it by hand. The command is in diagrams/README.md.
-//        ⛔ The rule was not wrong when written; it was written about the
-//           schedule colours and then read as a claim about every colour. A
-//           convention stated more strongly than it is true gets enforced
-//           somewhere it does not apply, which is how ApiPy ended up with a
-//           comment describing a colour it did not have (DEF-013).
-//
-//      ✅ GREEN WAS THE ONE WRONG COLOUR AND IT IS SETTLED — D-053, 2026-08-18.
-//        It carried the key "phase 0 — shipped" while sitting on `Scored` and
-//        `Promoted`, the two GOOD OUTCOMES, neither of them phase 0. `DoctorPy`
-//        then made it sharper rather than better: one true P0 node and two
-//        outcomes wearing one colour.
-//        ⛔ THE KEY GAVE WAY, NOT THE NODES. It now reads "phase 0 — shipped, or
-//        a good outcome", which is a documented second meaning instead of an
-//        undocumented one. Stripping green off the outcomes was the tidier fix
-//        and was rejected: the good path reading at a glance is worth more here
-//        than the one-colour-one-meaning rule, and the rule was never absolute —
-//        red and purple already have their own rows, as four lines below say.
-//        ⚠ WHAT THIS COSTS, SAID PLAINLY: green can no longer be read as a
-//        schedule claim on its own, so a green node needs its label checked. That
-//        is a real loss and it is the price of the choice, not an argument that
-//        the choice was free. ⛔ It applies to GREEN ALONE. Any other colour
-//        acquiring a second meaning is DEF-013 recurring, and the giveaway is
-//        that the key will not mention it.
-//
-//      TWO documented non-phase uses, both stated where they are used:
-//        · section 11, where colour is case STATUS. It says so there.
-//        · red and purple, which have their own legend rows.
+//      ⛔ THE RULE IS ABOUT THE SCHEDULE COLOURS ALONE. red, purple and grey have
+//         their own legend rows and are not phase claims. Nodes with NO colour
+//         carry their phase in the label as Pn.n, which is the real mechanism.
+//      ⛔ A CENSUS OF COLOURS WRITTEN INTO PROSE GOES STALE ON THE NEXT EDIT.
+//         Re-derive it from the DSL; never step it by hand. Command in
+//         diagrams/README.md. The previous header carried three such counts and
+//         all three were wrong within an hour of being written.
+//      ✅ GREEN MEANS TWO THINGS — "phase 0, shipped" OR "a good outcome" — and
+//         the KEY SAYS SO (D-053). It applies to GREEN ALONE. Any other colour
+//         acquiring a second meaning is DEF-013 recurring, and the giveaway is
+//         that the key will not mention it.
 //
 //  2 · THE BOXES CARRY THE NAME AND THE RULE. THESE COMMENTS CARRY THE ARGUMENT.
 //      ⛔ ONE line a node. TWO at the outside. If it needs a paragraph it is an
 //         argument, and arguments live down here, where they cost no pixels.
-//      The reason is READABILITY: one line is what a reader takes in from a box
-//      at a glance, and a box holding a paragraph is a box nobody reads. That
-//      alone carries the rule — which matters, because the OTHER reason once
-//      given for it turned out to be measuring something else entirely.
 //
-//      ⚠ EVERY BEFORE/AFTER PIXEL FIGURE THAT ONCE SAT HERE IS WITHDRAWN — NOT
-//        CORRECTED, WITHDRAWN — AND SO IS THE MECHANISM THEY ARGUED FOR. The
-//        claim was that fat labels act as walls the auto-layout routes around,
-//        so prose in one box inflates the whole canvas. Every number supporting
-//        it was taken one-export-after-one-push on a diagram that had been
-//        updated many times. ⛔ MEASURED 2026-08-15, that is a confound, not a
-//        result: ONE DSL, rendered TWICE, came out 6388 x 12786 (81.7 MP) in a
-//        newly-created diagram and 9338 x 16401 (153.2 MP) in one that had been
-//        updated ~8 times. Same bytes. 88% more area. The variable was the
-//        NUMBER OF EDITS, and it was the variable nobody was controlling.
-//        ⚠ That pair is of itself. It was taken just before the specialist
-//          labels gained their tool line, so it does NOT compare to the settled
-//          figure in diagrams/README.md — a pair is only a pair against the DSL
-//          it was measured on, which is what the withdrawn figures got wrong.
+//  3 · EVERY NODE NAMING A file.py:LINE MUST RESOLVE, IN EXACTLY ONE FILE, IN AN
+//      APPROVED REPO — touchstone, or tau2-bench @ a2c02472 (MIT). D-068.
+//      ⛔ AMBIGUITY IS A FAILURE, NOT A NEAR MISS. tau2 has SIX files called
+//         environment.py; the first draft of this diagram named the BARE file with
+//         the line number, and the guard resolved it to retail's 54-line domain file
+//         and reported a line past EOF. The line number was right. The NAME was
+//         ambiguous. ⛔ AND THE BARE NAME IS NOT WRITTEN OUT HERE EITHER, not even
+//         as a quotation — the guard cannot tell a citation from a claim, and a rule
+//         whose own explanation trips it is a rule that gets switched off.
+//         scripts/check-diagram-nodes.sh is what caught it and it fails on
+//         ambiguity now rather than taking the first hit.
 //
-//  ⛔ THE RULE THAT REPLACES THEM — RE-CREATE BEFORE YOU EXPORT.
-//     A hosted Eraser diagram keeps its element positions across updates and
-//     only lays out fully when it is CREATED. So an old diagram's canvas is a
-//     record of its edit history, and no amount of editing walks it back.
-//     Therefore: `manually_create_diagram` from THIS FILE and export from the
-//     new one. ⛔ NEVER `manually_update_diagram`, and never export from a
-//     diagram you have been editing.
+// ═══════════════════════════════════════════════════════════════════════════════
+//  WHAT THIS REDRAW CHANGED — D-068, and it is a redraw rather than an amendment.
 //
-//     ⛔ AND THE HOSTED DIAGRAM IS REPLACED, NOT LEFT BEHIND. Delete the old
-//        one, create the new one, KEEP it. The rule here used to end "delete
-//        it", which optimised for the export and quietly let the workspace go
-//        stale: on 2026-08-16 the hosted copy sat seven fixes behind this file,
-//        and it is the copy that LOOKS canonical when someone opens the
-//        workspace. A renderer nobody has marked stale is worse than no
-//        renderer. Delete-and-recreate is the same call sequence as before with
-//        the delete moved to the front, so it costs nothing and keeps both
-//        copies honest.
-//     ⚠ THE TRIGGER IS A CHANGE TO RENDERED CONTENT, NOT A CHANGE TO THIS FILE.
-//        Comments do not render. Strip `//` lines from both versions and compare;
-//        if they match, the PNG and the hosted copy are both still correct and
-//        re-uploading buys nothing. That check is what proved this very edit
-//        needed no re-export.
-//     📐 The file ID is stable across a replace and only the diagram ID changes,
-//        so a workspace bookmark keeps working.
-//     Cheap, because this file is the artifact and the hosted copy is a
-//     renderer — see docs/07 §5 rule 1.
-//     ⛔ AND WHEN MEASURING ANYTHING: export TWICE, compare the returned URLs.
-//        They are content-addressed (elements:<sha256>.png), so an identical
-//        hash means the render settled; a first export can return the PREVIOUS
-//        one. Two exports of one unchanged diagram came back 82.6 MP and
-//        156.2 MP before this was understood.
-//     🎯 THE POINT IS NOT THE PIXELS. A number was quoted for three drafts, in
-//        a file whose whole subject is refusing unearned claims, and it was
-//        measuring the measurement apparatus. That is this project's own thesis
-//        landing on its own documents — which is why the wrong version is
-//        recorded here rather than quietly replaced.
+//  D-062 replaced the specimen: infra-RCA out, τ²-bench retail in. D-066 archived
+//  the old one whole to `incident-specimen` at 109c424 before a file left main.
+//  Sections 1–4 of the previous picture — the corpus, the graph, the state keys,
+//  the tools — were ALL specimen. They are gone from here because they are gone
+//  from main, not because they were wrong.
 //
-//  ⛔ AND NO ⛔ OR 🔴 INSIDE A LABEL — MEASURED 2026-08-18, DEF-027. Eraser's render
-//     font carries no colour emoji, so both of those fall back to ONE identical
-//     featureless bar: `🔴 THE WEAKEST GATE` came out `▮ THE WEAKEST GATE` on P2Gate and
-//     `⛔ CUT by D-052` came out `▮ CUT by D-052` on ApiPy. Two marks meaning different
-//     things — a never, and a warning about this project — collapse into one mark
-//     meaning nothing, and the reader cannot even tell which was intended.
-//     ⚠ IN THIS FILE IT IS NOT THE SILENT-DROP FAMILY, AND THAT IS WHY IT SURVIVED. A swallowed
-//       message leaves a hole a grep can find (milestone 8). This leaves the sentence
-//       intact and mangles one character inside it, so the DSL round-trips, the hash
-//       settles, the extent check reads 98.4% — every instrument passes a picture with
-//       nine bars in it. It was caught by LOOKING, same as DEF-020 and DEF-026.
-//     ⛔ THE BLOCKLIST IS TWO CHARACTERS AND MUST STAY TWO. Measured on the same render:
-//       ⚠ renders as a real warning triangle, ✅ as a check, and → ≥ · — – all render
-//       correctly. Widening this to "no emoji in labels" would strip glyphs that WORK,
-//       on the theory that they are the same kind of thing. They are not — the
-//       measurement is the boundary, not the intuition.
-//     ⛔ AND THE BAR IS A FLOWCHART BEHAVIOUR ONLY. The same two characters in
-//       diagrams/sequence.eraser render as ZERO pixels — a silent drop, the `note
-//       over` family. One defect, two failure modes; a glyph checked in one file
-//       is unchecked in the other, which is why milestone 9 reads BOTH files.
-//     THESE COMMENTS KEEP THEIR GLYPHS. They render no pixels, so nothing here is at
-//     risk; the rule binds the ~102 rendered labels only, and milestone 9 enforces it.
+//  ⚠ THE STALENESS SPLIT THAT MADE THIS SAFE TO DO. Two kinds of node named a
+//  file that is not on disk, and they need OPPOSITE treatment:
+//    · 7 named files that were ARCHIVED — domain.py, incidents/generate.py,
+//      incidents/renderers.py, suite/benchmark/truth.json, manifest.json,
+//      suite/CHANGELOG.md, tests/unit/test_invariants.py. Confirmed present on
+//      `incident-specimen` with git ls-tree. Those are WRONG and they are cut.
+//    · 12+ named files that were NEVER BUILT ANYWHERE — loop/*.py, gate/*.py.
+//      Those are CORRECT. D-021 draws before code, so a diagram naming an unbuilt
+//      file is the gate working as designed.
+//  ⛔ A naive "does this file exist" check condemns the entire planned
+//     architecture. The test is `git ls-tree incident-specimen`, never `ls`.
 //
-//  3 · EVERY NODE NAMES SOMETHING REAL — a path in docs/09 §9's file map, a key
-//      in AgentState, or a status in docs/09 §6. If a name here cannot be
-//      pointed at in this repo, it does not belong in this diagram.
+//  ⚠ AND THE DECISIVE DEFECT WAS ABSENCE, NOT STALENESS. Nothing from D-062
+//    through D-067 appeared anywhere in the old picture. A diagram that is
+//    merely out of date still argues for something; one that is silent about
+//    the last six decisions argues for nothing.
 //
-//  ⛔ THE LOAD-BEARING ABSENCES. Four things are deliberately NOT drawn. Each is
-//     a design decision, not an omission, and each would be invisible as a
-//     missing line — so they are listed rather than left to be noticed:
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THE ONE STRUCTURAL FIND, AND IT IS WHY PHASE 1 IS SMALL.
 //
-//       · NO arrow from Agent to ScorePy. The scorer reads spans, never a return
-//         value (D-007). Draw that arrow and CI can no longer score a committed
-//         trace with no credential — and nothing would fail visibly.
-//       · NO arrow out of SLocked back to SOpen. locked is one-way. That absence
-//         IS the ratchet; every other property here follows from it.
-//       · NO arrow from Truth to anything but ScorePy. Invariant 1.
-//       · NO arrow from Bench to the gate. The gate compares hashes carried in
-//         manifest.json (condition 1) — it never re-reads the cases. An arrow
-//         there would imply the gate can see the corpus at compare time.
+//  tau2.utils.llm_utils.generate() at llm_utils.py:355 is the SINGLE chokepoint
+//  for EVERY model role in τ². The agent (llm_agent.py:128), the user simulator
+//  (user_simulator.py:235) and the hallucination reviewer (hallucination_reviewer.py:196)
+//  all import that one function. So the integration is ONE adapter dispatching on
+//  the `model` argument — not four.
 //
-//  📐 WHY AgentState IS A SIBLING GROUP AND NOT NESTED INSIDE Agent.
-//     agent/state.py IS inside agent/, so nesting it was tried — on the argument
-//     that the drawing should follow the file tree. It was reverted for a reason
-//     that has nothing to do with size: nested, the layout put the three
-//     specialists ABOVE the supervisor that routes to them. A container that
-//     inverts the reading order costs more than the containment buys, and that
-//     is a defect you can SEE in the render rather than a number off an export.
-//     Sibling it is, and the edges into it carry the relationship instead.
-//     ⚠ The canvas figures once quoted here were withdrawn with all the others
-//       (convention 2). Nothing in this argument depended on them, which is why
-//       the conclusion did not move.
-//     ⚠ Recorded because the argument for nesting is a good one and will be made
-//       again — by someone reading docs/09 §9, reasonably. This is the answer.
+//  litellm is displaced there, and that has a consequence D-063 did not survive:
+//  D-063 put the traces on litellm's OTel callback. litellm leaves the agent path
+//  at P1.1, so that callback sees NOTHING. touchstone emits its own spans or it
+//  has none. The grey LiteLLM box and the TelemetryPy edges are that change, said
+//  in the picture rather than buried in a decision file.
 //
-//  📐 `direction right` WAS TRIED AND DOES NOTHING HERE. The reasoning was good
-//     and the measurement killed it. The argument: a node box is ~3x wider than
-//     it is tall, so laying out DOWN makes each rank's width a function of LABEL
-//     WIDTH, while RIGHT would make it a function of NODE COUNT — and the deep
-//     chains (C1..C5, V1..V5, the corpus) should then stop stretching the page.
-//     MEASURED under the two-export settle rule: the two renders have a
-//     PIXEL-IDENTICAL content bounding box, 9338 x 16401, and differ in 0.237%
-//     of pixels — 0.031% by more than a hair. Whatever sets this drawing's
-//     extent, it is not the flow direction; grouping and edge routing dominate
-//     and `direction` only nudges a few connectors. Left at `down`, which is
-//     the order the sections are numbered in.
-//     ⚠ That rationale was WRITTEN BEFORE THE MEASUREMENT and is kept only as
-//       the record of a disproof. Do not re-derive it as a reason to switch.
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THE THREE DECISIONS — the reason the word "promotion" is gone.
 //
-//  📐 WHAT THE RETIRED HTML POSTER CARRIED, AND WHERE EACH PART WENT (D-036).
-//     diagrams/touchstone.html drew the same system in ten sections and six
-//     encodings. Deleting it is only honest if every section has somewhere to
-//     be, so this is that list — written BEFORE the delete, not after.
-//       1 the spine              -> sections 1-9 here, as nodes and edges
-//       2 the agent graph        -> section 2
-//       3 who may call what      -> the specialist labels in section 2 now name
-//                                   their OWN two tools. See below.
-//       4 the state              -> section 3
-//       5 how an attempt ends    -> section 6
-//       6 the trace              -> sections 7-8. NOT as a flame graph.
-//       7 the gate, all five     -> section 10, C1..C5 as a chain
-//         open -> locked         -> section 11, as the state machine it is
-//       8 the version ladder     -> section 12
-//       9 layout and boundaries  -> section 5, and docs/09 §9 owns the tree
-//      10 what exists when       -> the phase colours in the legend, plus a
-//                                   Pn.n on every label. ROADMAP.md is the
-//                                   authority; a second timeline would drift.
-//     TWO things are NOT carried, and both already had an owner:
-//       · the SHAPE of a trace — docs/04 defines the span vocabulary, and a
-//         drawing of nesting cannot be checked against anything.
-//       · the seven invariants strip — ⛔ docs/01 §6 has FOURTEEN, and the
-//         poster said so on its own face: "that list has fourteen and this is
-//         a selection." A partial second copy of a checkable list is the drift
-//         D-036 exists to stop. The ones that are STRUCTURAL are drawn where
-//         they bite: truth.json red and outside the agent, findings as the one
-//         reduced key, HEADERS ONLY on the supervisor edge, locked one-way.
+//  The old picture had one gate: compare.py, five conditions, PROMOTE or REFUSE.
+//  That collapsed three different decisions into one word, and the word named the
+//  least interesting of them:
 //
-//  📐 SECTION 3 OF THE POSTER WAS A MATRIX, AND A MATRIX SAYS SOMETHING A
-//     GRAPH CANNOT: an EMPTY CELL is a claim — this specialist may NOT reach
-//     that tool — whereas a missing arrow is indistinguishable from an arrow
-//     nobody drew. Six edges from three specialists to four tools also cross,
-//     which is what made it a matrix in the first place.
-//     ⛔ SO IT IS FLATTENED INTO THE LABELS, NOT DROPPED: each specialist
-//        names its own two (docs/03 §135-137), read.py says there are four,
-//        and three names of two out of four IS the matrix — a reader can
-//        reconstruct every cell, including the empty ones. The single edge
-//        `Specialists > ReadPy: two each` carries the count so the pairing
-//        cannot silently grow.
+//    1 · refuse a TOOL CALL          runtime, at make_tool_call()   — P3.1
+//    2 · reject a CANDIDATE VERSION  at compare                     — P2.4
+//    3 · admit a MINED CASE          at suite admit                 — DEFERRED
+//
+//  ⛔ ALL THREE ARE MECHANICAL. ANYTHING WITH A MODEL IN IT CANNOT GATE. That is
+//  the invariant this whole picture is arranged around, and it is why every node
+//  in the D1/D2/D3 column is green-on-dark rather than amber. D-064 says where the
+//  model IS allowed to sit: TRANSLATION — turn a stated constraint into a
+//  predicate — never VERDICT.
+//
+//  ⚠ DECISION 3 HAS NO BUILD ROW AND IS DRAWN ANYWAY, IN GREY, SAYING SO. D-030
+//  cut mining. The failure this project has already had once is a mechanism
+//  specified in full and built by no row (DEF-009), and the fix for that is not to
+//  stop drawing it — it is to make the picture say which of the three ships.
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+//  WHY THE SCORER STAYS HONEST, MEASURED RATHER THAN ASSERTED.
+//
+//  τ²'s COMPOSITE retail reward is NOT mechanical, and the gate is a component of
+//  it rather than the whole. reward_breakdown["DB"] is a database-state diff
+//  against an annotated goal, written as its own key by evaluator_env.py:153 on
+//  every task. THAT is what gates. The composite is reported beside it. D-069.
+//  ⚠ I GOT THIS WRONG THREE TIMES and the third is the one worth the ink:
+//    (1) "the scorer has no LLM judge" — it has an NL-assertion path, LLM-graded.
+//    (2) "the NL evaluator is in the reward path, 112 of 114 tasks" — read off
+//        reward_basis. CORRECT, and I then talked myself out of it.
+//    (3) "reward_breakdown is the execution record and never contains one" —
+//        measured over 1,824 shipped sims, true of THOSE sims, and about a task
+//        set no run will ever load again. The leaderboard runs used the original
+//        τ-bench basis; tasks.json was rewritten under them. TWO FILES, ONE
+//        CHECKOUT, FOUR-DIGIT n ON THE STALE ONE.
+//  ⛔ THE COMPONENT IS NOT FREE. DB-only and full reward disagreed on 6, 16, 12
+//     and 29 of 456 simulations across the four baselines — 1.3% to 6.4%. That was
+//     DB vs DB×COMMUNICATE; today's comparison is DB vs DB×NL_ASSERTION, so the
+//     number is an order of magnitude, NOT a transferable rate. Gating on a
+//     component is a DIFFERENT measurement, not a simpler one, and P1.7 measures
+//     the joint distribution before any gate is built on it.
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THE FIVE MODEL PINS, AND THE CONSTRAINT THAT SET THEM.
+//
+//  ⛔ ANTHROPIC ONLY. ollama and Cerebras are reachable from this machine and both
+//  stay `doctor` diagnostics — never model sources. D-067 third amendment. The
+//  README's Limits section still says the judge never runs on the Claude quota;
+//  that line is what is wrong, and it is on the docs list.
+//
+//  The deciding constraint is QUOTA SHAPE, not price. Measured off the SDK's
+//  RateLimitEvent: rate_limit_type='five_hour', overage_status='rejected',
+//  overage_disabled_reason='org_level_disabled'. The cap REJECTS rather than
+//  bills, so exhausting it does not cost money — it kills a run in flight. Opus as
+//  the agent was the realistic choice and lost to exactly that.
+//
+//  ⚠ AND THE FIRST PROBE REPORTED ALL FOUR CLAUDE MODELS AS FAIL. The probe's
+//  result capture was broken, not the models — is_error=False, cost $0.0432 on the
+//  same calls. A NEGATIVE RESULT FROM A PROBE YOU JUST WROTE IS A CLAIM ABOUT THE
+//  PROBE FIRST. It nearly removed the whole Claude 5 family from consideration.
+//
 // ═══════════════════════════════════════════════════════════════════════════════
 
 direction down
@@ -229,634 +148,203 @@ styleMode shadow
 typeface clean
 
 legend [position: top-left] {
-  // ⚠ TWO MEANINGS, ON PURPOSE, AND THAT IS D-053 RATHER THAN AN OVERSIGHT. Convention 1
-  //    says a colour is the schedule; this row breaks it deliberately, which is why the key
-  //    now says so out loud instead of leaving a reader to find `Scored` and wonder. The
-  //    alternative — strip green off the two outcomes — was rejected because the good path
-  //    reading at a glance is worth more here than one colour meaning one thing.
-  //    ⛔ IT IS NOT A LICENCE. Green is the ONLY colour with two meanings, both named in
-  //    the key. A second colour doing this quietly is the DEF-013 failure again.
   [color: green, label: "phase 0 — shipped, or a good outcome"]
   [color: blue, label: "phase 1 — next"]
   [color: orange, label: "phase 2 — v0.1.0"]
   [color: pink, label: "phase 3 — v0.2.0"]
-  [color: grey, label: "deferred, or cut"]
+  [color: grey, label: "deferred, cut, or displaced"]
   [color: red, label: "an invariant, or a never"]
-  // D-047, and the citation is in this comment rather than in the label on purpose: the
-  // label is rendered text, and adding to it would invalidate the PNG beside this file.
-  // ⛔ This row is not decoration — it closes a gap this file had ALREADY NAMED and then
-  //    worked around. The comment above `Bound`, at the foot of this file, says: "the old
-  //    node was grey while it was an open question, WHICH THE KEY NEVER COVERED". It solved
-  //    that one node by picking red and explaining why, and left the hole open. api.py is
-  //    the next one, and it was drawn in the default palette while its comment claimed it
-  //    was "grey-question form" — the prose and the render disagreeing, DEF-011's shape.
-  //    ⚠ "Deferred" and "undecided" are different states and must not share a colour:
-  //    deferred means the answer is yes and the date is later; this means nobody has said
-  //    yes. Collapsing them is how a question quietly becomes a queued task.
-  //    ⚠ AS OF 2026-08-18 THIS ROW HAS NO INSTANCE — `api.py` was the only purple node
-  //    and D-053 cut it. The row STAYS: a legend defines the notation, it is not a
-  //    census of what is used today, and the next open question should not have to
-  //    re-argue D-047 to get a colour. ⛔ It is not a spare colour to reassign.
   [color: purple, label: "an OPEN QUESTION — nobody has decided yet"]
   [connection: -->, label: "reads it — does not trigger it"]
 }
 
-// D-044 belongs on this node and nowhere else. The developer is the ONLY writer of a
-// candidate — there is no auto-tuner, and the reason is attribution (D-013), not principle.
-// Saying it here rather than in a floating note keeps it attached to the thing it constrains.
 Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing\nNO auto-tuner — a human writes every candidate (D-044)"]
 
-// ── 1 · THE CORPUS — built BEFORE the agent exists ────────────────────────────
-// That ordering is the falsifiability claim. The answer key is planted before
-// there is anything to grade, so "correct" is a lookup and never a judgement.
-
-Corpus [color: blue, icon: package, label: "1 · the frozen corpus — P1.1–P1.3"] {
-  // ⛔ NOT §4 in full. §4 is two things: the graph state and `Usage`. The graph state went
-  //    to agent/state.py — where the file map and the AgentState node in section 3 both
-  //    put it — so domain.py imports neither LangGraph nor the SDK and the scorer can
-  //    import it without importing the agent. D-055.
-  DomainPy [icon: file-text, label: "domain.py — P1.1 ✅ shipped\npydantic models, docs/09 §1–3 + §4's Usage\n16 models + 3 enums · the graph state is NOT here"]
-  GenPy [icon: settings, label: "incidents/generate.py — P1.2 ✅ shipped\ntruth FIRST, then render · TOPOLOGY · the ten-case SUITE\nbenchmark_hash + write_suite live HERE — beside what they hash (D-060)"]
-  RendPy [icon: layers, label: "incidents/renderers.py — P1.2 ✅ shipped\nten cause renderers + the deletion path\nevidence splits ambient / distinguishing — the split DERIVES required_specialist (D-058)"]
-  Bench [shape: document, icon: box, label: "suite/benchmark/ — P1.3 ✅ shipped\nn=10, FROZEN at hash 4c935f06 · manifest.json · README.md\n⚠ config_drift and noisy_neighbor are drawn but NEVER scored as themselves (D-061)\nNO writer after generation — the asymmetry is in section 11"]
-  // D-042: required_specialist is drawn here because the field has a DEADLINE, not
-  // because it is interesting. truth.json is hashed byte for byte, so the key is free
-  // at P1.2 and a benchmark version bump at any later moment. An implementer working
-  // from this picture has to see it before P1.3 freezes the tier.
-  Truth [shape: document, color: red, icon: lock, label: "truth.json — INSIDE the hash · one PER TIER\nNEVER seen by the agent\n✅ required_specialist landed BEFORE P1.3 froze it — Specialist | None (D-042, D-058)"]
-  // ⛔ THIS IS THE HALLUCINATION CHECK, AND IT IS A CLASS RATHER THAN A CHECKER — which is
-  //    why a search for one finds nothing. `insufficient_evidence` appeared ZERO times in this
-  //    file while docs/01 §3 calls it "the most important class", and phase 1's exit gate
-  //    names case 09 specifically to force it into the suite.
-  //    🎯 The design is the interesting part: there is NO hallucination detector anywhere in
-  //    this system, on purpose. A detector is a second model with a second failure mode and
-  //    nothing to check IT against. Instead the honest "I do not know" is planted in the
-  //    answer key like any other cause, so refusing to guess is a CORRECT answer that a case
-  //    can require — scored by exact match, no judge, same as everything else.
-  //    ⚠ It follows that an agent which never says it cannot tell scores WRONG on case 09.
-  //    That is the whole mechanism, and it was invisible on the canvas.
-  Insuf [shape: document, color: red, icon: circle, label: "insufficient_evidence — docs/01 §3, the most important class\nthe honest 'I do not know', and it is a CORRECT answer\nNO hallucination detector anywhere — the CLASS is the check\ncase 09 requires it — named in phase 1's exit gate"]
+// ── 1 · the specimen. External, pinned, and NOT OURS — which is the whole point of D-062.
+Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · pinned a2c02472\nnot written here, not vendored here — 114 tasks stay upstream"] {
+  Orch [icon: repeat, label: "orchestrator.py:260 — Orchestrator.run\ndrives one simulation to its end"]
+  AgentTurn [color: orange, icon: cpu, label: "llm_agent.py:128 — the agent under test\nTHE THING BEING MEASURED"]
+  UserSim [color: orange, icon: user, label: "user_simulator.py:235 — the customer\nFROZEN APPARATUS (D-067)"]
+  Reviewer [color: orange, icon: search, label: "hallucination_reviewer.py:196 — opt-in\nvalidates the SIMULATOR, not the agent"]
+  Gen [color: red, icon: git-merge, label: "llm_utils.py:355 — generate()\nTHE SINGLE SEAM · all four roles import it"]
+  LiteLLM [color: grey, icon: slash, label: "llm_utils.py:15 — litellm.completion\nDISPLACED at P1.1 — and its OTel callback goes with it"]
+  EnvCall [color: red, icon: shield, label: "environment/environment.py:158 — make_tool_call()\nTHE ENFORCEMENT POINT · every tool execution passes here"]
+  Mutates [icon: edit-3, label: "environment/environment.py:130 — _is_mutating_tool()\nτ² already split read from write — do not re-derive it"]
+  Eval [icon: check-square, label: "evaluator.py:88 — evaluate_simulation\nruns AFTER the simulation, never during it"]
+  Reward [color: red, icon: award, label: "reward_breakdown[DB] — the gating number\nNO MODEL · composite reported beside it, never gated · D-069"]
 }
 
-DomainPy > GenPy > RendPy > Bench
-GenPy > Truth
-GenPy > Insuf: planted like any other cause — one of the ten (docs/01 §3)
+Orch > AgentTurn
+Orch > UserSim
+Orch > Reviewer: opt-in — --auto-review
+AgentTurn > Gen
+UserSim > Gen
+Reviewer > Gen
+AgentTurn > EnvCall: every tool the agent calls
+EnvCall > Mutates: read or write?
+Orch > Eval > Reward
 
-// ── 2 · THE AGENT ─────────────────────────────────────────────────────────────
-// v1 is Synthesizer ALONE, findings == []. Deliberately weak: a baseline that
-// is already good hides every improvement that comes after it.
-// ⛔ The SAME object and the SAME prompts/synthesizer.md, not a v1_oneshot.md
-//    (D-038). That is what makes v2 − v1 attributable: if the decision layer is
-//    byte-identical, the delta measures the investigation layer and nothing
-//    else. The check runs at P1.4 — if the prompt needs an "if there are no
-//    findings…" branch, these are not the same node and D-038 flips.
-// ⛔ There is NO gate node here, and its absence is a decision (D-040). An
-//    earlier revision drew HumanGate between Synthesizer and END, holding a
-//    LangGraph interrupt() for blast_radius ≥ restart_service. It is deleted:
-//    nothing in this system executes an action (docs/01 §7), and the measured
-//    path auto-declined the interrupt on every suite run — so the pause only
-//    ever existed on a branch no number came from. Blast radius now sets
-//    verdict.escalate, which the scorer reads as an axis. A human rewrites this
-//    machine; a human is never a state in it.
-
-Agent [color: blue, icon: cpu, label: "2 · agent/ — P1.8 · graph.py · nodes.py · state.py\nStateGraph + SqliteSaver, checkpointed after EVERY node"] {
-  Supervisor [shape: hexagon, icon: git-branch, label: "supervisor — routes on `next`\nONE per hop, never a fan-out (D-026)"]
-  Specialists [color: blue, icon: search, label: "three specialists — each blind to the others"] {
-    SpTimeline [icon: clock, label: "timeline — did something change?\nget_deploys · get_logs"]
-    SpResource [icon: activity, label: "resource — what is saturated?\nget_metrics · get_logs"]
-    SpDependency [icon: share-2, label: "dependency — us, or something we call?\nget_topology · get_metrics"]
-  }
-  Synthesizer [icon: check-square, label: "synthesizer — no tools, it DECIDES\nv1 is THIS NODE ALONE (D-038)\nsets escalate if blast_radius ≥ restart_service (D-040)"]
+// ── 2 · the seam, and the pins behind it.
+Seam [color: blue, icon: git-merge, label: "2 · the seam — P1.1"] {
+  Adapter [color: blue, icon: link, label: "adapter.py — P1.1\nthe Claude Agent SDK behind generate(), dispatching on `model`\nONE adapter, FOUR roles — because there is one chokepoint"]
+  Sdk [color: orange, icon: cpu, label: "ClaudeSDKClient — claude_agent_sdk\nsetting_sources=[] — the EMPTY LIST, never None (D-034)"]
+  Anthropic [shape: cylinder, color: orange, icon: cloud, label: "Anthropic — subscription auth, NOT an API key\nfive-hour window · the cap REJECTS, it does not bill"]
 }
 
-Supervisor > Specialists: one per hop
-Specialists > Supervisor: hops += 1
-Supervisor > Synthesizer: next == done, or hops ≥ MAX_HOPS (D-039)
-// Synthesizer has no outgoing edge on purpose: it IS the terminal node (D-040).
-// Where the attempt lands is section 6, reached by the group edge Agent > Ends.
+Cfg [color: green, icon: settings, label: "config.py — P0 ✅ shipped · FIVE model pins (D-067)\nMODEL · USER_MODEL · JUDGE_MODEL · NL_ASSERTION_MODEL · REVIEW_MODEL"]
+NoOther [shape: document, color: red, icon: alert-octagon, label: "ANTHROPIC ONLY — ollama and Cerebras are `doctor` diagnostics\nNEVER model sources · a README line still says otherwise and it is WRONG"]
 
-// ── 3 · THE STATE ─────────────────────────────────────────────────────────────
-// The write side is D-012: exactly one reduced key. The read side is D-025, and
-// that is the one that goes wrong quietly — a key with an unintended READER
-// inherits framing, and nothing in the run reports that it happened.
+Gen > Adapter: REPLACED at the seam
+Gen --> LiteLLM: what it used to call
+Adapter > Sdk > Anthropic
+Cfg > Adapter: which pin, per role
+NoOther --> Cfg
+Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · asserts all five pins resolve"]
+Doctor > Cfg
 
-AgentState [color: blue, icon: box, label: "3 · agent/state.py — AgentState, docs/09 §4"] {
-  KIncident [icon: file-text, label: "incident: Incident — written once"]
-  KFindings [color: red, icon: plus-circle, label: "findings: Annotated[list[Finding], add]\nthe ONLY reduced key (D-012)"]
-  KHops [icon: hash, label: "hops: int — supervisor only"]
-  KVerdict [icon: award, label: "verdict: Verdict | None"]
+// ── 3 · the gates. Shadow earns enforce; nothing here carries a model in its verdict.
+Gates3 [color: orange, icon: filter, label: "3 · the gates — D-064 · D-065\na gate is an EXTRACTED CONSTRAINT plus a MECHANICAL CHECK"] {
+  Tier1 [color: orange, icon: hash, label: "gate/tier1.py — P2.1 · FIVE DB constraints, NO model\nmeasured: 0/408 passing sessions violated, 1/48 failing ones did"]
+  Tier2 [color: orange, icon: cpu, label: "gate/extract.py — P2.2 · the model TRANSLATES a stated constraint\ninto a predicate. The VERDICT is mechanical. It never judges 'did well'"]
+  Shadow [color: orange, icon: eye, label: "SHADOW — P2.3 · judges a COMPLETED session, acts on nothing\na gate earns enforcement here, or it does not get it"]
+  Enforce [color: pink, icon: shield, label: "gate/enforce.py — P3.1 · REFUSES the call before it executes\nthe hook at make_tool_call()"]
 }
 
-KIncident > Supervisor: read by every node
-Specialists > KFindings: append
-KFindings > Supervisor: HEADERS ONLY (D-025)
-KFindings > Synthesizer: the WHOLE list
-Synthesizer > KVerdict
-Supervisor <> KHops
+Tier1 > Shadow
+Tier2 > Shadow
+Shadow > Enforce: ONLY with a measured precision and recall (D-065)
+Enforce > EnvCall: refuse — before the write happens
+Precision [shape: document, color: red, icon: alert-triangle, label: "PERFECT PRECISION, 2.1% RECALL on a strong agent\nthe low recall is the FEATURE — only a gate that never fires falsely can be enforced"]
+Precision --> Tier1
+Headroom [shape: document, color: orange, icon: target, label: "tier 2 targets the 26 FLAKY tasks — where the headroom is\n⚠ its false-positive rate on the 85 always-passing tasks is what shadow measures"]
+Headroom --> Tier2
 
-// ── 4 · THE TOOLS — five, split 4 + 1 ─────────────────────────────────────────
-// All five are built at P1.7. The fifth is dead weight until v3, and that is
-// the entire content of v3: the delta is one tool on one node.
-
-Tools [color: blue, icon: tool, label: "4 · tools/ — P1.7"] {
-  ReadPy [icon: eye, label: "read.py — four read-only tools\nlogs · metrics · deploys · topology"]
-  RunbooksPy [icon: book-open, label: "runbooks.py — search_runbooks\nBM25, 13 files: 10 real, 3 decoys"]
-}
-
-Specialists > ReadPy: two each
-Supervisor > RunbooksPy: v3 onward
-
-// ── 5 · OUT OF PROCESS — two boundaries, each a failure mode and a cost ───────
-
-Boundary [color: grey, icon: shield, label: "5 · out of process"] {
-  ModelsPy [color: blue, icon: code, label: "models.py — a FILE, ~60 lines (DEF-002)\nsetting_sources=[] · the model is PINNED (D-034)"]
-  CLIProc [shape: hexagon, icon: terminal, label: "claude CLI — SUBPROCESS"]
-  ApiEndpoint [shape: cylinder, icon: cloud, label: "Anthropic API — NETWORK"]
-}
-
-Agent > ModelsPy: every node call
-ModelsPy > CLIProc > ApiEndpoint
-
-// ── 6 · HOW AN ATTEMPT ENDS ───────────────────────────────────────────────────
-// The split that earns its keep is ours-versus-theirs: parse_failure is the
-// agent's OWN output and scores as wrong; void is OUR infrastructure and counts
-// toward nothing. Merge them and a bad week of 429s reads as a worse agent.
-//
-// ⛔ `budget_exceeded` LIVED IN THIS COMMENT AND NOWHERE ELSE UNTIL 2026-08-17,
-//    which is the P1.4 failure recorded 120 lines below — "it lived in a comment,
-//    and a comment renders no pixels" — recurring in the section that comes FIRST.
-//    The line said it is orthogonal, lands beside any status, never instead of one.
-//    Every word of that was true and the picture asserted none of it: a reader saw
-//    four statuses and no flag. ⚠ A rule written down once does not fire on the next
-//    instance by itself; the only reason this one was caught is that a reader asked
-//    whether every node was present, and the answer came off the DSL rather than off
-//    the prose. There is still no guard for "a concept with no node" and there cannot
-//    be one, because the set of concepts is the judgement the diagram is FOR.
-
-Ends [color: red, icon: flag, label: "6 · exactly ONE status per attempt — docs/09 §6"] {
+// ── 4 · what an attempt lands on. One status, plus an orthogonal flag.
+Ends [color: red, icon: flag, label: "4 · exactly ONE status per attempt — docs/09 §6"] {
   Scored [color: green, icon: check-circle, label: "scored — counts toward everything"]
   ParseFail [color: red, icon: x-circle, label: "parse_failure — scored WRONG\nnever retried (D-013)"]
-  Voided [color: grey, icon: slash, label: "void — 429, or model changed\ncounts toward NOTHING (D-015)"]
-  Incomplete [color: grey, icon: pause-circle, label: "incomplete — process died\nthe checkpoint survived"]
+  Voided [color: grey, icon: slash, label: "void — rate limit, or model changed\ncounts toward NOTHING (D-015)"]
+  Incomplete [color: grey, icon: pause-circle, label: "incomplete — process died\nthe five-hour window is the realistic cause"]
 }
+Orch > Ends: every attempt lands on exactly one
+BudgetFlag [shape: document, color: red, icon: dollar-sign, label: "budget_exceeded — a FLAG, never a status\nlands BESIDE any of the four, NEVER instead of one"]
+Orch > BudgetFlag: orthogonal to where the attempt lands
 
-Agent > Ends: every attempt lands on exactly one
+// ── 5 · telemetry. This is the edge D-063 got wrong, and the picture says so.
+TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2\ntouchstone.* — NEVER gen_ai.* (D-017)\n🆕 EMITTED BY US: litellm's callback is gone with litellm"]
+D063 [shape: document, color: purple, icon: help-circle, label: "D-063 assumed litellm's OTel callback\nP1.1 kills that assumption — this is a CHANGE to a recorded decision"]
+D063 --> TelemetryPy
+Adapter > TelemetryPy: one span per model call, all four roles
+EnvCall > TelemetryPy: one span per tool call, and per REFUSAL
+Reward > TelemetryPy: the label, joined at end-of-simulation on session_id
 
-// ⛔ DRAWN OUTSIDE `Ends`, AND THE PLACEMENT IS THE WHOLE CLAIM. Inside that box it
-//    would read as a fifth status, and the box is labelled "exactly ONE". It is a FLAG
-//    on the attempt, not an outcome of it: docs/09 §6 carries it as a boolean beside
-//    the status, docs/05 §5 counts it in the aggregate next to hops_exhausted, and
-//    docs/04 §7 says `max_budget_usd` — a hard ceiling IN THE CLI, below the wrapper —
-//    aborts the attempt and records it. A scored attempt can carry it; so can a void.
-BudgetFlag [shape: document, color: red, icon: dollar-sign, label: "budget_exceeded — a FLAG, never a status\nlands BESIDE any of the four, NEVER instead of one\nmax_budget_usd aborts BELOW budget.py — docs/04 §7"]
-
-Agent > BudgetFlag: set on abort — orthogonal to where the attempt lands
-
-// ── 7 & 8 · THE TRACE, AND WHAT SURVIVES THE PROCESS ──────────────────────────
-// D-037 moved telemetry.py from P2.1 into P1.5. Before that, phase 1 ended with
-// a scorer that had never once read a span the agent actually produced.
-
-// D-043: two contracts, one test. With no human inside a run (D-040) the trace is the
-// only surface a person can act on, so an attribute set that satisfies only the scorer
-// improves nothing. The three human-read attributes are named on the node because they
-// are the ones nobody would infer from "emit spans".
-TelemetryPy [color: blue, icon: activity, label: "7 · telemetry.py — P1.5 (moved by D-037)\ntouchstone.* — NEVER gen_ai.* (D-017)\nTWO contracts, ONE test (D-043)\n+ prompt · findings_seen · attempt_status"]
-
-Stores [color: blue, icon: hard-drive, label: "8 · what survives the process"] {
-  // The picture said "what --resume reads" and docs/06 §3 now says nothing reads it back.
-  // Kept and marked rather than quietly corrected: a store that is written on every node
-  // and read by nothing is the exact shape of a mechanism that looks wired and is not.
-  Ckpt [shape: cylinder, icon: database, label: "config.CHECKPOINTS\n.touchstone/checkpoints.db — written after EVERY node\n⚠ UNEXERCISED since D-040 — nothing reads it back yet"]
+Stores [color: blue, icon: hard-drive, label: "6 · what survives the process"] {
   Spans [shape: cylinder, icon: file-text, label: "results/spans/(version).jsonl\nthe scorer's ONLY input"]
+  Bench [shape: document, color: blue, icon: lock, label: "suite/benchmark/ — P1.3 · task IDS and a hash\nNEVER task bytes — vendoring makes us the corpus's owner again"]
 }
-
-Agent > Ckpt: after EVERY node
-Agent > TelemetryPy
-KVerdict > TelemetryPy: leaves as a SPAN, not a return value
 TelemetryPy > Spans
+Bench > Orch: which tasks — the ids only
 
-// ── 9 · THE SCORER ────────────────────────────────────────────────────────────
-// Note what does NOT arrive here: the agent's return value. That absence is
-// what lets CI score a committed JSONL with no credential and no model call.
-
-CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.9 adds incidents · triage · run · score"]
-
-// ⛔ THE ONLY FILE IN THIS PICTURE THAT IS ACTUALLY ON DISK, AND IT HAD NO NODE. It
-//    appeared as five words inside CliPy's label and five more inside P0Gate's, so the
-//    ONE thing here that has shipped was the one thing a reader could not point at. Of
-//    the 42 file paths this file draws, three exist; a diagram is a specification of
-//    work not yet done and that is fine, but the built part earns a box.
-// ⚠ GREEN IS THE KEY APPLIED. This node is a phase-0 file that shipped, so it is green
-//    under the first half of the key — and `Scored` and `Promoted` are green under the
-//    SECOND half, which the key now states out loud (D-053, 2026-08-18).
-//    ⛔ THIS NODE IS WHY THE QUESTION BECAME ANSWERABLE. While green sat only on two
-//    outcomes it had no true instance at all, and the honest reading was "the key is
-//    simply wrong". Drawing one real P0 node turned that into a colour with a true
-//    instance AND two others — a genuine choice between two defensible keys, which is a
-//    thing a reader can decide. **Making a question decidable is different from
-//    answering it, and it is usually the harder half.**
-DoctorPy [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN (docs/09 §9)\none of only TWO files with a fixed order — the other is domain.py\n✅ shipped: `touchstone doctor` runs today"]
-
+// ── 7 · the driver and the scorer.
+CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.6 adds run · score · suite"]
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
-// ⚠ RESTRUCTURED by D-046. Judge used to live in section 13 with the phase-2 "surfaces"
-// and Diag sat here unnumbered, so the one edge carrying the whole D-045 argument ran the
-// height of the canvas and a reader had to find two nodes at opposite ends to answer "how
-// is the rubric kept out of the gate?". Judge is not a surface — it is a scoring component
-// that happens to be phase-2 TIMED, and this diagram groups by ROLE while COLOUR carries
-// phase. So all three sit in one box and the orange node inside a blue group is the phase,
-// said the way the legend already says it.
-//
-// 🔴 A PIXEL CLAIM SAT HERE AND IS WITHDRAWN — the regroup was written up as "3,941px of
-// height gone, 27% less to scroll, which GROUP a node is in is a bigger layout input than
-// how many nodes there are." Both renders came from the long-edited hosted diagram, which
-// the rule ~40 lines above says is a record of edit history and not of content. The rule
-// was in this file, and it was not followed. The D-046 export was ALSO CLIPPED — section
-// 13 missing entirely — and two exports returned the identical hash, so the settle rule
-// declared it good. Settled is not complete. diagrams/README.md findings 2a and row five.
-// ⛔ The regroup stands on its reading argument alone, which is the one it was made for.
-Scoring [color: blue, icon: bar-chart-2, label: "9 · scoring — what happens at score time"] {
-  // Note what does NOT arrive here: the agent's return value. That absence is what lets CI
-  // score a committed JSONL with no credential and no model call.
-  // ⚠ Both metrics are named because the CONTRAST is the claim, and the picture carried
-  // only half of it: all_k appeared four times, pass@1 not once. docs/05 §2 — "pass@1
-  // describes a demo, all_k describes something you would put on call." A diagram that
-  // shows only the headline number has quietly dropped the sentence that makes it mean
-  // anything, and P3.1 requires both reported ESPECIALLY when they differ.
-  // ⛔ AND THAT FIX WAS STILL HALF OF IT (DEF-017). docs/05 has FOUR scored axes — §1 correctness,
-  //    §2 all_k, §3 escalation F1, §4 cost per correct — and `F1` appeared ZERO times in
-  //    this file, comments included. Two of the four reached the canvas and one more
-  //    (cost per correct) only ever appeared downstream on C4, where it reads as a budget
-  //    rule rather than as something the scorer computes. Naming the SET on the node is
-  //    what stops the next axis going missing: a reader can now count four and check.
-  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — P1.6 · NO model call\nspans + truth.json → results/(version).json (D-007)\nFOUR axes, docs/05 §1–4: correctness · all_k · escalation F1 · cost per correct\nall_k is the HEADLINE · pass@1 beside it, docs/05 §2 — BOTH, especially when they differ\nTWO outputs — only ONE of them reaches the gate"]
-
-  // The dead end IS the mechanism. The old label said "DIAGNOSTIC, never gates", which was
-  // the prose promise drawn as though it were a structure. A box with no outgoing edge is
-  // the only honest way to draw "nothing downstream may read this" — and it is why a rubric
-  // is not a human in the loop: a human gate HALTS the machine, this cannot even be observed
-  // by it. ⛔ If an edge ever leaves this node, D-045 has been broken.
-  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\ncompare.py NEVER reads inside it — ONE TEST proves it (D-045)\nrubric + judge_model + rubric_hash (D-041) · router P/R (D-042)\nNO OUTGOING EDGE, ON PURPOSE"]
-
-  // Phase-2 timed, drawn here anyway: it belongs to scoring, and P2.6a says when.
-  // ⚠ It is admissible as a SIXTH promotion condition only at agreement ≥ 0.95 sustained
-  //   over ≥ 10 versions, non-systematic disagreements, and n ≥ 50 (D-045 amendment).
-  //   Until then the edge below is the only one it gets.
-  Judge [color: orange, icon: award, label: "arize-phoenix-evals — P2.6a · the ONLY judged metric\nCerebras, NEVER the Claude quota (D-016)\ncriterion 1 DUPLICATES the mechanical check → its error rate (D-041)\nhad no build row at all until DEF-009"]
-}
-
 Dev > CliPy
-CliPy > DoctorPy: `touchstone doctor` — the P0 subcommand, and the only one that runs today
-CliPy > RunPy
-Bench > RunPy: the Incident only — NEVER the truth
-RunPy > Agent: invoke(state, thread_id=run_id)
+CliPy > Doctor: the P0 subcommand, and the only one that runs today
+CliPy > RunPy > Orch
+
+Scoring [color: blue, icon: bar-chart-2, label: "7 · scoring — P1.5"] {
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — NO model call (D-007)\nspans + reward_breakdown → results/(version).json\npass^k is the HEADLINE · pass@1 beside it — BOTH, especially when they differ"]
+  Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\ncompare.py NEVER reads inside it — ONE TEST proves it (D-045)\nNO OUTGOING EDGE, ON PURPOSE"]
+  Judge [color: orange, icon: award, label: "the rubric judge — JUDGE_MODEL, cheapest tier on purpose\nit CANNOT GATE — that is why it is allowed to exist at all"]
+}
 Spans > ScorePy
-Truth > ScorePy: read at SCORE time only
+Reward > ScorePy: the answer key, and it is τ²'s, not ours
 ScorePy > Diag: the OTHER output — and it stops here
 Judge > Diag: writes the rubric fields — and reaches NOTHING else
+Shadow --> Diag: the shadow scores land here until a gate earns enforcement
 
-// ── 10 · THE GATE — this is the product ───────────────────────────────────────
-// Everything above exists to make this output mean something. The chain is an
-// AND: five conditions, not five options. It is drawn as a chain so the rail
-// carries the AND and no label has to repeat it.
-// ⚠ Condition 5 is VACUOUS through v4 — the locked set is empty until P3.3.
-//   The honest sentence is "four conditions ran, five are specified."
-
-Gate [color: orange, icon: filter, label: "10 · loop/compare.py — P2.4 · ALL FIVE must hold"] {
+// ── 8 · decision 2. Five conditions, all mechanical.
+Cmp [color: orange, icon: filter, label: "8 · loop/compare.py — P2.4 · ALL FIVE must hold"] {
   C1 [icon: hash, label: "1 · benchmark_hash(C) == benchmark_hash(I)"]
-  C2 [color: red, icon: alert-triangle, label: "2 · NO per-case regression — THE ONE THAT WORKS\nfires on all_k → not-all_k ONLY (D-008)"]
-  C3 [icon: trending-up, label: "3 · strict improvement on ≥ 1 metric\nelse a no-op promotes"]
-  C4 [icon: dollar-sign, label: "4 · no budget breach — cost/correct, p95"]
-  C5 [color: grey, icon: lock, label: "5 · no locked case fails — ONE-WAY\nVACUOUS through v4"]
+  C2 [color: red, icon: alert-triangle, label: "2 · NO per-task regression — THE ONE THAT WORKS\nfires on pass^k → not-pass^k ONLY (D-008)"]
+  C3 [icon: trending-up, label: "3 · strict improvement on ≥ 1 metric\nelse a no-op is accepted"]
+  C4 [icon: dollar-sign, label: "4 · no budget breach — cost per success, p95"]
+  C5 [color: grey, icon: lock, label: "5 · no locked task fails — ONE-WAY\nVACUOUS while decision 3 is deferred"]
 }
-
 C1 > C2 > C3 > C4 > C5
+ScorePy > Cmp: results/(version).json — the scored half only
+Accepted [shape: oval, color: green, icon: check, label: "ACCEPT — vN is the champion"]
+Refused [shape: oval, color: red, icon: x, label: "REJECT — the rejection IS the result\nNEVER fixed by weakening the baseline"]
+C5 > Accepted: all five hold
+Cmp > Refused: any ONE fails
+Refused --> Dev: informed by WHICH task broke
 
-Promoted [shape: oval, color: green, icon: check, label: "PROMOTE — vN is the champion"]
-Refused [shape: oval, color: red, icon: x, label: "REFUSE — the refusal IS the result\nNEVER fixed by weakening the baseline"]
-
-ScorePy > Gate: results/(version).json
-C5 > Promoted: all five hold
-Gate > Refused: any ONE fails
-Refused --> Dev: informed by WHICH case broke
-
-// ⛔ P1.4 was the ONLY phase-1 step with nothing on the canvas — it lived in a comment,
-//    and a comment renders no pixels. That is not a filing error. Diag one section above
-//    says "ONE TEST proves it (D-045)", and the test it names had no node, so the picture
-//    asserted a mechanism and then declined to draw it. Every other claim here points at a
-//    file a reader can open; this one pointed at prose.
-// ⚠ Drawn with `-->` on purpose — the legend reads it as "reads it, does not trigger it".
-//    A test that TRIGGERED the gate would be a different and much weaker thing.
-Inv [shape: document, color: blue, icon: check-square, label: "tests/unit/test_invariants.py — P1.4\n13 LIVE invariants of docs/01 §6, numbered to 14\n5 is RETIRED, not renumbered (D-040) — the slot stays EMPTY\n1–8 now · 9–10 v5-only · 11–12 need the regression tier · 13–14 need v2"]
-
-Inv --> Gate: asserts compare.py reads NO field inside diagnostics{} — the code half of D-045
-
-// ── 11 · THE REGRESSION LIFECYCLE — all that condition 5 reads ────────────────
-// ⚠ COLOUR HERE IS STATUS, NOT PHASE. The only section where that is true.
-// ⛔ There is no arrow out of SLocked back to SOpen. A locked case unlocks only
-//    by a recorded override in DECISIONS.md, with the trace — never in a commit
-//    message. mine.py sits in this group because what it produces is `open`.
-// The ScorePy edge below was missing in draft 2, and its absence was a CONTENT
-// error before it was ever a layout one: mine.py has to read something, and
-// what it reads is the scored results. Adding it also moved this section from
-// adrift at the top of the canvas to beside the gate it feeds — the fix for the
-// meaning and the fix for the placement were the same edge.
-
-// ⛔ THE SECOND SUITE MANIFEST LIVES HERE, and it was missing until an audit counted the
-//    stores against docs/07 §2. That row does not say "draw the suite" — it says draw
-//    EVERY store AND ITS WRITER, and it names this pair as the one that is NOT symmetric:
-//    suite/benchmark/ has no writer at all once generated, suite/regression/ has exactly
-//    one. Four statuses were drawn with no store under them, so the picture showed what a
-//    case BECOMES and never where it is kept or who may put it there. A store with one
-//    writer is a design claim; an undrawn store is that claim made invisible.
-Life [color: grey, icon: repeat, label: "11 · the case lifecycle — P3.3–P3.6, DEFERRED (D-030)"] {
-  MinePy [icon: filter, label: "loop/mine.py · loop/suite.py\nfailures → suite/proposed/"]
-  // ⛔ THE FIVE ADMISSION GATES WERE A LINE OF TEXT INSIDE THIS LABEL, and the promotion
-  //    gate's five conditions are five nodes on a chain. Same kind of object — an AND of
-  //    mechanical checks — drawn two different ways, so only one of them read as a gate.
-  //    A reader could not see that admission is also all-or-nothing, and a text list has no
-  //    place to hang the thing that matters about gate 5: the `why` is required and there is
-  //    still no human step (D-040). Structure is what makes the AND checkable.
-  Admit [color: grey, icon: filter, label: "the five admission gates — ALL five, docs/02 §5"] {
-    A1 [icon: repeat, label: "1 · reproducible"]
-    A2 [icon: activity, label: "2 · not_flaky"]
-    A3 [icon: slash, label: "3 · not_a_void"]
-    A4 [icon: git-branch, label: "4 · distinct"]
-    A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED\nwritten by whatever produced it, NEVER by a human step (D-040)"]
-  }
-  Regr [shape: cylinder, icon: database, label: "suite/regression/ — the second manifest\nONE writer, ever: `touchstone suite admit` (loop/suite.py)\n⚠ NOT symmetric with suite/benchmark/, which has NO writer at all"]
-  // ⛔ THE STORE RULE ABOVE FIRED ON `Regr` AND STOPPED ONE FILE SHORT. docs/07 §2 says
-  //    draw EVERY store and its writer; the audit that added Regr added the manifest and
-  //    left the changelog beside it undrawn, so the section showed where a case is KEPT and
-  //    still not where its REASON is kept. Those are different artifacts: the manifest holds
-  //    `why` as a required field per case (docs/02 §4), this holds one entry per suite
-  //    VERSION — what was added, why, and what the agent could not do at the time.
-  // ⚠ GENERATED, THEN REVIEWED — that is the claim, and it is why it is a store and not a
-  //    label. docs/02 §5: "a hand-maintained changelog is how a reason outlives the fact."
-  //    Generation is what keeps it honest; the review is what makes it worth reading.
-  Log [shape: document, icon: file-text, label: "suite/CHANGELOG.md — one entry per suite VERSION\nGENERATED from the manifests by `touchstone suite log`, then REVIEWED\nwhat was added, why, and what the agent could not do at the time"]
-  SOpen [icon: circle, label: "open — does NOT gate"]
-  SLocked [color: red, icon: lock, label: "locked — GATES FOREVER, one-way\nset automatically on the first PROMOTED all_k"]
-  SQuar [icon: pause-circle, label: "quarantined — human, reason REQUIRED"]
-  SSuper [icon: edit, label: "superseded — human, the label was wrong"]
+// ── 9 · the three decisions, side by side. None of them may contain a model.
+Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {
+  D1 [icon: shield, label: "1 · refuse a TOOL CALL — runtime, P3.1\nno model in the verdict"]
+  D2 [icon: filter, label: "2 · reject a CANDIDATE VERSION — at compare, P2.4\nno model in the verdict"]
+  D3 [color: grey, icon: pause-circle, label: "3 · admit a MINED CASE — DEFERRED by D-030\ndrawn because DEF-009 was a mechanism nobody scheduled"]
 }
+Enforce > D1
+Cmp > D2
+Invariant [shape: document, color: red, icon: alert-octagon, label: "ANYTHING THAT GATES IS MECHANICAL\nANYTHING WITH A MODEL IN IT CANNOT GATE\nD-064 puts the model in TRANSLATION, never in the VERDICT"]
+Invariant --> Decisions
 
-ScorePy --> MinePy: the failures, mined
-MinePy > A1: suite/proposed/ → the gates, ALL five must hold (docs/02 §5)
+Admit [color: grey, icon: filter, label: "10 · the five admission gates — DEFERRED with decision 3"] {
+  A1 [icon: repeat, label: "1 · reproducible"]
+  A2 [icon: activity, label: "2 · not_flaky"]
+  A3 [icon: slash, label: "3 · not_a_void"]
+  A4 [icon: git-branch, label: "4 · distinct"]
+  A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED"]
+}
 A1 > A2 > A3 > A4 > A5
-A5 > Regr: all five held — admitted_by records the GATE SET, never a name (D-040)
-Regr > Log: generated from the manifests, then reviewed — `touchstone suite log`
-Regr > SOpen: admitted — enters as open
-SOpen > SLocked: a promoted version scores it all_k
-SOpen > SQuar: human
-SLocked > SQuar: human, with a reason
-SLocked > SSuper: on a label correction
-SLocked --> C5: the ONLY thing condition 5 reads
+A5 > D3
+Admit --> C5: the ONLY thing condition 5 would read
 
-// ── 12 · THE LADDER — what vN means everywhere above ──────────────────────────
-// Only v1 is phase 1. Colouring the whole ladder blue would read as "the ladder
-// ships with the agent", which is the schedule risk hiding in plain sight.
-
-Ladder [icon: bar-chart, label: "12 · the ladder"] {
-  V1 [color: blue, label: "v1 — P1.8 · synthesizer alone, findings == []"]
-  V2 [color: orange, label: "v2 — P2.5 · + supervisor and specialists"]
-  V3 [color: pink, label: "v3 — P3.2 · + search_runbooks"]
-  V4 [color: pink, label: "v4 — P3.2 · + a tool-call budget"]
-  V5 [color: grey, label: "v5 — CUT by D-030 · + search_incident_history"]
+// ── 11 · the ladder. Four versions, and each one names what changed.
+Ladder [icon: bar-chart, label: "11 · the ladder — ONE thing changes per rung"] {
+  V1 [color: blue, label: "v1 — P1.7 · the BASELINE, no gate anywhere"]
+  V2 [color: orange, label: "v2 — P2.9 · + the gates, in SHADOW"]
+  V3 [color: pink, label: "v3 — P3.2 · + tier-1 ENFORCEMENT"]
+  V4 [color: pink, label: "v4 — P3.3 · + tier-2 ENFORCEMENT · ⚠ expected to be able to LOSE"]
 }
+V1 > V2 > V3 > V4
+Gates3 --> Ladder: what changes between versions — and ONLY this
+NoInherit [shape: document, color: red, icon: alert-triangle, label: "v1 IS MEASURED HERE, NEVER INHERITED\nτ²'s four shipped baselines all ran a gpt-4.1 simulator — context, not a reference line"]
+NoInherit --> V1
 
-V1 > V2 > V3 > V4 > V5
-Agent --> Ladder: what changes between versions — and ONLY this
-
-// ── 13 · THE SURFACES — once a second version exists ──────────────────────────
-// Everything here needs a SECOND version to mean anything. That is why it is a
-// separate phase rather than the back half of phase 1.
-
-Later [color: orange, icon: server, label: "13 · the surfaces — phase 2"] {
-  BudgetPy [icon: dollar-sign, label: "loop/budget.py — P2.3\nset FROM v1's numbers, NEVER raised after"]
-  PromotePy [icon: award, label: "loop/promote.py — results/index.json"]
-  RecordPy [icon: grid, label: "loop/record.py — P2.10\nthe README table, GENERATED"]
-  McpPy [icon: link, label: "tools/mcp_server.py — P2.9\nthe same five tools, a second surface"]
-  // ✅ CUT, 2026-08-18, D-052. D-040 took the reason away — the four endpoints were
-  //    justified by a DURABLE interrupt and no node waits any more — and this node then
-  //    spent one pass PURPLE, as the file's one open question. The decision is now made,
-  //    so it is GREY and labelled with what cut it, which is how V5 is drawn (D-030).
-  // ⛔ NOT DELETED, and that is the same rule as V5: a cut is a claim, and a claim needs
-  //    somewhere to be checked. A reader who wonders "is there an HTTP surface?" gets an
-  //    answer with a decision ID on it; a deleted node answers nothing and looks like an
-  //    oversight. **The cheapest way to re-add a bad idea is to leave no record of killing it.**
-  // ⚠ docker-compose.yml LEFT THIS LABEL AND MOVED TO `Phoenix`, which is the whole reason
-  //    to read this twice. The compose file was never api.py's — Phoenix needs it, P2.8 still
-  //    needs Phoenix, and cutting the two together would have quietly cut the viewer as well.
-  //    ⛔ When a node dies, check what was riding on its label.
-  // 🔴 PURPLE FOR ONE PASS, AND THE HISTORY IS KEPT. Before that this comment said it was
-  //    drawn "in grey-question form" — it carried no colour attribute at all and rendered in
-  //    the default palette, so the one node the key had no word for was also the one node
-  //    whose comment described a colour it did not have. Grey was wrong THEN: grey is
-  //    "deferred, or cut", and it was neither — it was undecided, which D-047 gave purple.
-  //    ✅ It is now genuinely CUT, so grey is finally the right colour for the right reason.
-  //    ⚠ That leaves PURPLE WITH NO INSTANCE ANYWHERE IN THIS FILE. The row stays: a legend
-  //    defines the notation, it is not a census of what is currently used, and the next
-  //    open question needs the colour to already mean something. ⛔ Do not read an unused
-  //    key row as a spare colour to reassign.
-  ApiPy [color: grey, icon: server, label: "api.py — CUT by D-052, and the trigger was D-040\nthe four endpoints existed to show a DURABLE interrupt; no node waits, so\n`POST /triage` returns what `touchstone triage` already returns"]
-  Phoenix [icon: eye, label: "Phoenix — P2.8 · a VIEWER, in docker-compose.yml\nNEVER a dependency of scoring\nthe compose file SURVIVES the api.py cut — it was never api.py's (D-052)"]
-  // ⚠ Judge WAS here and moved into section 9. It was filed under "the surfaces" because it is
-  // phase-2 timed, but this group means ROLE and a judge is not a surface — it sits beside
-  // api.py and CI, which it has nothing to do with. DEF-009 is the reason it exists at all:
-  // docs/05 §5 specified it in full — library, provider, criteria, required fields, a
-  // results-schema entry — and NO row in any phase built it.
+// ── 12 · the surfaces.
+Later [color: orange, icon: server, label: "12 · the surfaces — phase 2"] {
+  RecordPy [icon: grid, label: "loop/record.py — P2.8\nthe README table, GENERATED"]
+  Phoenix [icon: eye, label: "Phoenix — P2.6 · a VIEWER, in docker-compose.yml\nNEVER a dependency of scoring"]
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
-  NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.6 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
+  NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.5 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
 }
-
-BudgetPy > C4
-Promoted > PromotePy > RecordPy
-Gate --> NegControl
+Accepted > RecordPy
+Cmp --> NegControl
 Spans --> Phoenix
-// ⛔ McpPy had NO edge at all, and for this node that is the whole claim. "A second
-//    surface" is a statement about what it points AT — the same five tools, not a
-//    reimplementation of them (D-019). Unwired, it read as a sixth thing to build.
-//    ApiPy stays unwired, and after D-052 that means something different: it had nothing
-//    to point at while it was undecided, and now it is CUT, so it has nothing to point at
-//    permanently. Same shape on the canvas, opposite reason — read the label, not the edge.
-McpPy --> Tools: the SAME five, re-exposed — NOT a second implementation (D-019)
 Spans --> CI
 
-// ── 14 · THE GATES THE PROJECT PASSES, NOT THE ONES THE AGENT PASSES (D-048) ─
-// ⛔ EVERY GATE ABOVE IS ONE THE AGENT GOES THROUGH. These are the gates THE WORK
-//    goes through, and this file had none of them: `exit gate` appeared ZERO times
-//    in it, comments included, while ROADMAP.md carries four of them and 37
-//    conditions. A picture that draws the machine's quality gates and not the
-//    project's own is claiming the discipline runs in one direction only — and
-//    this project's entire pitch is that it runs in the other one too.
-//
-// 🎯 THE LABELS CARRY AN EVIDENCE FRACTION, NOT A RULE LIST, and that is the
-//    point of drawing them at all. Counted off ROADMAP.md: a condition is
-//    MACHINE-ATTESTED if it names a command or an artifact — `touchstone doctor`,
-//    a byte-identical `results/v1.json`, `uv run pytest`, a `git grep` that must
-//    return nothing. 17 of 37 do. The other 20 are a person ticking a box, which
-//    is the weakest evidence anywhere in this project and is INVISIBLE in a
-//    checklist, because a ticked box looks identical either way.
-//    ⛔ P2 IS THE WEAK ONE — 6 of 16 — AND IT IS THE GATE THAT SHIPS v0.1.0.
-//    Putting the fraction on the node makes the soft gate the first thing a
-//    reader sees, which a list of 16 ticks structurally cannot do.
-//    ⚠ The fraction is a claim about WORDING, not about rigour: it counts
-//      conditions that name something a machine can produce. A hand-ticked box
-//      may still be checked carefully, and an attested one can still be attested
-//      to the wrong thing (rule 19 — machine-attested means the run happened,
-//      never that it was correct). It is a floor on evidence, and the direction
-//      of its error is that it FLATTERS: every unnamed artifact counts against.
-//
-// ⚠ ROADMAP.md IS THE AUTHORITY for all 37. These nodes carry counts plus the
-//   conditions that actually block; a second copy of a checkable list is exactly
-//   the drift D-036 exists to stop, and it is why the other 33 are not here.
-//
-// ⛔ DiagGate IS DRAWN AS A DIAMOND AND SITS BEFORE THE CHAIN, because it gates
-//    the START of a phase while the other four gate the END. docs/07 is titled
-//    "the gate no phase starts without" and D-021 is the reason this file exists
-//    — and `D-021` appeared ZERO times in it. A diagram omitting the rule that
-//    requires the diagram is the most self-referential blind spot available, and
-//    it survived every pass because nobody looks for the frame inside the picture.
-
-DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\nevidence: diagrams/loop.png + diagrams/sequence.png + scripts/check-diagram.py — NINE milestones\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
-
-Gates [icon: check-square, label: "14 · the four phase exit gates — 37 conditions · 17 machine-attested"] {
-  P0Gate [color: green, icon: check-circle, label: "phase 0 exit — 5 conditions, 2 ATTESTED\n✅ PASSED: D-001 carries the live `touchstone doctor` output, verbatim\nthe model id came off ResultMessage.model_usage on a real call (D-033)"]
-  P1Gate [color: blue, icon: check-square, label: "phase 1 exit — 9 conditions, 7 ATTESTED — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\n`git grep` the scorer for the agent's return type and find NOTHING (D-007)\ncase 09 — insufficient_evidence — is in the suite"]
-  P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — 16 conditions, 6 attested\nTHE WEAKEST GATE, AND IT IS THE ONE THAT SHIPS v0.1.0\n10 of 16 are a person ticking a box"]
-  P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — 7 conditions, 2 attested\nthe REJECTED candidate is the deliverable — a gate seen to block"]
+// ── 13 · the gate on the gates.
+DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
+PhaseGates [icon: check-square, label: "13 · the four phase exit gates"] {
+  P0Gate [color: green, icon: check-circle, label: "phase 0 exit — ✅ PASSED\nD-001 carries the live `touchstone doctor` output, verbatim"]
+  P1Gate [color: blue, icon: check-square, label: "phase 1 exit — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\nreward_breakdown is {DB, COMMUNICATE} on EVERY scored simulation"]
+  P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — every gate carries a SHADOW score\na gate with no shadow number does not reach phase 3"]
+  P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — a REFUSED tool call is in a committed trace\nand at least one candidate is rejected"]
 }
-
-DiagGate > Gates: blocks the START of every phase — the other four block the end
+DiagGate > PhaseGates: blocks the START of every phase — the other four block the end
 P0Gate > P1Gate > P2Gate > P3Gate
-NegControl --> P2Gate: the proof the gate can reject (docs/02 §3)
-DoctorPy --> P0Gate: its verbatim output IS D-001 — 1 of the 2 attested conditions
+NegControl --> P2Gate: the proof the gate can reject
+Doctor --> P0Gate: its verbatim output IS D-001
+Enforce --> P3Gate: a refusal that was SEEN, not one that was wired
 
-// ── 15 · THE GUARDS — scripts/, and NO phase builds any of them ──────────────
-// ⛔ THIS SECTION EXISTS BECAUSE THE SAME HOLE WAS ALREADY FOUND ONCE, IN THE OTHER
-//    ARTIFACT, AND NOT SWEPT ACROSS. docs/09 §9 says it in its own words: `scripts/`
-//    was missing from the file map until 2026-08-16, four committed files referenced
-//    by no doc at all, and the cause was structural — "this map places the files the
-//    PHASES name, and nothing that only checks the work is ever named by a phase, so
-//    the map could not see it by construction."
-//    🎯 That sentence is true of THIS FILE word for word. Every other node here was
-//    reached by walking a phase, so the guards were invisible to the same sweep for
-//    the same reason, and the fix that closed it in docs/09 §9 was never applied here.
-//    A correction is not applied until it is swept into every artifact that shared the
-//    mechanism — and "the doc map" and "the picture" shared it exactly.
-// ⚠ ONE ASYMMETRY MADE IT VISIBLE: check-diagram.py was already named on DiagGate, as
-//   evidence. So one of the four guards was drawn and three were not — which reads as a
-//   judgement about those three, and no such judgement was ever made.
-// ⛔ NO Pn.n ON ANY OF THESE NODES, ON PURPOSE. There is no phase row to cite: a
-//    `grep` of ROADMAP.md for all four returns nothing. Writing a plausible phase in
-//    would be inventing a schedule, and this file's first convention is that a phase
-//    colour is a claim. They are grey — "deferred, or cut" is wrong for them too, but
-//    the honest reading is on the group label: built already, scheduled by nothing.
-// ⚠ AND EVERY ONE OF THE FOUR IS WIRED, WHICH IS NOT TIDINESS. An unwired leaf is this
-//   file's notation for an open question — that was the whole mechanism holding `ApiPy`
-//   until D-052 answered it, which is why section 13 now leans on its LABEL rather than on
-//   its edges. ⛔ The notation is unchanged and still live; it simply has no instance right
-//   now, exactly as the purple legend row does. `p0-deps.sh` landed here
-//   edgeless on the first pass and would have read as a fifth thing nobody had decided
-//   on. It is decided, and it is built. The edge into P0Probe is the real ordering:
-//   install, then measure. ⛔ Adding nodes to a notation means checking what the
-//   notation says about the shape you added, not only about the words in the label.
-
-Guards [color: grey, icon: shield, label: "15 · scripts/ — the tooling that checks or sets up the WORK\nfour files, ~26 KB, COMMITTED and NAMED BY NO PHASE (docs/09 §9)"] {
-  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, NINE milestones\nthe only check that reads the RENDER, not the source (7)\n8 and 9 grep the DSL for what the renderer EATS or MANGLES"]
-  CheckLinks [icon: link, label: "check-links.py — every markdown link resolves\n⚠ against GIT, never the working tree — an empty dir passes on disk and 404s in public"]
-  P0Probe [icon: search, label: "p0-probe.py — the two phase 0 measurements\ndocs/00 §8 requires them BEFORE code"]
-  P0Deps [icon: download, label: "p0-deps.sh — the phase 0 install, ONE command"]
+// ── 14 · the guards.
+Guards [color: grey, icon: shield, label: "14 · scripts/ — the tooling that checks the WORK\nCOMMITTED and NAMED BY NO PHASE"] {
+  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, NINE milestones\nthe only check that reads the RENDER, not the source"]
+  CheckNodes [color: red, icon: crosshair, label: "check-diagram-nodes.sh — D-068 · every path-and-line node resolves\nAMBIGUITY FAILS — tau2 has six files of one name"]
+  CheckLinks [icon: link, label: "check-links.py — every markdown link resolves\n⚠ against GIT, never the working tree"]
 }
-
 CheckDiag > DiagGate: the evidence D-021 asks for
-P0Probe > P0Gate: 2 measurements, taken before the first line
-CheckLinks --> Gates: runs against every gate's citations — blocks none of them
-P0Deps > P0Probe: install first — there is nothing to measure until it is installed
-
-// ── THE OPEN QUESTIONS — NONE OPEN, AND THE TWO CLOSED 2026-08-18 ────────────
-// ✅ BOTH WERE ANSWERED BY THE READER, WHICH IS THE ONLY PLACE EITHER COULD HAVE
-//    BEEN ANSWERED — one was a scope call and one was a notation call, and this
-//    file is allowed to make neither on its own.
-//      · api.py — CUT (D-052). Section 13's node is grey and says what cut it.
-//      · green — the KEY gave way (D-053): "phase 0 — shipped, or a good outcome".
-//        The nodes kept their colour; the row now documents the second meaning.
-// ⛔ THE HISTORY BELOW IS KEPT VERBATIM AND IS NOT DECORATION. Both questions
-//    were invisible to a sweep, for two DIFFERENT reasons, and those reasons
-//    outlive the answers — the next question will hide the same two ways.
-//
-// ⚠ SO THE COUNT IS CURRENTLY ZERO, AND ZERO IS THE READING THIS FILE DISTRUSTS
-//   MOST. docs/07 §6: "a diagram with no open questions is usually a diagram
-//   nobody thought about." It is honest here only because both answers arrived as
-//   decisions with IDs, in one sitting, from the person entitled to make them.
-//   ⛔ If this section still says zero several passes from now, that is evidence
-//   nobody has looked, not evidence the design is settled.
-//
-// ── the record of how each one hid ───────────────────────────────────────────
-// docs/07 §6: a diagram with no open questions is usually a diagram nobody
-// thought about. The three this started with are closed — D-037 (the scorer
-// reads spans from phase 1), D-038 (v1 IS the synthesizer node), D-039 (the
-// bound is 6). ⛔ THAT IS THE GOOD OUTCOME, NOT A MISSING SECTION. D-038 says
-// it explicitly: an "open" question nothing is waiting on is a decision with
-// the record missing, and leaving it drawn as open was a rejected option.
-//
-// 🔴 QUESTION ONE — CLOSED BY D-052, AND THIS IS HOW IT HID. The heading here
-//    read "and why the list is now empty" and that was FALSE: one question was
-//    open, it was section 13's `ApiPy`, and the node has said so
-//    in its own label the whole time: whether api.py is built at all, after
-//    D-040 removed the durable interrupt that was its only justification
-//    (ROADMAP P2.8, docs/06 header). The file therefore contained a completeness
-//    claim and, four sections above it, the counter-example — and the claim was
-//    the more confident of the two. ⚠ The failure was not a stale comment. The
-//    three closed questions were closed by DECISIONS, so "closed" was checked
-//    against D-037/D-038/D-039; this one was never opened by a decision, it was
-//    opened by one being REVERSED, so nothing in the D-series marked it. A
-//    question created by a withdrawal is invisible to a sweep that looks for
-//    questions created by a decision.
-//    🎯 It is now COUNTABLE rather than asserted: a question ABOUT A NODE is the
-//    node, painted purple. Empty list ⟺ no purple in the legend's sense.
-//
-// 🔴 QUESTION TWO — CLOSED BY D-053, AND IT BROKE THE RULE ONE LINE ABOVE ON
-//    THE SAME PASS THAT WROTE IT. Convention 1 was checked against the DSL and found false; the
-//    correction surfaced a live question with it: `green` is keyed "phase 0 —
-//    shipped" and sits on `Scored` and `Promoted`, the two good OUTCOMES.
-//    ⚠ SWEPT 2026-08-17. This said "the only node naming a P0 artifact (`CliPy`)
-//      is blue"; `DoctorPy` now exists, is phase 0, has shipped, and is green by
-//      the key. The question is unchanged and SHARPER — green is on one real P0
-//      node and two outcomes at once — so what was a colour with no true instance
-//      is now a colour with a true instance and two false ones. Either the
-//      outcomes give it up, or the key stops claiming a phase. ✅ ANSWERED
-//      2026-08-18: the key gave way, not the nodes — D-053, and the cost of that
-//      choice is stated in convention 1 rather than hidden here.
-//    ⛔ IT CANNOT BE PAINTED PURPLE, and that is the finding, not a snag. It is
-//    a question about the KEY — about what a colour means — so there is no node
-//    to colour, and painting one would state the question in the very notation
-//    the question is about. **A question about the notation is invisible to a
-//    count that is taken in that notation.** Same shape as the paragraph above:
-//    that one escaped a sweep for questions-opened-by-a-decision because it was
-//    opened by a WITHDRAWAL; this one escapes a sweep for purple nodes because
-//    it is not about a node. Both times the mechanism was sound and the
-//    ENUMERATION it ran over was the thing with the hole in it.
-//    ⚠ So the honest rule is two-part, and the second part is not mechanical:
-//    purple nodes, PLUS whatever is written in this section. If those two ever
-//    disagree, this section wins — it is the one a person maintains.
-//
-// ⚠ WHAT REPLACES IT IS NOT A FOURTH QUESTION — IT IS THE FALSIFIER OF THE
-//   ONE ANSWER THAT IS NOT A MEASUREMENT. 6 was chosen with no run behind it,
-//   because the first run IS v2, so there was never a version that did not
-//   already depend on the answer. The picture therefore carries the rule that
-//   keeps it honest rather than the number, which lives in one place:
-//     · TOO SMALL is caught by `hops_exhausted` — the ceiling fired instead of
-//       the supervisor stopping, read off the last supervisor span's `next`.
-//     · TOO LARGE is already caught by `cost_per_correct_usd`, a promotion
-//       metric, because a supervisor with spare budget wanders.
-//   Two directions, two detectors, neither of them new machinery.
-//
-// ⛔ RED, NOT GREY. Grey is "deferred, or cut" in the key and this is neither —
-//    the old node was grey while it was an open question, which the key never
-//    covered. Red is "an invariant, or a never", and the never is exact: never
-//    re-run a version at a different bound and report the better number.
-
-Bound [shape: document, color: red, icon: alert-octagon, label: "the loop's bound is a HYPOTHESIS — D-039\nconfig.py MAX_HOPS · a different value is a different VERSION"]
-
-Bound --> Supervisor
+CheckNodes > DiagGate: and the evidence that each name points somewhere real
+CheckLinks --> PhaseGates: runs against every gate's citations — blocks none of them

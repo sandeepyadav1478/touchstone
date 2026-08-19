@@ -78,7 +78,80 @@ API_KEY_ENV = "ANTHROPIC_API_KEY"
 # the second was a CLI default. Neither was this project's choice, and D-013 makes the model
 # part of a candidate's identity. An unpinned model means two rows of the version table can
 # differ by whose machine ran them. D-034.
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
+
+# The other two roles, pinned separately and for a different reason (D-067).
+#
+# ⛔ USER_MODEL is measurement apparatus, not a participant. It is FROZEN the way the
+# benchmark is frozen (D-024): change it and every pass^k number before the change becomes
+# incomparable to every number after, because the agent was talking to a different customer.
+# It is deliberately NOT `MODEL` — one model on both sides of the conversation shares its own
+# blind spots, and tau2 itself tested Claude against a gpt-4.1 simulator rather than itself.
+#
+# ⚠️ This breaks comparability with tau2's four shipped retail baselines, all of which ran the
+# simulator on gpt-4.1-2025-04-14. There is no OpenAI key here (D-001 asserts ANTHROPIC_API_KEY
+# absent; nothing else is set either), so those runs are CONTEXT, never a reference line. Our
+# own baseline gets measured, not inherited.
+USER_MODEL = "claude-haiku-4-5-20251001"
+
+# The judge only grades where a gate cannot be decided deterministically. Cheapest tier on
+# purpose: quota is the binding constraint (see below), and a judge call is the most numerous
+# call in the loop.
+# Anthropic only — stated twice by the candidate, and it governs (D-067). ollama and Cerebras
+# are reachable but are not on the table; `doctor` still probes them as diagnostics, not as
+# model sources.
+#
+# Cheapest tier on purpose. The judge grades explanation quality and ⛔ CANNOT GATE ANYTHING
+# (docs/05-scoring.md §5) — its output is an annotation on a span, never a decision — so a
+# weaker judge costs accuracy on a reported number, not correctness on a promotion.
+# ⛔ Not `MODEL`: sonnet-5 is the agent, and an agent grading its own explanation is not a
+# measurement. Sharing a pin with USER_MODEL is safe here precisely because neither gates and
+# the judge grades the *agent*, never the simulator.
+# ⚠️ Ceiling, stated where the number is made: a smaller judge is a weaker judge.
+#
+# 🔴 CONFLICT, open: README §Limits says "The judge never runs on the Claude quota; it cannot
+# gate anything, so it is the cheapest thing to move off the constrained provider." Anthropic-only
+# means it now DOES draw on the same five-hour cap. The constraint wins; the README line is stale
+# and gets corrected in the docs pass.
+JUDGE_MODEL = "claude-haiku-4-5-20251001"
+
+# τ²'s natural-language assertion evaluator — pinned defensively, because as configured it is
+# DORMANT and it must stay that way.
+#
+# 🔴 THIS COMMENT WAS WRONG AND THE CORRECTION IS D-069 / DEF-036. It read: "measured across all
+# four shipped retail baselines (1,824 simulations), reward_breakdown contains only
+# {DB, COMMUNICATE}; NL_ASSERTION never appeared once, although 112 of 114 tasks list it in
+# reward_basis" — and concluded that reward_basis was a mere declaration overridden by the
+# execution record.
+#
+# ⛔ THE TWO NUMBERS ARE ABOUT DIFFERENT TASK SETS. data/tau2/results/final/ holds leaderboard
+# runs made against the ORIGINAL τ-bench basis; data/tau2/domains/retail/tasks.json — the file a
+# run loads today — declares ["DB", "NL_ASSERTION"] on 112 of 114 tasks, ["DB"] on 2 (CHANGELOG
+# :214, tasks 33/34), and COMMUNICATE on ZERO. evaluator.py:223 multiplies in whatever the
+# loaded task declares, so a run today DOES put a judge in the composite.
+#
+# ⛔ So touchstone gates on reward_breakdown["DB"] — evaluator_env.py:153 writes it as its own
+# key on every task — and reports the composite beside it, unmodified. Nothing upstream is
+# edited and the gate stays mechanical. This evaluator stays pinned defensively because it WILL
+# fire: it is no longer dormant, it is simply outside the gate.
+#
+# ⚠️ Assert the shape of our own pilot's breakdown rather than assuming any of this carries
+# over — that assertion is a P1 exit-gate box.
+# ⚠️ τ² labels this evaluator "experimental/WIP" (evaluator/AGENTS.md).
+NL_ASSERTION_MODEL = "claude-opus-5"
+
+# τ²'s reviewer / hallucination checker (`--auto-review`, `--review-mode user`). Off by default
+# and NOT part of reward — it grades the conversation qualitatively, including whether the *user
+# simulator* fabricated facts. 🎯 This is the instrument that measures the D-067 simulator risk
+# directly, so it is pinned rather than left to τ²'s own `claude-opus-4-5` default.
+REVIEW_MODEL = "claude-opus-5"
+
+# ⚠️ Quota is a ROLLING FIVE-HOUR WINDOW and overage is REJECTED, not billed. Measured
+# 2026-08-19 from the SDK's RateLimitEvent: rate_limit_type='five_hour',
+# overage_status='rejected', overage_disabled_reason='org_level_disabled'. Exhausting it does
+# not cost money — it kills the run in flight. Any full-suite run (114 tasks x k trials,
+# ~11k model turns) therefore needs checkpoint-and-resume across windows, and the cheap pins
+# above are that constraint's doing, not a quality judgement.
 
 PHOENIX_URL = os.environ.get("PHOENIX_URL", "http://localhost:6006")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")

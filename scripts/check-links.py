@@ -36,6 +36,12 @@ LINK = re.compile(r"\]\(([^)]+)\)")
 
 
 def git(*args: str) -> list[str]:
+    """Run git in the repo root and return its stdout, whitespace-split.
+
+    ⛔ Every path this script checks comes from here rather than from the filesystem,
+    and that is the whole point of the script: an empty directory passes an `ls` and
+    404s in public. Checking git means checking what a stranger can actually clone.
+    """
     out = subprocess.run(
         ["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True
     )
@@ -43,6 +49,7 @@ def git(*args: str) -> list[str]:
 
 
 def main() -> int:
+    """Resolve every relative markdown link against the git index; return an exit code."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()

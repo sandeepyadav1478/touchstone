@@ -1,39 +1,56 @@
 # touchstone
 
-> ⚠️ **The specimen is being replaced — 2026-08-19.** The incident-triage domain described
-> below was archived to the [`incident-specimen`](https://github.com/sandeepyadav1478/touchstone/tree/incident-specimen)
-> branch at `109c424` and deleted from `main`: `domain.py`, `incidents/`, the frozen
-> `suite/benchmark/` and their tests, 1,954 lines. **The loop is unchanged** — frozen
-> benchmark, growing regression suite, per-case no-regression — because the loop is the
-> project and the domain is only the specimen it operates on. It becomes τ²-bench retail,
-> whose corpus is a third party's and whose scorer is a deterministic DB-state diff, so the
-> improvement numbers are no longer measured against a corpus we wrote ourselves.
->
-> ⛔ **Everything below still describes the archived specimen** until the docs pass lands.
-> D-062, D-066.
-
-**A production-incident triage agent that is required to get better.**
+**An agent-improvement loop that is required to prove the improvement.**
 
 Every change to the agent is a *candidate version*. Every candidate is scored against a
-frozen benchmark of incidents whose root causes are known. **A candidate is promoted only if it
-regresses nothing it previously passed** — average improvement is not enough.
-
-And every failure becomes a permanent case: mined from the trace, admitted by five mechanical
-gates with no human in the path, and added to a **regression suite that only grows**. Once a version passes a case, it is locked, and nothing
+**frozen benchmark**, and a candidate is accepted only if it **regresses nothing it previously
+passed** — average improvement is not enough. Every failure becomes a permanent case in a
+**regression suite that only grows**: once a version passes a case, it is locked, and nothing
 that breaks it ships again.
 
 A touchstone never changes. That is the whole idea.
 
+### The loop is the product; the domain is a specimen
+
+**touchstone measures agents. It does not define what a good answer is** — because a project
+that owns both the agent and the answer key can improve either one, and you cannot tell from
+the outside which it did.
+
+So the specimen is a third party's: **[τ²-bench](https://github.com/sierra-research/tau2-bench)
+retail** — 114 customer-service tasks, MIT-licensed, with a scorer that has **no model in it**.
+A task's reward is the product of its declared components:
+
+**The gating number is the `DB` component**: the task's gold actions are replayed on a fresh
+environment, and the agent's end state is diffed against the result. Any path reaching an
+equivalent state passes. No model, no rubric, no argument.
+
+⚠️ **τ²'s *composite* reward is not purely mechanical, and we do not pretend otherwise.** 112 of
+retail's 114 tasks declare `reward_basis = ["DB", "NL_ASSERTION"]`, and `NL_ASSERTION` is scored
+by a judge. So touchstone **gates on `DB` and reports the composite beside it** — nothing
+upstream is edited, the leaderboard number stays computable, and the gate stays mechanical.
+D-069.
+
+⛔ **THE INVARIANT: anything that gates is mechanical; anything with a model in it cannot
+gate.** A model's only job here is **translation** — turning a written policy constraint into a
+predicate over the database. The **verdict** is always a predicate, never a judgement. τ² ships
+a judged reward component and it stays out of the gate — [docs/05](docs/05-scoring.md) §5 says
+why that is an invariant rather than a threshold.
+
+*The previous specimen — a self-authored production-incident triage corpus — is archived on the
+[`incident-specimen`](https://github.com/sandeepyadav1478/touchstone/tree/incident-specimen)
+branch at `109c424`: 1,954 lines across 20 files, removed from `main`. **The loop is unchanged
+across that swap, and that is the claim the swap was for.** D-062, D-066.*
+
 ```bash
-touchstone run   v4                 # triage the suite, k times each, emit spans
+touchstone run   v4                 # run the suite, k times each, emit spans
 touchstone score v4                 # score from the spans, write results/v4.json
-touchstone compare v4 --against v3  # per-case verdict → promote or reject
+touchstone compare v4 --against v3  # per-task verdict → accept or reject
 ```
 
 > ### ⚠️ Status: phase 0 — specified, not yet built
 >
-> **What is here now:** the full specification (`docs/00`–`09`), the promotion rule, the
-> structural diagram that gates implementation, and `touchstone doctor`, which runs.
+> **What is here now:** the full specification (`docs/00`–`09`), the acceptance rule, the
+> structural diagrams that gate implementation, and `touchstone doctor`, which runs.
 > **What is not here:** the loop. No run has happened, so there are no artifacts under
 > `results/` — the directory is created by the first run — and the version table below has no
 > data in it.
@@ -45,7 +62,6 @@ touchstone compare v4 --against v3  # per-case verdict → promote or reject
 > run artifact or left blank; there is no path here for a number that was not measured. A repo
 > that shows its schedule before its results is the honest version of one that shows results
 > it cannot reproduce.
-
 ---
 
 ## The version history
@@ -53,18 +69,22 @@ touchstone compare v4 --against v3  # per-case verdict → promote or reject
 **This table is the point of the repository** — the shape of it, until there are runs to fill
 it. Every cell comes from a committed artifact under `results/`, which is empty at phase 0.
 
-| version | what changed | correct | all_k(3) | escalation F1 | tool calls | $/correct triage¹ | promoted |
-|---|---|---|---|---|---|---|---|
-| v1 | baseline — one node, no tools | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | — |
-| v2 | + three specialists behind a supervisor | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v3 | + runbook retrieval | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v4 | v3 + a tool-call budget | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| version | what changed | mean reward | `pass^3` | tool calls | $/success¹ | accepted |
+|---|---|---|---|---|---|---|
+| v1 | baseline — the τ² agent, driven through our seam | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | — |
+| v2 | + a gate in shadow | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v3 | + memory across sessions | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v4 | + gates in enforce | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
 
 ¹ From the Agent SDK's own cache-aware `total_cost_usd` — a real per-call figure, drawn from a
 subscription quota rather than billed. **Not an invoice** — see [Limits](#limits).
 
+⛔ **`pass^k` is τ²-bench's metric, computed by τ²-bench's code**, and it is the *strict* one:
+`C(successes, k) / C(trials, k)`. It is **not** `pass@k`, which conventionally means *at least
+one of k succeeded*. The caret is the distinction. [docs/05](docs/05-scoring.md) §2.
+
 **The rejections get written up here, next to the table.** When a candidate is refused, this
-section gains two sentences: what looked better, which case regressed, and what the trace
+section gains two sentences: what looked better, which task regressed, and what the trace
 showed. A gate that never visibly refuses anything is not a gate, so the refusals are the part
 worth reading.
 
@@ -73,72 +93,84 @@ worth reading.
 ## Why the numbers mean something
 
 Most agent demos score themselves with a language model judging their own output. This one
-mostly does not need to:
+does not, and the reason is structural rather than clever: **we do not own the answer key.**
 
-**Every incident in the suite was generated with its root cause planted.** The generator
-decides that `billing-api` is failing because a migration dropped an index and the connection
-pool is now saturating, then renders the logs, metrics, deploy history and alert text that
-such an incident *would* produce. The answer key exists before the agent sees anything.
+**τ²-bench's reward is a database diff.** The task ships with a list of gold actions; the
+scorer replays them on a fresh environment and compares the resulting state to the state the
+agent left behind. Any path that reaches an equivalent end state passes. There is no rubric, no
+judge, and no argument about whether an answer was good enough.
 
-So the primary metric is **exact match on `root_cause_id`** — no judge, no rubric, no
-argument about whether an answer was good enough. A judge appears in exactly one dimension
-(explanation quality) and it is named in the results file.
-
-**What this buys, concretely:** a regression is a fact rather than a judgement. If case 07
-passes at v2 and fails at v4, CI blocks the promotion — there is nothing to interpret and
+**What this buys, concretely:** a regression is a fact rather than a judgement. If task 47
+passes at v2 and fails at v4, CI blocks the acceptance — there is nothing to interpret and
 nobody to overrule.
 
-**What it costs** is in [Limits](#limits), and it is real: a planted root cause is not an
-ambiguous one, and real incidents are ambiguous.
+**And it buys one thing a self-authored corpus cannot buy at all:** the numbers are comparable
+to a published leaderboard we had no hand in. **What it costs** is in [Limits](#limits), and it
+is real.
 
 ---
 
 ## How it works
 
 ```
-                  ┌──────────── the agent under test ────────────┐
-  incident  ──▶   │  supervisor → { logs · metrics · deploys }    │  ──▶  verdict
-   (suite)        │      ↓ specialists, LangGraph                 │       + escalate?
-                  │  escalate = blast radius > threshold         │
-                  └───────────────────┬──────────────────────────┘
-                                      │ OpenTelemetry spans
-                                      ▼
-        run ──▶ score ──▶ compare ──▶ promote ──▶ record        the loop
-                  │            ▲
-                  │            │  benchmark — frozen, hashed, n=10
-                  │            │  ⛔ changing it resets every comparison
-                  │            │
-                  └─▶ mine ──▶ admission ──▶ regression — grows, never shrinks
-                     failures    5 gates,     ✅ adding to it resets nothing
-                                 mechanical   🔒 a case locks the first time a
-                                                 promoted version passes it
+   ┌──────── τ²-bench retail — third party, MIT ────────┐
+   │  114 tasks · gold actions · user simulator         │
+   │  Environment.make_tool_call()  ◀── the gate acts here
+   └───────────────────────┬────────────────────────────┘
+                           │  llm_utils.generate()  ◀── THE SINGLE SEAM
+                           │  all four model roles cross this one function
+                           ▼
+              ┌─── our adapter ───▶ Claude Agent SDK ───┐
+              └───────────────────┬─────────────────────┘
+                                  │ OpenTelemetry spans
+                                  ▼
+         run ──▶ score ──▶ compare ──▶ accept ──▶ record        the loop
+                   │           ▲
+                   │           │  benchmark — frozen, hashed
+                   │           │  ⛔ changing it resets every comparison
+                   │           │
+                   └─▶ mine ──▶ admission ──▶ regression — grows, never shrinks
+                      failures    5 gates,     ✅ adding to it resets nothing
+                                  mechanical   🔒 a case locks the first time an
+                                                  accepted version passes it
 ```
 
+**One function is the whole integration.** Every model role τ² runs — the agent, the user
+simulator, the hallucination reviewer, the NL-assertion evaluator — imports the same
+`generate()`. Replacing it with an adapter that dispatches on `model` puts the Claude Agent SDK
+behind all four without touching a call site. **Enforcement attaches at a second point**,
+`Environment.make_tool_call()`, which every tool execution already passes through and which
+already knows which tools mutate state.
+
 ⛔ **No human is a step in that picture, and none is a state in the agent.** Nothing pauses for
-approval: blast radius sets a scored `escalate` flag, and a mined case is admitted by five
-mechanical gates ([docs/02](docs/02-promotion.md) §5) rather than by somebody signing off on a
-batch. **People improve this system by rewriting it** — reading traces, changing prompts, adding
-cases — which is what everything below is instrumented for.
+approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
+([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
+improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
+is what everything below is instrumented for.
 
 **Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
 must not move. The regression suite only ever answers *"did something that used to work stop
 working?"* — a binary with no denominator to corrupt, so it can grow forever without
 invalidating anything. That asymmetry is what makes `mine` affordable enough to actually run.
-[docs/02](docs/02-promotion.md) §1.
+[docs/02](docs/02-gates.md) §1.
 
-**The spans are the score.** The scorer does not read the agent's prose — it reads the trace:
-which tools were called, how many tokens, what the verdict span carried, whether the agent
-escalated. Instrumentation is not a dashboard here; it is the measurement substrate — and with
-nobody standing inside a run, it is also the **only** place a person can see what happened.
+⛔ **The benchmark stores task ids and a hash, never task bytes.** τ²'s corpus is upstream's and
+stays upstream; vendoring it would fork the answer key, which is the exact thing this design
+exists to avoid.
+
+**The spans are the score.** The scorer does not read prose — it reads the trace: which tools
+were called, how many tokens, what the reward decomposed into, why the session terminated.
+Instrumentation is not a dashboard here; it is the measurement substrate — and with nobody
+standing inside a run, it is also the **only** place a person can see what happened.
 
 | Doc | What it covers |
 |---|---|
 | [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the three model paths, `touchstone doctor` |
-| [docs/01-spec.md](docs/01-spec.md) | The incident model, the verdict, the generator, 13 live invariants numbered to 14 |
-| [docs/02-promotion.md](docs/02-promotion.md) | The two tiers, the promotion rule, the six stages, case provenance, the negative control |
-| [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The graph, three specialists, five read-only tools, escalation as a scored field |
+| [docs/01-spec.md](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, 13 live invariants numbered to 14 |
+| [docs/02-gates.md](docs/02-gates.md) | ⛔ **The three decisions**, the two tiers, the acceptance rule, the stages, case provenance |
+| [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The adapter at the seam, what we may and may not change about the τ² agent |
 | [docs/04-observability.md](docs/04-observability.md) | Span schema, OpenInference conventions, why the scorer reads spans |
-| [docs/05-scoring.md](docs/05-scoring.md) | The four metrics, `all_k`, exact-match vs judged |
+| [docs/05-scoring.md](docs/05-scoring.md) | Reward, `pass^k`, cost per success — and why a judge can never gate |
 | [docs/06-api.md](docs/06-api.md) | CLI, HTTP surface, compose |
 | [docs/07-diagrams.md](docs/07-diagrams.md) | ⛔ **The gate: no code before an approved structural diagram** — every phase, every change |
 | [docs/08-memory.md](docs/08-memory.md) | Where agent memory legitimately goes, and the **anchoring failure it is planted to catch** |
@@ -271,7 +303,7 @@ design, so they hold whether or not a run has happened yet.
 - [`tracebench`](https://github.com/sandeepyadav1478/tracebench) — `all_k` over OTel spans.
 - [`evalloop`](https://github.com/sandeepyadav1478/evalloop) — mining eval sets from traces,
   and the health guard that refuses to report drift from a dead window. The
-  [`mine`](docs/02-promotion.md#5-mine) stage is that idea with a real domain under it.
+  [`mine`](docs/02-gates.md#5-mine) stage is that idea with a real domain under it.
 
 ## License
 

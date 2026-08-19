@@ -1,6 +1,6 @@
 # 08 — Memory: where it goes, and the failure it is there to catch
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 **The earlier answer was too small.** D-022 established that memory must not be infrastructure,
 which is correct and still stands. It left the impression that memory is a coin-flip experiment
@@ -134,7 +134,7 @@ which is prose a human wrote and is worth more here than a label a generator sta
 | `none` | ⟨…⟩ | ⟨…⟩ | distraction cost |
 
 **And the gate already handles it, with no change to the promotion rule.** Condition 2 is
-per-case no-regression ([docs/02](02-promotion.md) §1). If memory helps six cases and breaks
+per-case no-regression ([docs/02](02-gates.md) §1). If memory helps six cases and breaks
 two false friends, **the gate rejects the candidate** — and that rejection, with the trace under
 it, is the strongest single artifact this project can produce:
 
@@ -228,7 +228,7 @@ changes and is the thing D-021 exists to stop.
 
 ## 8. The negative control — because retrieval that changes nothing looks identical to retrieval
 
-[docs/02](02-promotion.md) §3 requires proof the gate can reject. **Memory needs its own,
+[docs/02](02-gates.md) §3 requires proof the gate can reject. **Memory needs its own,
 for a different reason:** a retrieval tool that is never actually used produces the same numbers
 as one that is used and does not help. Both look like a null result.
 
@@ -276,7 +276,7 @@ already owns that machinery, so the write path is D-024's pipeline pointed at a 
 | | |
 |---|---|
 | **Who may write** | ⛔ Not the agent. A candidate memory is emitted **only from a run whose verdict scored correct against the answer key** — in production, from an incident a human closed with a confirmed cause |
-| **Where it lands** | `proposed`, never `resolved`. The same five mechanical admission gates promote it as promote a mined case ([docs/02](02-promotion.md) §5) — ⛔ **no human step, and the `why` is still required**, written by whatever produced it |
+| **Where it lands** | `proposed`, never `resolved`. The same five mechanical admission gates promote it as promote a mined case ([docs/02](02-gates.md) §5) — ⛔ **no human step, and the `why` is still required**, written by whatever produced it |
 | **What refuses it** | Promotion condition 2, unchanged. A memory that lifts average correctness while breaking one previously-passing case is exactly what a poisoned memory looks like, and the gate already rejects that candidate. No new rule |
 | **old vs new** | **Supersession, never deletion** — `superseded` is already a case status (D-024). A memory about a rewritten service is not wrong, it is *expired*, and the record has to keep the difference. `TTLConfig.default_ttl` ages out what nobody retrieves |
 | **Retractability** | Invariant 11's fields — `why`, `added`, `origin` — plus the `run_id` and trace. ⛔ **A memory you cannot trace is a memory you cannot retract** |

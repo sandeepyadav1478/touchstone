@@ -1,97 +1,145 @@
 # 05 — Scoring
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
-Four metrics, one of them judged. **The three that gate promotion have no model in them.**
+Three gating metrics, all mechanical. **The judged dimension is reported beside them and gates nothing — [§5](#5-the-judged-dimension--and-why-it-can-never-gate) says why that is an invariant rather than a threshold.**
 
 ---
 
-## 1. Correctness — exact match, no judge
+## 1. Reward — mechanical, no judge
 
-A verdict is **correct** iff:
+**touchstone does not define correctness. τ²-bench does, and it does it without a model.**
+That is the whole reason this specimen was chosen (D-062): the answer key is a database, not
+an opinion.
 
-```python
-if truth.resolvable:
-    correct = (verdict.root_cause_id  == truth.root_cause_id
-           and verdict.affected_service == truth.affected_service
-           and verdict.escalate is False)
-else:                                    # `insufficient_evidence` cases
-    correct = verdict.escalate is True
-```
+A simulation's reward is the **product** of the components named in the task's
+`evaluation_criteria.reward_basis` — `evaluator.py:223` starts at `1.0` and multiplies each one
+in, so **any single zeroed component zeroes the reward.** That is what makes *"which component
+came back zero"* the natural failure class.
 
-**Both halves matter.** Naming the right failure in the wrong service is not a triage; and
-confidently answering an incident that has no determinable cause is the failure that wakes
-people up at 3am for nothing.
+| Component | How it is checked | Model in it? | In retail's basis? |
+|---|---|---|---|
+| `DB` | the task's gold `actions` are replayed on a fresh environment, and the agent's **end state** is diffed against the result. **Any path reaching an equivalent end state passes** | none | **all 114 tasks** |
+| `NL_ASSERTION` | a judge is asked whether each written assertion holds, via `generate()` on `DEFAULT_LLM_NL_ASSERTIONS` (`evaluator_nl_assertions.py:121`) | 🔴 **yes** | **112 of 114** |
+| `COMMUNICATE` | each required string must appear, lowercased, as a **substring** of some assistant message (`evaluator_communicate.py:69`) | none | ⛔ **zero** — this is the *original τ-bench* basis, not retail's |
 
-⚠️ **Partial credit is reported, never gated.** The results file carries `root_cause_only` and
-`service_only` alongside the strict number, because *"right cause, wrong service"* is a
-different diagnosis from *"no idea"* and the version diff is more legible with both. **The
-promotion rule uses the strict conjunction only** — one number to gate on, the rest for
-reading.
+🔴 **So touchstone gates on `reward_breakdown["DB"]`, not on the composite reward (D-069).**
+`evaluator_env.py:153` writes `DB` as its own key on every task, independent of what the
+composite multiplies together — so the mechanical half is available per simulation without
+editing anything upstream. **The composite is reported next to it, unmodified**, because that is
+the number the leaderboard is in.
 
-### Stratified by `precedent`, for v5 (D-023)
+⚠️ **`RewardType` declares five components** — `DB`, `ENV_ASSERTION`, `NL_ASSERTION`, `ACTION`,
+`COMMUNICATE`. Across the **1,824 shipped retail simulations** in `data/tau2/results/final/`,
+`reward_breakdown` is exactly `{DB, COMMUNICATE}` — **and that is a fact about a task set this
+repo will never run.** Those leaderboard runs predate the retail rewrite; the file a run loads
+today declares `{DB, NL_ASSERTION}` on 112 of 114 tasks.
 
-**Not a new metric — a group-by.** `correct` and `all_k` are additionally reported per
-`precedent` label (`true` / 🔴 `false_friend` / `none`, [docs/01](01-spec.md) §4), because a
-memory candidate's average hides the thing worth knowing: memory should *help* on `true`, *hurt*
-on `false_friend`, and be flat on `none`.
+⛔ **A report JSON is authoritative for the run that produced it and for nothing else.** Both
+files ship in the same checkout, the stale one has a four-digit `n`, and the claim it produced
+reached four artefacts before anyone opened `tasks.json`. `DEFECTS.md` DEF-036.
 
-⛔ **Counts, never percentages, at n=10.** A stratum holds two or three cases; `2/2 → 0/2` is a
+🔴 **`COMMUNICATE` is a substring match, and upstream says so itself** — the line carries
+`# TODO: This could be improved!`. It strips commas from the haystack and nothing else, so an
+agent that says the right number inside the wrong sentence still scores. **Do not repair it.**
+Our figures have to be comparable with the published leaderboard, and a scorer we quietly
+improved is a scorer nobody can check us against. Record the brittleness; keep the metric.
+
+### The partial-credit rule survives the swap
+
+**Partial credit is reported, never gated.** `results/` carries the `reward_breakdown` split
+alongside the scalar, because *"got the database right, never said the number"* is a different
+failure from *"did the wrong thing"*, and the version diff is more legible with both. **The
+acceptance rule uses the scalar only** — one number to gate on, the rest for reading.
+
+### Stratified by memory condition, for the memory candidate (D-023)
+
+**Not a new metric — a group-by.** Reward and `pass^k` are additionally reported per memory
+condition, because a memory candidate's average hides the thing worth knowing: memory should
+*help* where a prior session carried a usable fact and be flat where it did not.
+
+⛔ **Counts, never percentages, at this n.** A stratum holds a handful of tasks; `2/2 → 0/2` is a
 fact and *"memory costs 40%"* is a number invented from two data points. The gate result is
-valid at this n — one per-case regression is one regression — the rate is not.
+valid at this n — one per-task regression is one regression — the rate is not.
 [docs/08](08-memory.md) §7.
 
+⚠️ **The `precedent` / `false_friend` stratification this section used to describe was a property
+of the authored corpus** — we planted the precedent, so we could label it. **τ² tasks carry no
+such label and we do not get to add one**, so the stratification is now over a condition we
+control (memory on/off) rather than a corpus property we cannot see. That is a real loss of
+resolution, recorded rather than papered over.
+
 ---
 
-## 2. `all_k` — reliability
+## 2. `pass^k` — reliability
 
-Each case runs **k times** (default 3 — `config.K`, D-030).
+Each task runs **k times** (default 3 — `config.K`, D-030).
+
+⛔ **This metric is not ours and its name is not a choice.** τ²-bench computes it at
+`metrics/agent_metrics.py:113`:
+
+```python
+def pass_hat_k(num_trials: int, success_count: int, k: int) -> float:
+    return math.comb(success_count, k) / math.comb(num_trials, k)
+```
+
+**Read that carefully — it is not "the fraction of tasks that passed every attempt."** It is the
+probability that **k trials drawn without replacement from this task's n trials all pass**,
+averaged across tasks. With `k == num_trials` the two coincide; with `k < num_trials` they do
+not, and the difference is a per-task probability rather than a 0/1 indicator.
 
 | Metric | Definition |
 |---|---|
-| `pass@1` | Mean correctness across all attempts |
-| `all_k` | **Fraction of cases correct on *every* attempt** |
+| `pass^1` | mean success rate over all trials — the lenient reading, one attempt |
+| `pass^k` | `C(successes, k) / C(trials, k)` per task, averaged — **the headline** |
 
-`all_k` is the headline. An agent right 80% of the time on each of five independent attempts
-fully succeeds on about a third of cases — `pass@1` describes a demo, `all_k` describes
-something you would put on call.
+An agent right 80% of the time on each of four independent attempts clears `pass^4` on about
+four tasks in ten. **`pass^1` describes a demo; `pass^k` describes something you would put on
+call.** Both go in the README, even when they differ — especially when they differ.
 
-**Both go in the README, even when they differ — especially when they differ.**
+⚠️ **Infrastructure errors have two conventions and they disagree.** `get_metrics_df` filters
+`INFRASTRUCTURE_ERROR` simulations out entirely (`agent_metrics.py:145`), while the published
+leaderboard convention counts them as **failed trials** (τ²-bench `RELEASE_NOTES.md`). ⛔ **Say
+which one a number used, in the same sentence.** We follow the leaderboard convention, because a
+run that died is a run the operator did not get an answer from.
 
-⛔ **Never call `all_k` "pass@k".** They are opposite ends of strictness: pass@k conventionally
-means *at least one of k succeeded*; `all_k` means *all k succeeded*. A reader who sees the
-familiar name assumes the lenient metric, and **the gate reads weaker than it is.** `pass@1` above
-is the conventional metric and is correctly named. *(D-041 — the confusion arrived by comparison
-with a published closed-loop eval design that reports pass@k, and it got within one sentence of
-these docs.)*
+🆕 **This retires D-041 by adopting upstream's name instead of coining one.** The old metric was
+called `all_k`, with a standing ⛔ never to call it `pass@k` — because `pass@k` conventionally
+means *at least one of k succeeded*, and a reader seeing the familiar name reads the gate as
+weaker than it is. `pass^k` is τ²-bench's own name for its own metric, and **the caret is the
+distinction**: `pass@k` is lenient, `pass^k` is strict. The rule that produced D-041 held; what
+changed is that we no longer have to enforce it ourselves.
 
-> From [`tracebench`](https://github.com/sandeepyadav1478/tracebench). Cite it.
-
----
-
-## 3. Escalation F1
-
-`escalate=True` is the positive class, over the labelled cases:
-
-| | Should escalate | Should not |
-|---|---|---|
-| **Did** | TP | FP — cried wolf |
-| **Did not** | FN — acted on a guess | TN |
-
-**Both errors are real and they are not symmetric.** An FN means the agent confidently
-recommended an action on an incident whose cause was undetermined. Report precision and
-recall separately as well as F1. **Promotion gates on F1; the split is what tells you which way
-a version moved**, and two versions with the same F1 can be opposite kinds of wrong.
-
-⚠️ This metric only means something because 2–3 of 10 cases are `insufficient_evidence`
-([docs/01](01-spec.md) §3). **Quote n alongside it, always.**
+> The reliability framing came from [`tracebench`](https://github.com/sandeepyadav1478/tracebench). Cite it.
 
 ---
 
-## 4. Cost per correct triage
+## 3. ⛔ Escalation F1 — cut, and why
+
+**This section measured whether the agent knew when to give up**, over cases labelled
+`insufficient_evidence`. It was a good metric for a corpus we authored, because we chose how
+many of those cases to plant.
+
+**τ²-bench retail has an analogue and it will not carry a metric.** `transfer_to_human_agents`
+exists (`domains/retail/tools.py:731`), but:
+
+- it is named in **4 of 114** tasks — an F1 over four positives is a number that moves when one
+  attempt flips;
+- it is a `ToolType.GENERIC` tool that **returns a constant string** and touches no state, so it
+  contributes **nothing** to `DB`, and therefore nothing to reward;
+- there is no per-task ground truth for *"should have transferred"* — only the four tasks that
+  mention it.
+
+⛔ **So it is cut, not weakened.** The old text required *"quote n alongside it, always"*; at
+n=4 the honest application of that rule is to delete the metric. **A metric kept at an n that
+cannot support it is worse than no metric, because it still moves and someone still reads it.**
+
+---
+
+## 4. Cost per success
 
 ```
-cost_per_correct = sum(ResultMessage.total_cost_usd) / n_correct_attempts
+cost_per_success = sum(ResultMessage.total_cost_usd) / n_successful_trials
 ```
 
 **Measured, not computed.** The Agent SDK reports `total_cost_usd` per call, plus a
@@ -101,80 +149,85 @@ and wrong in the flattering direction**, because prompt caching is not in the li
 🔴 **But it was not billed.** The runs go through the Claude Code subscription, so the honest
 sentence is: *"what the run would have cost at API list prices — it came out of a subscription
 quota, not an invoice."* Both halves are load-bearing. ⚠️ Record the **model id** next to it —
-that comes from the run and is what distinguishes the three paths; `provider` is a config label
+that comes from the run and is what distinguishes the paths; `provider` is a config label
 (D-033), and `"auth": "subscription"` is a precondition `touchstone doctor` asserts.
 
-**The denominator is the design choice.** Cost per *attempt* rewards an agent that gives up
-quickly. Cost per *correct* triage is the unit an operator actually has — and an agent that
+🔴 **And the quota rejects rather than bills.** The account reports
+`overage_status='rejected'` on a `five_hour` window, so exhausting it **kills a run in flight**
+rather than producing a larger number here. A cost figure from a truncated run is not a cheap
+run — check `termination_reason` before reading this metric at all.
+
+**The denominator is the design choice.** Cost per *trial* rewards an agent that gives up
+quickly. Cost per *success* is the unit an operator actually has — and an agent that
 is cheap and wrong scores badly, which is right.
 
-⛔ **Void attempts are in neither term.** A 429 (`is_error` with `api_error_status`) means the
-attempt did not happen; counting its cost or its failure would let a quota limit look like a
-regression (D-015).
-
+⚠️ **Renamed from "cost per correct triage".** *Triage* was the specimen's verb, not the
+metric's; the arithmetic is unchanged.
 ---
 
-## 5. The judged dimension — explanation quality
+## 5. The judged dimension — and why it can never gate
 
-`arize-phoenix-evals` (D-020), **on Cerebras — never on the Claude quota** (D-016). **Its
-result is written back as an annotation on the span it judged**, so even the judged dimension
-is read from the same substrate as everything else.
+**τ²-bench ships a judged reward component, and we do not turn it on.** `NL_ASSERTION` is a
+declared member of `RewardType`; `evaluator_nl_assertions.py:121` scores it by calling
+`generate()` — **the same seam every other model role crosses** — on
+`DEFAULT_LLM_NL_ASSERTIONS`. Across the 1,824 shipped simulations it appears in
+`reward_breakdown` **zero** times.
 
-- Runs on `verdict.reasoning`: is the explanation supported by evidence the agent actually
-  retrieved? (Cross-check the tool spans — a reason citing a metric it never fetched is
-  a fabrication, and **that check is mechanical, not judged.**)
-- ⛔ **Never gates promotion.** Reported beside the others, in its own column. 🆕 **And since
-  D-045 that is a test rather than this sentence** — the fields live inside
-  §6's `diagnostics` object and `compare.py` is asserted never to read it.
-- 🔴 **Built at P2.6a, not in phase 1** (DEF-009). This section specified the judge
-  in full while no roadmap row built it, for as long as it has existed. **The placement is the
-  finding:** a metric that cannot gate cannot block the loop, so it comes *after* the gate it is not
-  part of.
-- ⚠️ **Ceiling: a smaller judge is a weaker judge.** State it, and state which model. The
-  honest framing is the interesting one — *"the quota goes to the thing being measured, not to
-  a metric that cannot block anything"* — and it is only honest if the trade is named.
+⛔ **THE INVARIANT: anything that gates is mechanical; anything with a model in it cannot
+gate.** D-064 puts the model in **translation** — turning a written constraint into a predicate
+over the database — and leaves the **verdict** mechanical. D-065 says a gate runs in shadow or
+in enforce, and in both modes the thing that decides is a predicate, not a judgement.
 
-**The evidence cross-check is the better half of this section** and it needs no judge at
-all: the reasoning names a metric, the spans say whether it was fetched. **A hallucinated
-citation is detectable structurally.**
+⚠️ **This section previously said the rubric was not a gate *yet*, and gave a threshold for
+promoting it.** The argument was: the reason is `n`, not a view about rubrics — a rubric averages
+out beautifully as a dense RL reward over thousands of episodes, and a gate is the opposite
+regime (one decision, no averaging, a 90%-reliable judge corrupting one case in ten, which is the
+entire margin between adjacent versions). **That argument was correct and it has been
+superseded.** D-064 did not raise the threshold; it removed the axis. A judge is now excluded by
+*construction*, not by an `n` it might one day clear. 🎯 **The old text is kept here rather than
+deleted, because a threshold that was quietly removed reads, later, as a threshold that was
+quietly met.**
 
-### The rubric, and the three things recorded with every score (D-041)
+🔴 **The judge does not run on Cerebras, and this section said it did.** The constraint is
+**Anthropic models only**, stated by the user and not negotiable; `ollama` and Cerebras remain
+`touchstone doctor` diagnostics and are **never model sources** — the earlier text named
+`arize-phoenix-evals` on Cerebras under D-016, and **the doc was what was wrong**. What survives
+is the reason the offload was attractive in the first place: *the quota goes to the thing being
+measured, not to a metric that cannot block anything.* With the judge excluded by the invariant
+rather than by cost, that trade no longer needs making.
 
-The criteria are fixed, written down, and scored by an LLM on a **declared** model. A score
-missing any of these is not reportable:
+### What replaces it: the cross-check, which needs no judge at all
+
+**The evidence cross-check was always the better half of this section**, and it survives the
+specimen swap intact because it is structural:
+
+- the transcript names a fact — an order id, a price, a policy clause;
+- the tool spans say whether the agent ever fetched it;
+- **a citation with no fetch behind it is detectable without asking anyone's opinion.**
+
+That is a real check against a real failure mode, it is mechanical, and it is therefore
+**eligible to gate**. It is the same shape as the `DB` component: replay what should have
+happened, diff it against what did.
+
+### If the judged column is ever reported, three things are recorded with it (D-041)
+
+Reported, never gated — and the fields live inside §6's `diagnostics` object, with `compare.py`
+asserted never to read it (D-045). **That guarantee is a test, not this sentence.**
 
 | Recorded | Why |
 |---|---|
-| `judge_model` | A rubric score whose judge is not on the record is a number with no provenance. §6 already carries `judge: {provider, model}` — D-041 makes it **required**, not illustrative |
-| `rubric_hash` | **The rubric is part of the measurement.** Edit a criterion and every past rubric score becomes a different claim — the same argument [docs/09](09-schemas.md) §5 makes about `truth.json` |
-| `criterion_1_agreement` | The calibration, below |
+| `judge_model` | A score whose judge is not on the record is a number with no provenance. §6 carries `judge: {provider, model}` — D-041 makes it **required**, not illustrative |
+| `rubric_hash` | **The rubric is part of the measurement.** Edit a criterion and every past score becomes a different claim — the same argument [docs/09](09-schemas.md) §5 makes about the benchmark hash |
+| `criterion_1_agreement` | The calibration: criterion 1 duplicates the mechanical cross-check above, so **the agreement rate between them is the judge's measured error rate on this corpus**, computed against an answer already known |
 
-🎯 **Criterion 1 is deliberately a duplicate of the mechanical check above**, and that is what
-makes the rest of the rubric safe to read. The cross-check answers *"does the reasoning cite a
-metric the spans say was never fetched"* structurally, with no model. Criterion 1 asks the judge
-the same question — so **the agreement rate between them is the judge's measured error rate on
-this corpus**, computed on every run, against an answer that is already known.
+⛔ **The remaining criteria are not reportable on a run whose criterion-1 agreement is not also
+reported.** Not because they are wrong — because with no human anywhere in this loop (D-040),
+nothing else in the system can tell you whether they are right.
 
-⛔ **Criteria 2–4 are not reportable on a run whose criterion-1 agreement is not also reported.**
-Not because they are wrong — because with no human anywhere in this loop (D-040), nothing else in
-the system can tell you whether they are right.
-
-### 🆕 What would make the rubric a promotion condition — and why it is not one yet
-
-⚠️ **The reason is `n`, not a view about rubrics.** A rubric is an excellent instrument where its
-noise **averages out** — the strongest published case for one is as an RL reward, dense across
-thousands of episodes, where a signal that is individually noisy is collectively right. **A
-promotion gate is the opposite regime:** n=10, one decision, no averaging, and a judge that is 90%
-reliable corrupts about one case in ten — which is the entire margin between two adjacent versions.
-
-So D-045's "never gates" is really a **threshold**, and `criterion_1_agreement` is the instrument
-that reads it. The rubric becomes admissible as a sixth condition when: agreement **≥ 0.95 sustained
-over ≥ 10 versions**, its disagreements are inspected and **non-systematic** (a judge always wrong
-about escalation is worse than one wrong at random), the benchmark is **n ≥ 50**, and it is counted
-as a **separate layer** rather than a second gate on the same judge.
-
-🎯 **Which is why the guarantee is a test rather than a sentence.** A boundary can be moved
-deliberately, in one visible diff, by whoever meets those four. Prose can only be forgotten.
+🔴 **Built at P2.6a at the earliest, and possibly never** (DEF-009). This section specified a
+judge in full while no roadmap row built it, for as long as it has existed. **The placement is
+the finding:** a metric that cannot gate cannot block the loop, so it comes after the gate it is
+not part of — and under the invariant, "after" may mean "not at all."
 
 ### ⛔ Two gates that call the same judge are one gate
 
@@ -185,14 +238,13 @@ rows in the table. Four layers here are independent, and the reason is nameable 
 |---|---|
 | The invariants ([docs/01](01-spec.md) §6) | No model call at all — it cannot hallucinate |
 | The evidence cross-check, above | Structural: the span says fetched, or it does not |
-| The deterministic scorer (§1) | Exact match on `root_cause_id` + `affected_service` |
-| The promotion conditions ([docs/02](02-promotion.md) §1) | Arithmetic over the three above |
+| τ²'s mechanical reward (§1) | `DB` state diff and `COMMUNICATE` substring — upstream's code, not ours |
+| The acceptance conditions ([docs/02](02-gates.md) §1) | Arithmetic over the three above |
 
-**The rubric is a fifth entry but not a fifth layer** — it shares its model with any other judged
-check, so they fail together. ⚠️ **A list of seven gates that share one judge is a single point of
-failure wearing a table**, and counting them separately is how a gate stack gets impressive
-without getting stronger.
-
+**A judged column would be a fifth entry but not a fifth layer** — it shares its model with any
+other judged check, so they fail together. ⚠️ **A list of seven gates that share one judge is a
+single point of failure wearing a table**, and counting them separately is how a gate stack gets
+impressive without getting stronger.
 ---
 
 ## 5a. The router — measured, never gated (D-042)
@@ -205,7 +257,7 @@ the one thing this project sells.
 It closes with **no judge and no labeller**, because the answer is already computed three times
 over: [docs/01](01-spec.md) §3 gives each root cause its distinguishing evidence,
 [docs/03](03-agent-and-tools.md) §1 assigns the tools to the specialists, and
-[docs/02](02-promotion.md) §2's mine pre-check already tests *"signal present and fetchable"* — and
+[docs/02](02-gates.md) §2's mine pre-check already tests *"signal present and fetchable"* — and
 then throws the answer away. So `required_specialist` is **planted in `truth.json` by the
 generator**, and router precision/recall per specialist is exact match against `next`. Invariant 1
 is untouched: the agent never reads `truth.json`; only the scorer does.
@@ -237,25 +289,31 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
   "runbook_hash": "c41e7b…",
   "k": 3,
   "max_hops": 6,                                        // ⛔ null at v1 — no supervisor (D-038)
+  "domain": "retail",                                   // ⛔ τ² task ids are bare integers and
+                                                        //    are NOT unique across domains
+  "tau2_version": "1.0.1",                              // the scorer is upstream's; pin it
   "model": "⟨the model_usage key, from the run — D-033⟩",
-  "provider": "⟨subscription | cerebras | ollama — from config; the model id is the evidence⟩",
+  "provider": "subscription",                           // ⛔ Anthropic only; cerebras/ollama are
+                                                        //    doctor diagnostics, never model sources
   "auth": "subscription",
   "aggregate": {
-    "correct": 0.0, "all_k": 0.0, "pass_at_1": 0.0,
-    "escalation": {"precision": 0.0, "recall": 0.0, "f1": 0.0},
-    "cost_per_correct_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
-    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0
+    "reward_mean": 0.0, "pass_hat_1": 0.0, "pass_hat_k": 0.0,
+    "reward_breakdown_zeroed": {"DB": 0, "COMMUNICATE": 0},  // which component killed the reward
+    "infra_error_convention": "counted_as_failed",           // ⛔ leaderboard convention, §2
+    "cost_per_success_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
+    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0,
+    "termination_reasons": {"agent_stop": 0, "max_steps": 0, "infrastructure_error": 0}
   },
-  "cases": [{"id": "inc-001", "correct_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
+  "cases": [{"id": "47", "success_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
 
   // ⛔ compare.py NEVER reads inside this object, and one test proves it (D-045).
-  //    Everything a promotion depends on is above this line.
+  //    Everything an acceptance depends on is above this line.
   "diagnostics": {
-    "judge": {"provider": "cerebras", "model": "⟨…⟩",         // ⛔ required, not illustrative (D-041)
-              "rubric_hash": "7d13ae…"},
-    "criterion_1_agreement": 0.0,                             // the judge's measured error rate (D-041)
-    "explanation_quality": {"criterion_2": 0.0, "criterion_3": 0.0, "criterion_4": 0.0},
-    "router": {"macro_f1": 0.0,                               // vs required_specialist (D-042)
+    "judge": null,                                      // ⛔ excluded by the invariant, §5 — not
+                                                        //    "not yet"; NL_ASSERTION stays off
+    "criterion_1_agreement": null,
+    "evidence_cross_check": {"cited_without_fetch": 0}, // mechanical, and therefore gate-eligible
+    "router": {"macro_f1": 0.0,                         // vs required_specialist (D-042)
                "per_specialist": {"timeline": {"precision": 0.0, "recall": 0.0}}}
   },
 
@@ -269,7 +327,7 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
 ```
 
 ⛔ **Written by `touchstone score`, never by hand.** The README table is generated from these
-files ([docs/02](02-promotion.md) §2.6). Per-attempt records and the four `status` values:
+files ([docs/02](02-gates.md) §2.6). Per-attempt records and the four `status` values:
 [docs/09](09-schemas.md) §6.
 
 🎯 **`diagnostics` is a boundary, not a heading (D-045).** Both things inside it are opinions about
@@ -291,7 +349,7 @@ the run anyway: **no attempt can report `hops` above it.**
 supervisor emitted `done`** — the last `touchstone.node.supervisor` span named a specialist and the
 synthesizer ran regardless. Scored attempts only; a `void` run stopped for a quota, not a bound.
 **It is diagnostic and it is not a fifth promotion axis** — condition 3's four are closed (§1 of
-[docs/02](02-promotion.md)). ⚠️ **It only catches the bound being too *small*.** Too large is a
+[docs/02](02-gates.md)). ⚠️ **It only catches the bound being too *small*.** Too large is a
 supervisor that wanders, and that already lands on `cost_per_correct_usd`, which *is* a promotion
 metric — so the two failure directions have separate detectors and neither needs a new one.
 
@@ -304,7 +362,7 @@ between two rows would be indistinguishable from the agent improving.
 aggregate at all.** That asymmetry is deliberate and it is the whole reason the suite can grow
 (D-024): **an average over a case set that changes between runs is not comparable to itself**,
 so the regression tier reports counts and a fail list instead. `locked_failed` non-empty blocks
-the promotion; `newly_locked` names the cases this run just locked shut.
+the acceptance; `newly_locked` names the cases this run just locked shut.
 
 ⚠️ **Never put a regression pass rate in the version table.** It would move for two reasons at
 once — the agent changed, and the denominator changed — and a ratio whose denominator moves
@@ -314,8 +372,10 @@ between rows is not comparable down the column, which is the only thing that tab
 
 ## 7. What is deliberately not measured
 
-- ⛔ **MTTR.** No humans, no baseline, no real incidents. **The most tempting number here and
-  the least defensible.**
-- ⛔ **Anything against a human responder.** There is no comparison group.
+- ⛔ **Wall-clock "time to resolution".** No humans, no baseline, and τ² user turns are a
+  simulator's, not a customer's. **The most tempting number here and the least defensible.**
+- ⛔ **Anything against a human agent.** There is no comparison group.
+- ⛔ **A repaired `COMMUNICATE` check.** §1 says why: a scorer we quietly improved is a scorer
+  nobody can compare us against.
 - ⛔ **Answer "helpfulness" as a headline.** A judge scoring vibes is what this design exists
   to avoid; it appears once, in §5, clearly bounded.

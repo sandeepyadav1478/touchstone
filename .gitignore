@@ -59,3 +59,4 @@ phase0.log
 .idea/
 .vscode/
 .DS_Store
+scripts/check-diagram-nodes.sh

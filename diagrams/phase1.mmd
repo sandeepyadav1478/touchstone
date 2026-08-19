@@ -1,0 +1,76 @@
+%% touchstone phase 1 — the adapter, the enforcement point, and the three decisions
+%% Every node names a real symbol: touchstone, or tau2-bench @ a2c02472 (MIT). D-068.
+flowchart TB
+
+  subgraph TAU2["τ²-bench · external · MIT · pinned a2c02472"]
+    direction TB
+    RUN["Orchestrator.run<br/>orchestrator.py:260"]
+    AGENT["llm_agent.py:128<br/>agent turn"]
+    USER["user_simulator.py:235<br/>user turn"]
+    REVIEW["hallucination_reviewer.py:196<br/>opt-in, validates the simulator"]
+    GEN["llm_utils.generate<br/>llm_utils.py:355"]
+    LITE["litellm.completion<br/>llm_utils.py:15"]
+    ENVC["Environment.make_tool_call<br/>environment/environment.py:158"]
+    MUT["_is_mutating_tool<br/>environment/environment.py:130"]
+    EVAL["evaluate_simulation<br/>evaluator.py:88"]
+    REW["reward_breakdown[DB] — gates<br/>composite reported, never gates"]
+  end
+
+  subgraph TS["touchstone"]
+    direction TB
+    ADP["adapter<br/>replaces litellm at the seam"]
+    SDK["ClaudeSDKClient<br/>claude_agent_sdk"]
+    CFG["config.py<br/>MODEL · USER_MODEL<br/>JUDGE_MODEL · REVIEW_MODEL"]
+    GATE["gate · shadow then enforce<br/>D-064 · D-065"]
+    TEL["telemetry<br/>OTel spans"]
+    SUITE["suite<br/>benchmark frozen · regression grows"]
+    ADMIT["5 admission gates<br/>reproducible · not flaky<br/>not a void · distinct · justified"]
+    DOC["doctor.py<br/>asserts the pins"]
+  end
+
+  PHX["Phoenix<br/>PHOENIX_URL"]
+  ANTH["Anthropic<br/>subscription auth · 5h window"]
+
+  RUN --> AGENT
+  RUN --> USER
+  AGENT --> GEN
+  USER --> GEN
+  REVIEW --> GEN
+
+  GEN -. "replaced" .-> LITE
+  GEN ==> ADP
+  ADP --> SDK --> ANTH
+  CFG --> ADP
+  DOC --> CFG
+
+  AGENT --> ENVC
+  ENVC --> MUT
+  ENVC ==> GATE
+  GATE -- "enforce: refuse before the write" --> ENVC
+
+  RUN --> EVAL --> REW
+
+  ADP --> TEL
+  ENVC --> TEL
+  TEL --> PHX
+
+  REW --> D2
+  ADMIT --> D3
+  GATE --> D1
+  EVAL -. "mined failures" .-> ADMIT
+  ADMIT --> SUITE
+  SUITE --> D2
+
+  D1{{"DECISION 1<br/>refuse a tool call<br/>no model"}}
+  D2{{"DECISION 2<br/>reject a candidate version<br/>no model"}}
+  D3{{"DECISION 3<br/>admit a mined case<br/>no model"}}
+
+  classDef nomodel fill:#0b3d2e,stroke:#3ddc97,color:#eaffef,stroke-width:2px
+  classDef model fill:#3d2b0b,stroke:#ffb703,color:#fff6e5
+  classDef seam fill:#3d0b2b,stroke:#ff5db1,color:#ffe9f5,stroke-width:3px
+  classDef dead fill:#2a2a2a,stroke:#666,color:#999
+
+  class D1,D2,D3,REW,ADMIT,MUT nomodel
+  class AGENT,USER,REVIEW,SDK,ANTH model
+  class GEN,ADP,ENVC seam
+  class LITE dead

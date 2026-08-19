@@ -1,6 +1,6 @@
 # 01 — Spec: the incident, the verdict, the generator
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 **Write this file's code first, before any agent exists.** The corpus is what makes every
 later number falsifiable; an agent built before the answer key is an agent you cannot score.
@@ -263,12 +263,12 @@ may change, and each change carries its reason.
 compare two runs whose benchmark hashes differ** — that guard is what makes the version table
 honest, and it is one of the first things to write. ⚠️ **`regression/` has no such
 requirement**: it is a gate, not a comparison, so adding to it resets nothing.
-[docs/02](02-promotion.md) §1.
+[docs/02](02-gates.md) §1.
 
 **Every case in either tier carries its own provenance** — `origin`, a required non-empty
 `why`, `added`, `admitted_by`, the mining trace if it has one, and an append-only `history[]`.
 Full schema and the `touchstone suite show` / `diff` / `log` commands:
-[docs/02](02-promotion.md) §5.
+[docs/02](02-gates.md) §5.
 
 ### The second frozen corpus — `history/`, for v5 (D-023)
 

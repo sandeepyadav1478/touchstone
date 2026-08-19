@@ -1,191 +1,138 @@
-title touchstone — one attempt, and every boundary it crosses
+title touchstone — one simulation, and every boundary it crosses
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  THIS IS THE SECOND DIAGRAM, AND docs/07 §3 SAYS IT IS THE ONE THAT MATTERS:
-//  "the ordering across the SDK, LangGraph, the checkpointer, the span exporter
-//   and Phoenix is where a design turns out to be wrong. When only one diagram is
-//   drawn, draw that one." ⛔ We drew the flowchart first — the kind that section
-//  calls "easy and usually already right in your head". This is the correction.
+//  WHAT THIS PICTURE IS FOR, AND WHY IT WAS REDRAWN RATHER THAN AMENDED — D-068.
 //
-//  ⛔ IT LIVES IN ITS OWN ERASER FILE, AND THAT IS NOT FILING (DEF-022). Eraser
-//     lays every diagram in one file onto ONE shared canvas at the same origin, so
-//     the flowchart and this page rendered ON TOP OF EACH OTHER and neither could
-//     be read. There is no position parameter in the MCP — create takes fileId,
-//     type and code, nothing else — so one file per diagram is the only separation
-//     available. ⚠ The flowchart keeps lEXSFoZ7vOTFMYclaqr1; this is C9LfwhW1XqfTtkpdynD0.
+//  The old sequence traced cli.py → loop/run.py → agent/graph.py → tools/ →
+//  agent/models.py → the claude CLI. Every participant between run.py and the
+//  network was OUR agent, and D-062 replaced it with τ²-bench retail. D-066
+//  archived the old one whole to `incident-specimen` at 109c424. So five of the
+//  eleven participants below are new, and the three that vanished vanished
+//  because the files did.
 //
-//  ⛔ IT REPLACES A DRAWING RATHER THAN ADDING ONE. docs/04 §4a carried a Mermaid
-//     sequence of the same run; it is gone, and §4a points here. Two sequence
-//     diagrams of one run is the drift D-036 exists to stop, and the one that
-//     survives is the one that shows the process and network boundaries — which
-//     is the whole reason docs/07 §3 asks for a sequence at all.
-//     ⚠ Every line of §4a's ARGUMENT stayed there. Only the picture moved.
+//  ⛔ THE RENDERER EATS THREE THINGS AND THE ONLY DEFENCE IS A STATIC GREP.
+//     · `note over` renders as NOTHING
+//     · an opening `[` in a message label DELETES THE WHOLE MESSAGE
+//     · `title` inside a block renders as nothing
+//     Milestones 8 and 9 of scripts/check-diagram.py grep the DSL for exactly
+//     these. ⛔ Also no ⛔ and no 🔴 in a RENDERED label — a black bar in the
+//     flowchart, and ZERO pixels here. They are fine in comments, which is why
+//     this block is full of them.
 //
-//  🔴 ⛔ ERASER SILENTLY DROPS `note over` IN A SEQUENCE DIAGRAM. NEVER USE IT.
-//     MEASURED 2026-08-17: a probe with `note over A,B: …` and `note over B: …`
-//     was accepted with no error, round-tripped VERBATIM in the API's own `code`
-//     field, and rendered ZERO pixels for both. Stored, echoed back, invisible.
-//     ⚠ THAT IS EXACTLY THE HAZARD IN THIS PORT. The Mermaid original carried
-//       FOUR notes and three of them were the load-bearing claims — invariant 1,
-//       invariant 14, and "no arrow here, the verdict is never returned to the
-//       scorer". A faithful-looking port would have kept the arrows, dropped the
-//       reasons, and passed every check we have, because nothing we run reads the
-//       render for meaning. So each one is re-expressed as a MESSAGE LABEL or a
-//       BLOCK LABEL below, and they are marked ⛔ where they land.
-//     📐 What IS supported, all probed on a live render before use: participant
-//        attributes (icon, color), `>`, `-->` dashed, self-messages, `loop`, and
-//        `alt`/`else`. `opt` renders too and is not used — nothing here is optional.
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THE ONE THING THIS PICTURE EXISTS TO SHOW.
 //
-//  🔴 ⛔ AND A SECOND SILENT DROP, WORSE THAN THE FIRST: AN OPENING `[` IN A
-//     MESSAGE LABEL DELETES THE WHOLE MESSAGE. Measured on a five-message probe:
-//     a label containing `setting_sources=[]` rendered NOTHING, a label containing
-//     a lone `[` rendered NOTHING, a label containing a lone `]` rendered FINE, and
-//     the plain labels either side rendered fine — so the parser reads `[` as the
-//     start of an attribute block and swallows the line. The DSL round-tripped
-//     verbatim, two exports returned an identical content hash, and all four edges
-//     were clear. ⛔ **A whole message vanished and every check in this repo passed
-//     it.** It bit THIS file on its first render: `Models > Claude` — the process
-//     boundary, which is the single reason a sequence diagram was drawn — was
-//     missing, and the label is now written in prose to avoid the bracket.
-//     🎯 Milestone 8 in scripts/check-diagram.py exists because of this, and it is
-//        a static grep. Nothing that reads the render could have caught it, because
-//        the render is a picture of the wrong thing and looks entirely correct.
-//     ⚠ Same family as DEF-015, where a `]` inside a flowchart label truncated the
-//       guard's own regex — but that was a reader and this is the RENDERER, and
-//       truncation leaves evidence while deletion does not.
+//  There are exactly TWO places where touchstone's code sits inside τ²'s control
+//  flow, and both are single functions:
 //
-//  🔴 ⛔ A THIRD SILENT DROP, AND THE SAME GLYPH BEHAVES DIFFERENTLY IN THE OTHER
-//     FILE: A ⛔ OR 🔴 IN A RENDERED LABEL. Measured 2026-08-18, DEF-027. In
-//     diagrams/touchstone.eraser those two characters render as ONE identical
-//     featureless black bar — visible, wrong, and readable as a deliberate shape.
-//     HERE THEY RENDER AS ZERO PIXELS. `Score`'s participant label opened with `⛔`
-//     and the mark simply was not in the picture; cropping the previous render at
-//     the `Score` header shows no bar and no gap. It now opens with the words.
-//     ⚠ ONE DEFECT, TWO FAILURE MODES, AND NEITHER GENERALISES FROM THE OTHER.
-//       Having found the bars in the flowchart, the obvious next step was to look
-//       HERE for bars. There are none, and the label was still broken. What the
-//       renderer does with a character it cannot draw is a property of the DIAGRAM
-//       TYPE, so a glyph verified in one file is unverified in the other.
-//     🎯 Milestone 9 covers both files for exactly that reason, and it is a static
-//        grep for the same reason milestone 8 is: a dropped glyph leaves a label
-//        that reads as if it were never marked, and no render check can see it.
+//    · generate() at llm_utils.py:355 — where the model call is made. The agent,
+//      the user simulator and the hallucination reviewer ALL import this one
+//      function, so ONE adapter dispatching on `model` covers every role. This is
+//      why phase 1 is small, and it was found by reading the imports rather than
+//      by assuming a framework shape (rule 7: a mechanism is a claim about the
+//      code, and you name the file you read it in).
 //
-//  📐 WHAT THIS SHOWS THAT diagrams/touchstone.eraser CANNOT. The flowchart draws
-//     what exists and what may reach what. It cannot draw ORDER, and three of this
-//     project's sharpest claims are ordering claims:
-//       · the telemetry wiring — four steps whose ORDER is the whole content
-//         (docs/04 §3). Get it wrong and you get traces that look right and have
-//         no LLM spans. A flowchart of the same four boxes says nothing at all.
-//       · the checkpoint lands AFTER every node, not at the end of the run.
-//       · the scorer runs LATER, in a different process, from a committed file.
-//     🎯 The last one is why the two halves of this page never touch.
+//    · make_tool_call() at environment/environment.py:158 — where a tool actually
+//      executes. Every tool call passes through it, and _is_mutating_tool() at
+//      :130 has already classified read vs write via toolkit.tool_mutates_state().
 //
-//  ⛔ THE LOAD-BEARING ABSENCE, AND IT IS THE SAME ONE AS IN THE FLOWCHART:
-//     there is NO message between `Graph` and `Score`, in either direction. The
-//     lifelines are ordered so that the ONLY path between them runs through
-//     `Spans` — a file on disk. That is D-007, and it is what lets CI score a
-//     committed JSONL with no credential and no model call (D-014). ⚠ An absence
-//     cannot be asserted by a picture, so `Score`'s own label carries it in words
-//     as well, and tests/unit/test_invariants.py carries it in code.
+//  ⚠ THE SECOND ONE IS EMPTY UNTIL PHASE 3. In phase 1 nothing hooks it; in phase
+//  2 the gate runs in SHADOW, which means it reads completed sessions and returns
+//  no verdict into the flow at all. The `alt` block near the bottom is drawn with
+//  the shadow branch as the live one ON PURPOSE — a sequence diagram that shows
+//  enforcement working is a diagram of phase 3, and phase 3 has not happened.
 //
-//  📐 LIFELINE ORDER IS CHOSEN, NOT ALPHABETICAL. Left to right is roughly "how
-//     far from the developer's process": CLI and run.py are local, the graph,
-//     tools/ and models.py are in-process, `claude` is a subprocess, the API is
-//     the network, then the two disks, then the scorer that runs after everything
-//     above has exited. ⛔ Adjacency was spent on the FREQUENT pairs —
-//     models→claude, spans→score — so the crossing edges are the rare ones.
-//     ⚠ `Tools` sits BETWEEN Graph and Models, which costs Graph→Models its
-//       adjacency, and it buys two things: Graph→Tools is adjacent, and left to
-//       right inside one specialist hop now reads as TIME — tool first, then the
-//       model call, which is the order docs/04 §2's span tree lists them in.
+// ═══════════════════════════════════════════════════════════════════════════════
+//  THE TELEMETRY EDGES ARE THE PART THAT CHANGED A DECISION.
 //
-//  🔴 ⛔ THE PORT DROPPED A SCORED SPAN TYPE, AND NOTHING HERE CAUGHT IT (DEF-021).
-//     The first version of this file had no `Tools` lifeline at all. The Mermaid it
-//     replaces had one, `touchstone.tool.*` is one of the four span families in
-//     docs/04 §2, and two of the metrics in §2's table — tool-call count and
-//     truncation rate — are computed from spans that this picture did not draw.
-//     ⚠ Every guard passed. Milestones 1–5 check that what IS written resolves;
-//       milestone 8 catches a message the RENDERER ate. Nothing checks for a
-//       participant that was never typed. It was found by reading the drawing being
-//       replaced, line by line, against the drawing replacing it — which is the only
-//       method that works and is not automatable from here.
-//     🎯 So the rule this file adds: **a replacement is audited against the thing it
-//        replaces, not against the spec.** The spec agreed with both versions.
+//  D-063 put the spans on litellm's OTel callback. P1.1 displaces litellm at the
+//  seam, so that callback observes nothing — the model calls no longer go through
+//  it. touchstone emits its own spans from the adapter, or it has none. Every
+//  Tel arrow below comes from OUR code for that reason, and none from litellm.
+//
+//  ⚠ AND THE REWARD ARRIVES LAST, WHICH CONSTRAINS WHAT A GATE CAN READ. τ²
+//  computes the reward AFTER the simulation ends. Spans and labels join at
+//  end-of-simulation on session_id. So a gate acting during a run acts on
+//  BEHAVIOUR and never on OUTCOME — which is what a gate should do anyway, but
+//  it is a consequence of the architecture rather than a preference.
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+//  WHY THE SCORER HAS NO MODEL IN IT, MEASURED.
+//
+//  Across the 1,824 shipped simulations of the four public retail runs,
+//  reward_breakdown["DB"] is the gating number and the composite is reported beside
+//  it — retail declares NL_ASSERTION on 112 of 114 tasks, so the composite carries
+//  a judge (D-069). DB is a database-state diff against an annotated goal. The
+//  superseded COMMUNICATE component was a
+//  lowercased substring match at evaluator_communicate.py:69. No model in either.
+//  ⚠ reward_basis is a DECLARATION of what may be scored; reward_breakdown is the
+//  EXECUTION RECORD. Reading the first one as the second is how "the NL evaluator
+//  is in the reward path for 112 of 114 tasks" got said out loud, and it is wrong.
+//
 // ═══════════════════════════════════════════════════════════════════════════════
 
-CLI [icon: terminal, color: blue, label: "cli.py — P0\nshipped `doctor`\nroadmap row P1.9\nadds the other four"]
+CLI [icon: terminal, color: blue, label: "cli.py — P0 shipped `doctor`\nP1.6 adds run, score and suite"]
 Run [icon: play, color: blue, label: "loop/run.py — the k-attempt driver"]
-Graph [icon: cpu, color: blue, label: "agent/graph.py — StateGraph + SqliteSaver"]
-Tools [icon: tool, color: blue, label: "tools/read.py + tools/runbooks.py — LOCAL reads, no network\nP2 also serves the same five over MCP (tools/mcp_server.py)"]
-Models [icon: code, color: blue, label: "agent/models.py — a FILE, ~60 lines (DEF-002)"]
-Claude [icon: cloud, color: grey, label: "`claude` CLI subprocess → the Anthropic API\nthe process boundary, then the network one"]
-Tel [icon: activity, color: blue, label: "telemetry.py\nroadmap row P1.5\nmoved here by D-037"]
-Ckpt [icon: database, color: grey, label: ".touchstone/checkpoints.db\n⚠ written every node, read back by NOTHING yet"]
+Orch [icon: repeat, color: grey, label: "τ² Orchestrator.run — orchestrator.py:260\nEXTERNAL, MIT, pinned a2c02472"]
+Agent [icon: cpu, color: orange, label: "τ² agent — llm_agent.py:128\nTHE THING BEING MEASURED"]
+User [icon: user, color: orange, label: "τ² user simulator — user_simulator.py:235\nfrozen apparatus, deliberately NOT the agent's model"]
+Gen [icon: git-merge, color: red, label: "generate() — llm_utils.py:355\nthe SINGLE seam: all roles call this one function"]
+Adapter [icon: link, color: blue, label: "adapter.py — P1.1\nthe Claude Agent SDK, dispatching on `model`"]
+Claude [icon: cloud, color: orange, label: "ClaudeSDKClient to Anthropic\nsubscription auth, five-hour window, the cap REJECTS"]
+Env [icon: shield, color: red, label: "make_tool_call() — environment/environment.py:158\nthe enforcement point, empty until phase 3"]
+Tel [icon: activity, color: blue, label: "telemetry.py — P1.2\nOUR spans: litellm's callback died with litellm"]
 Spans [icon: file-text, color: red, label: "results/spans/(version).jsonl\nthe ONLY thing that crosses from the run to the score"]
-Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)\nit has no message to or from the graph, on purpose"]
-Cmp [icon: filter, color: orange, label: "loop/compare.py — P2.4, the gate"]
+Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)"]
+Cmp [icon: filter, color: orange, label: "loop/compare.py — P2.4, decision 2"]
 
-// ── the wiring, and ORDER IS THE ENTIRE CONTENT (docs/04 §3) ──────────────────
-// ⛔ These three are numbered in their labels because the numbers ARE the claim.
-//    A flowchart would draw the same three boxes and assert nothing. Wrong order
-//    produces a trace that looks correct and is missing every LLM span — which is
-//    the shape of every quiet failure in this project.
 CLI > Tel: init_telemetry() — ONCE, from cli.py
-Tel > Tel: 1 · phoenix.otel.register() — BEFORE importing anything that instruments
-Tel > Tel: 2 · LangChainInstrumentor().instrument() — nodes become spans
-Tel > Tel: 3 · AnthropicInstrumentor().instrument() — model calls become LLM spans
-
+Tel > Tel: register the exporter BEFORE importing anything that instruments
 CLI > Run: touchstone run vN --k 3
-// ⛔ MERMAID NOTE 1 OF 4 LANDS HERE — "GroundTruth stays in truth.json, invariant 1".
-//    It is on the message rather than beside it, because a note would not render.
-Run > Run: seed from suite/benchmark/manifest.json — the Incident ONLY, truth.json stays shut (invariant 1)
+Run > Run: read suite/benchmark/manifest.json — TASK IDS and a hash, never task bytes
 
 loop [label: "k attempts — config.K = 3 (D-030) · a cached attempt is never re-run (D-015)"] {
-  Run > Graph: invoke(state, thread_id=run_id)
-  Graph > Tel: touchstone.run {version, case_id, attempt, tier, benchmark_hash}
+  Run > Orch: run one τ² retail simulation, task_id and seed
+  Orch > Tel: touchstone.simulation start — version, task_id, attempt, benchmark_hash
 
-  // ⛔ MERMAID NOTE 2 OF 4 IS THIS BLOCK'S LABEL — "no two specialist spans overlap".
-  //    Better here than as a note: invariant 14 is a property OF THE LOOP, and the
-  //    loop is the thing that would violate it by fanning out.
-  loop [label: "one specialist per hop — no two node spans OVERLAP (invariant 14, D-026) · until next == done or hops ≥ MAX_HOPS (D-039)"] {
-    // ⛔ TOOL BEFORE MODEL, and that ordering is read off docs/04 §2's span tree,
-    //    where touchstone.tool.get_metrics is listed ABOVE the LLM span under the
-    //    same node. It is a SPECIALIST-only hop — the tree shows no tool span under
-    //    supervisor or synthesizer. ⚠ Nothing is built yet, so §2 is the authority
-    //    here; if nodes.py ends up calling the model first, this arrow moves.
-    Graph > Tools: a specialist hop only — supervisor and synthesizer call none (docs/04 §2)
-    Tools --> Graph: the incident's own state, or BM25 over runbooks/ — truncated at the cap
-    Tools > Tel: touchstone.tool.* {name, result_size, truncated} — a CHILD of the node span · tool count and truncation rate are scored off it
-    Graph > Models: the node's model call — every node, no exceptions
-    Models > Claude: subprocess · setting_sources is the EMPTY list, never None · the model is PINNED (D-034)
-    Claude --> Models: ResultMessage — model_usage is where the model id was measured (D-033)
-    Models --> Graph: the node's output
-    Graph > Ckpt: checkpoint AFTER every node — not at the end of the run
-    Graph > Tel: touchstone.node.* {hop, next, findings_seen} — findings_seen is for the human (D-025, D-043)
+  loop [label: "one conversational turn — until the task ends or the turn cap is hit"] {
+    Orch > Agent: the agent's turn
+    Agent > Gen: generate(model=MODEL, messages, tools)
+    Gen > Adapter: REPLACED here — litellm is no longer on this path
+    Adapter > Claude: one model call, the pin for THIS role
+    Claude --> Adapter: the assistant message, with usage
+    Adapter > Tel: touchstone.model — role, model, tokens, latency. ONE span per call, all four roles
+    Adapter --> Gen: an AssistantMessage, the shape τ² already expects
+    Gen --> Agent: the turn's output
+
+    opt [label: "the turn contains a tool call"] {
+      Agent > Env: make_tool_call — every tool execution passes through here
+      Env > Env: _is_mutating_tool at line 130 — τ² already split read from write
+      Env > Tel: touchstone.tool — name, mutating, and in phase 3 whether it was REFUSED
+      Env --> Agent: the tool result, or in phase 3 a refusal the agent must handle
+    }
+
+    Orch > User: the customer's turn
+    User > Gen: generate(model=USER_MODEL) — the SAME function, a different pin
+    Gen > Adapter: the simulator crosses the identical seam
+    Adapter > Claude: haiku, frozen — a correlated apparatus cannot measure what it correlates with
+    Claude --> Adapter: the customer's reply
+    Adapter --> User: and the conversation continues
   }
 
-  // ⛔ MERMAID NOTE 3 OF 4 IS THE TAIL OF THIS LABEL — "the run ends here, nothing
-  //    waits, no gate span (D-040)". The verdict span IS the terminal event.
-  Graph > Tel: touchstone.verdict {root_cause_id, blast_radius, escalate} — the run ENDS here · nothing waits, no gate span (D-040)
-  Tel > Spans: the file exporter writes JSONL — timestamps included, or invariant 14 is unrunnable
+  Orch > Orch: evaluate_simulation at evaluator.py:88 — AFTER the run, never during it
+  Orch > Tel: touchstone.reward — gates on the DB component of reward_breakdown. No model in that number
+  Tel > Spans: the file exporter writes JSONL, timestamps included
 }
 
-// ── everything below happens LATER, in a different process ────────────────────
-// ⛔ MERMAID NOTE 4 OF 4 — "no arrow here, the verdict is never returned to the
-//    scorer" — has no message to ride on, because the whole claim is that there is
-//    no message. It is carried by `Score`'s participant label, by the lifeline
-//    order (the only path from Graph to Score runs through a file), and by
-//    tests/unit/test_invariants.py in code. ⚠ THIS IS THE ONE THE PORT COULD HAVE
-//    LOST SILENTLY, and it is the most important claim on the page.
 Score > Spans: read the committed JSONL — NO model call, NO credential (D-014)
-Spans --> Score: spans, with their timestamps
-Score > Score: read truth.json — at SCORE time only, and by nothing else in this picture
-Score > Cmp: results/(version).json — the scored half only · diagnostics{} reaches nothing (D-045)
+Spans --> Score: spans, with their timestamps and the reward joined on session_id
+Score > Score: pass^k is the headline, pass@1 beside it — BOTH, especially when they differ
+Score > Cmp: results/(version).json — the scored half only. diagnostics reaches nothing (D-045)
 Cmp > Cmp: five conditions against the incumbent — an AND, not five options
 
-alt [label: "all five hold"] {
-  Cmp --> CLI: PROMOTE — vN is the champion
+alt [label: "phase 2 — the gate runs in SHADOW and changes nothing"] {
+  Cmp --> CLI: the gate's precision and recall, scored against sessions whose outcome is known
 }
-else [label: "any ONE fails"] {
-  Cmp --> CLI: REFUSE — and WHICH case blocked it. The refusal IS the result
+else [label: "phase 3 — the gate ENFORCES, and the refusal is in the trace"] {
+  Cmp --> CLI: ACCEPT, or REJECT and WHICH task blocked it. The rejection IS the result
 }

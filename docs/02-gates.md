@@ -1,11 +1,47 @@
-# 02 — The promotion gate
+# 02 — The gates
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 **This is the project. Everything else is the specimen it operates on.**
 
 A touchstone never changes. A candidate version of the agent ships only if it is better on
 something and worse on nothing that mattered before.
+
+---
+
+## 0. Three decisions, and why this file stopped being called "the promotion gate"
+
+**This file was `02-promotion.md` until D-064 and D-065.** The old name was wrong in two ways at
+once: it named **one** decision where there are **three**, and the one it named is not the
+interesting one.
+
+| | the decision | where it is made | what makes it | ships |
+|---|---|---|---|---|
+| **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
+| **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | **P2.4** |
+| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the five admission gates in §5 | ⛔ **deferred** (D-030) |
+
+⛔ **All three are mechanical, and that is the invariant this file exists to protect:**
+
+> **Anything that gates is mechanical. Anything with a model in it cannot gate.**
+
+**D-064 is where the model *is* allowed to sit, and the distinction is narrow on purpose.** The
+model's only job is **translation** — turn a constraint the customer *stated* into a predicate over
+the database. The verdict is then a mechanical evaluation of that predicate against the proposed
+call. ⛔ **The gate never judges "did the agent do well."** The moment it does, the gate is an
+opinion, and an opinion that blocks a write is the worst of both.
+
+### Why the vocabulary changed at all
+
+"Promote" described a world with one candidate and one decision. It collapsed under the specimen
+swap (D-062) because **decision 1 has no analogue in it** — there is nothing to promote when the
+question is *"does this tool call execute, right now, before the row is written?"*
+
+⚠️ **Decision 3 is drawn everywhere and built nowhere, and that is stated rather than left to be
+noticed.** D-030 cut mining as the fast route's largest single cut. It stays specified here — §5
+still carries all five admission gates — because this project has already had one mechanism
+specified in full and scheduled by no row (DEF-009 (`DEFECTS.md`)), and the fix for that is not
+to stop writing it down. It is to say which of the three ship. **One and two ship. Three is scope.**
 
 ---
 
@@ -32,19 +68,19 @@ yesterday's test run.**
 entire baseline, which prices the mechanism so high it would never run. **A safety mechanism
 too expensive to use is the 3-byte-state-file failure in a different costume** (§3).
 
-### The promotion rule
+### The acceptance rule
 
-A candidate **C** is promoted against incumbent **I** if and only if all five hold:
+A candidate **C** is accepted against incumbent **I** if and only if all five hold:
 
 | # | Condition | Why it is there |
 |---|---|---|
 | 1 | `benchmark_hash(C) == benchmark_hash(I)` | ⛔ **Refuse to compare across different benchmarks.** Otherwise "improvement" can be produced by editing a case, which is the most likely way this project would quietly lie |
-| 2 | **No per-case regression on the benchmark** — no case that was `all_k` under I is less than `all_k` under C | Aggregate improvement can hide a broken case. This is the condition that does the work |
-| 3 | **Strict improvement** on at least one of: correctness, `all_k`, escalation F1, cost per correct triage | Prevents promoting a no-op and calling it progress |
-| 4 | **No budget breach** — cost per correct triage and p95 latency within the declared budget | An agent that gets better by calling ten more tools has not gotten better |
+| 2 | **No per-case regression on the benchmark** — no case that was `pass^k` under I is less than `pass^k` under C | Aggregate improvement can hide a broken case. This is the condition that does the work |
+| 3 | **Strict improvement** on at least one of: mean reward, `pass^k`, cost per success | Prevents accepting a no-op and calling it progress. ⚠️ **Escalation F1 was the fourth axis here and it is cut** — its τ² analogue is `transfer_to_human_agents`, named in **4 of 114** retail tasks and contributing nothing to reward (`ToolType.GENERIC`, returns a constant string) |
+| 4 | **No budget breach** — cost per success and p95 latency within the declared budget | An agent that gets better by calling ten more tools has not gotten better |
 | 5 | **No `locked` regression case fails** — see below | The one-way condition: what has ever worked keeps working, across every version, forever |
 
-Anything else is a **reject**, and a reject is written to `results/` exactly like a promote.
+Anything else is a **reject**, and a reject is written to `results/` exactly like an accept — ⛔ **the rejection is the more valuable of the two.**
 
 ### `open` → `locked`: why a mined case cannot gate on arrival
 
@@ -55,7 +91,7 @@ regression case carries a status:
 | status | Behaviour | Set by |
 |---|---|---|
 | `open` | ✅ Reported in `results/`, ⛔ **does not gate** | on entry — the agent cannot pass it yet |
-| `locked` | 🔒 **Gates from here on** | **automatically**, the first time a *promoted* version scores it `all_k` |
+| `locked` | 🔒 **Gates from here on** | **automatically**, the first time an *accepted* version scores it `pass^k` |
 | `quarantined` | Reported, does not gate, reason required | human, per §4 |
 | `superseded` | Excluded; points at its replacement | human, on a label correction |
 
@@ -81,7 +117,7 @@ Each case runs **k times** (default 3 — `config.K`, D-030). Comparing two thre
 a statistical question, and treating it as a binary would be the exact failure this repo's whole
 discipline exists to prevent.
 
-**So the gate fires on one transition only: `all_k` → not `all_k`.** A case the agent used to
+**So the gate fires on one transition only: `pass^k` → not `pass^k`.** A case the agent used to
 get right on every attempt, and now does not.
 
 - **Sharpest at the top.** `3/3 → 2/3` is the transition the gate acts on, and the one the
@@ -100,13 +136,26 @@ actually resolve, and everything else is reported without being acted on.
 
 ---
 
-## 2. The six stages
+## 2. The stages
 
 ```
-  run ──▶ score ──▶ compare ──▶ promote ──▶ record
+                 ┌─────────── the loop that ships ───────────┐
+  run ──▶ score ──▶ compare ──▶ accept ──▶ record
                         │                      │
-                        └──── mine ◀───────────┘
+                        └──── mine ◀───────────┘   ⛔ deferred — D-030
+                                 │
+                                 └─▶ admit ─▶ regression suite
 ```
+
+⚠️ **`promote` was the fourth verb here and it is retired.** The stage still exists — a candidate
+that clears §1's five conditions becomes the incumbent — but the word named a single decision in a
+project that has three (§0), and it named the least interesting one. **`accept` is the verb, and
+its counterpart `reject` is the deliverable**: a candidate that gets refused, with the task that
+refused it named, is the strongest artifact this project can produce.
+
+⛔ **`mine` and `admit` are deferred**, not optional. Everything downstream of `score` in that
+second row is scope, and §5 keeps its full specification so that deferring it stays a decision
+rather than an omission.
 
 ### 1. `run`
 
@@ -122,26 +171,36 @@ the `locked` ones.**
 ### 2. `score`
 
 Reads the **spans**, not the prose ([docs/04](04-observability.md)). Produces
-`results/<version>.json`: per case, per attempt — correctness, escalation, tool calls,
+`results/<version>.json`: per case, per attempt — reward and its `reward_breakdown` split, `termination_reason`, tool calls,
 tokens, latency; then the aggregates.
 
 ### 3. `compare`
 
 Applies §1 against the incumbent. Emits a per-case table and a verdict.
 
-### 4. `promote`
+### 4. `accept`
 
 Writes the version into `results/index.json` as the new incumbent. **In CI this is the gate**
 — a rejected candidate fails the job.
+
+⚠️ **Accepting is the cheap half.** The stage exists so that *rejecting* has somewhere to happen,
+and §3 is the check that it can.
 
 ### 5. `mine`
 
 **Every failure becomes a candidate case, and the machine does everything except say yes.**
 
 A case that failed carries a trace showing *how*. The mine stage clusters failures by the
-wrong `root_cause_id` the agent chose, and proposes new incidents that isolate that confusion
-— if the agent keeps calling `cache_stampede` when it is `db_pool_exhausted`, generate cases
-that differ only in the distinguishing signal.
+**way** the session failed. For τ²-bench retail that taxonomy is not invented here — it is the ten
+`TerminationReason` values (`data_model/simulation.py:1254` in [tau2-bench](https://github.com/sierra-research/tau2-bench) **1.0.1**, MIT) crossed with **whether the mechanical `DB` component came back zero** (D-069), and it proposes cases that isolate that confusion.
+
+⛔ **Cluster on `reward_breakdown["DB"]`, never on the composite reward.** Retail declares `reward_basis = ["DB", "NL_ASSERTION"]` on 112 of its 114 tasks, so the composite has a judge in it and cannot gate — D-069. The `DB` key is written separately by `evaluator_env.py:153` and is mechanical. *(An earlier pass here said the two live components were `DB` and `COMMUNICATE`; that was measured off 1,824 leaderboard simulations run against the superseded task set — `DEFECTS.md` DEF-036.)*
+
+⚠️ **This paragraph described generating new incidents with a planted root cause, and that
+capability left with the specimen (D-062, D-066).** τ²'s 114 retail tasks are upstream and are
+**never** regenerated here — mining selects and annotates, it does not author. That is a real
+reduction in what `mine` can do, and it is the price of not owning the corpus, which is the whole
+point of the swap.
 
 > This is [`evalloop`](https://github.com/sandeepyadav1478/evalloop)'s idea with a real domain
 > under it. Cite it; it predates this project.
@@ -149,15 +208,15 @@ that differ only in the distinguishing signal.
 ```mermaid
 flowchart TB
   SCORE["score — candidate C"] --> FAIL["failures + traces"]
-  FAIL --> MINE["mine · cluster by the wrong root_cause_id"]
-  MINE --> GEN["generate.py · plant the distinguishing signal<br/>the label comes from the planted cause — no judge, no labeller"]
+  FAIL --> MINE["mine · cluster by failure class · 12 derivable from the evaluator"]
+  MINE --> GEN["select the τ² task and the turn<br/>the label comes from reward_breakdown — no judge, no labeller"]
   GEN --> CHECK["mechanical pre-checks<br/>dedupe by signature · signal present and fetchable · seed determinism"]
   CHECK --> PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> ADMIT{"⛔ admission gates — all five, mechanical<br/>reproducible · not flaky · not a void · distinct · justified"}
   ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
   ADMIT -->|all five hold| REG["regression suite · status: open<br/>✅ no baseline reset"]
-  REG -->|"first all_k under a promoted version"| LOCK["status: locked · gates from here"]
-  ADMIT -->|"promote to benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
+  REG -->|"first pass^k under an accepted version"| LOCK["status: locked · gates from here"]
+  ADMIT -->|"lift into the benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
 ```
 
 #### ⛔ Admission is mechanical, and no human is a step in it
@@ -169,8 +228,8 @@ before a case can gate anything is the strictest one — it is just not a person
 ⚠️ **This used to be a batch human review, and the argument for it was that "a wrong label
 entering silently is poison."** That is true and it is why the step existed. It does not apply
 here, for a reason specific to this domain: **nothing is labelled at mine time.** A mined case
-is one the generator produced with its root cause planted before the agent ever saw it (§2), so
-the label was correct before the failure happened. There is no labelling act to get wrong —
+carries τ²'s own `reward_breakdown` as its label — computed by the benchmark's evaluator, not by
+us and not by a judge (§2), so the label was correct before the failure happened. There is no labelling act to get wrong —
 which this document already said: *review is a batch approval over machine-prepared cases,
 never a labelling task.*
 
@@ -180,7 +239,7 @@ pipeline already produces:
 
 | Admission gate | The check | Where it comes from |
 |---|---|---|
-| **Reproducible** | fails on **every** one of k attempts, not some | `all_k` — [docs/05](05-scoring.md) §2 |
+| **Reproducible** | fails on **every** one of k attempts, not some | `pass^k` — [docs/05](05-scoring.md) §2 |
 | **Not flaky** | re-run at the same seed reproduces the failure | §4's flaky-case row |
 | **Not a void** | no `429`, no tool error, no `hops_exhausted` — the attempt actually happened | the four attempt statuses, [docs/09](09-schemas.md) §6 |
 | **Distinct** | no case in either tier shares `(root_cause_id, affected_service, seed)` | [docs/01](01-spec.md) §6, invariant 9 |
@@ -198,7 +257,7 @@ provenance fields are outside `benchmark_hash` by construction ([docs/09](09-sch
 
 ⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all five is now
 admitted with nobody having looked at it. The recovery path is the regression tier itself: if
-it ever refuses a promotion on a case that inspection shows should not have been admitted,
+it ever refuses a candidate on a case that inspection shows should not have been admitted,
 review comes back as an **offline batch that quarantines** — never as a step a run waits on.
 D-040.
 

@@ -684,7 +684,7 @@ guarding.
 
 **Spec diagrams live in the docs and are not artifacts**: [docs/03](../docs/03-agent-and-tools.md) §1
 (state, partial — no failure paths), [docs/04](../docs/04-observability.md) §4a (the run→span→score
-sequence), [docs/06](../docs/06-api.md) §3 (compose topology), [docs/02](../docs/02-promotion.md) §5
+sequence), [docs/06](../docs/06-api.md) §3 (compose topology), [docs/02](../docs/02-gates.md) §5
 (the mine loop), [docs/08](../docs/08-memory.md) §5 (v5 memory).
 
 ---
@@ -751,7 +751,7 @@ DEF-002, DEF-003, DEF-004, DEF-005 — and all four are now fixed.**
    *because* it is vacuous: **a condition with nothing to do is the one most likely to be quietly
    dropped.** ⛔ The honest sentence is *"four conditions ran, five are specified."*
 9. ✅ **DEF-003 — `k` had two values in the spec at once. Fixed
-   2026-08-15.** [docs/02](../docs/02-promotion.md) and [docs/05](../docs/05-scoring.md) both said
+   2026-08-15.** [docs/02](../docs/02-gates.md) and [docs/05](../docs/05-scoring.md) both said
    *"default 5"*; D-030 rejected k=5, ROADMAP P3.1 and [docs/06](../docs/06-api.md) say `--k 3`, and
    `docs/02` contradicted itself nine lines apart. Found by having to write `3/3 → 2/3` onto the
    picture. **Drawing forces a number to be one number**, which prose never does. ⚠️ **The sweep

@@ -1,6 +1,6 @@
 # 06 — Surfaces: CLI, HTTP, compose
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not.
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 Two surfaces. **The CLI is the primary one** — it is what the loop runs and what CI calls.
 
@@ -62,7 +62,7 @@ touchstone triage inc-007 --version v4             # one run, prints the verdict
 
 ⛔ **There is no `touchstone approve`, and there is no `suite review`.** No run ever pauses, so
 there is nothing to resume; `suite admit` applies the five mechanical gates in
-[docs/02](02-promotion.md) §5 and records which one rejected a case. **A human improves this
+[docs/02](02-gates.md) §5 and records which one rejected a case. **A human improves this
 system by rewriting it — reading traces, changing prompts, adding cases — never by standing
 inside a run** (D-040).
 
@@ -71,7 +71,7 @@ must never appear in a doc example whose output is pasted into the README.
 
 **When the `suite` verbs are built, `suite show` is the one that makes a growing suite
 defensible** — every case answers *why is this here, which gates admitted it, and what failure
-produced it* ([docs/02](02-promotion.md) §5). ⛔ There is never a `touchstone suite unlock`. Overriding a
+produced it* ([docs/02](02-gates.md) §5). ⛔ There is never a `touchstone suite unlock`. Overriding a
 locked case is a hand edit plus a `DECISIONS.md` entry, on purpose: a gate with a convenient off
 switch is not a gate.
 
