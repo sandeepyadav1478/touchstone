@@ -1,5 +1,17 @@
 # touchstone
 
+> ⚠️ **The specimen is being replaced — 2026-08-19.** The incident-triage domain described
+> below was archived to the [`incident-specimen`](https://github.com/sandeepyadav1478/touchstone/tree/incident-specimen)
+> branch at `109c424` and deleted from `main`: `domain.py`, `incidents/`, the frozen
+> `suite/benchmark/` and their tests, 1,954 lines. **The loop is unchanged** — frozen
+> benchmark, growing regression suite, per-case no-regression — because the loop is the
+> project and the domain is only the specimen it operates on. It becomes τ²-bench retail,
+> whose corpus is a third party's and whose scorer is a deterministic DB-state diff, so the
+> improvement numbers are no longer measured against a corpus we wrote ourselves.
+>
+> ⛔ **Everything below still describes the archived specimen** until the docs pass lands.
+> D-062, D-066.
+
 **A production-incident triage agent that is required to get better.**
 
 Every change to the agent is a *candidate version*. Every candidate is scored against a
