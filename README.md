@@ -207,10 +207,10 @@ implemented**. It is listed here because the spec is fixed, not because it runs:
 docker compose up -d phoenix            # ⬜ traces. ⚠️ that is all the loop needs — the five
                                         #    tools run over MCP stdio, in-process, no container
 
-touchstone incidents generate --n 10    # ⬜ the suite, with planted root causes
-touchstone run v1 --k 3                 # ⬜ 10 incidents × 3 attempts
+touchstone suite freeze --domain retail  # ⬜ pin the task ids and hash them
+touchstone run v1 --k 3                 # ⬜ the frozen subset × 3 attempts
 touchstone score v1                     # ⬜ → results/v1.json
-touchstone compare v2 --against v1      # ⬜ → promote or reject, per case
+touchstone compare v2 --against v1      # ⬜ → accept or reject, per task
 ```
 
 ### Models
@@ -218,39 +218,56 @@ touchstone compare v2 --against v1      # ⬜ → promote or reject, per case
 The agent runs on **Claude, through [`claude-agent-sdk`](https://github.com/anthropics/claude-agent-sdk-python)**,
 which drives the `claude` CLI as a subprocess and inherits its login — so a suite run goes
 through a **Claude Code subscription rather than a metered API key**. Running the same suite k
-times per case per candidate is the whole point of this repo, and that is what makes it
+times per task per candidate is the whole point of this repo, and that is what makes it
 affordable.
 
 ```bash
-touchstone doctor   # checks the CLI, the login, the fallbacks
+touchstone doctor   # checks the CLI, the login, and all five model pins
                     # ⛔ and asserts ANTHROPIC_API_KEY is *absent* — if it is set,
                     #    runs quietly bill an API account instead of the subscription
 ```
 
-**Fallbacks:** Cerebras when rate-limited, ollama offline. ⛔ A provider switch *inside* a run
-voids that run rather than mixing it — provider and model are part of a candidate's identity.
-The **judge never runs on the Claude quota**; it cannot gate anything, so it is the cheapest
-thing to move off the constrained provider.
+⛔ **Anthropic models only, in every role.** `ollama` and Cerebras are reachable from this
+machine and `doctor` reports on them; they are **diagnostics, never model sources**. *(An earlier
+version of this section said the judge runs on Cerebras to keep it off the constrained quota.
+That was the doc being wrong, not the constraint being flexible.)*
 
-**The model is pinned to `claude-sonnet-4-6`**, and that id comes from a live call rather than
-a config file — `doctor` asks the running CLI what it actually answered as, because the id is
-part of a candidate's identity and a config file can disagree with reality. Full manifest and
-reasoning: [docs/00-stack.md](docs/00-stack.md).
+⚠️ **The quota rejects rather than bills.** It is a **five-hour window** whose overage status is
+`rejected`, with overage disabled at the org level — so exhausting it does not produce a larger
+invoice, it **kills a run in flight.** That shapes the model pins more than price does.
+
+**Five roles, pinned separately** (D-067) — τ² runs four of them and touchstone adds one:
+
+| Role | Pin |
+|---|---|
+| agent under test | `claude-sonnet-5` |
+| user simulator | `claude-haiku-4-5-20251001` — **frozen apparatus**, deliberately not the agent's model |
+| NL-assertion evaluator | `claude-opus-5` — runs, but **outside the gate** (D-069) |
+| reviewer / hallucination checker | `claude-opus-5` — opt-in, `--auto-review` |
+| touchstone's own rubric judge | `claude-opus-5` — reported, **never gates** |
+
+**Every id comes from a live call rather than a config file** — `doctor` asks the running CLI
+what it actually answered as, because the id is part of a candidate's identity and a config file
+can disagree with reality. ⛔ **A provider or model switch *inside* a run voids that run rather
+than mixing it.** Full manifest and reasoning: [docs/00-stack.md](docs/00-stack.md).
 
 ---
 
 ## Reliability, not accuracy
 
-Each case runs **k times**. The headline reliability number is `all_k` — the fraction of
-cases that succeeded on *every* attempt — not `pass@1`.
+Each task runs **k times**. The headline reliability number is **`pass^k`** — τ²-bench's own
+metric, `C(successes, k) / C(trials, k)` per task, averaged — and it is the **strict** one.
 
-An agent that is right 80% of the time on each of five attempts is not an 80% agent; it is an
-agent that fully succeeds on roughly a third of cases. **`all_k` is the number you would use
-to decide whether to put something on call.**
+An agent that is right 80% of the time on each of four attempts is not an 80% agent; it clears
+`pass^4` on about four tasks in ten. **`pass^k` is the number you would use to decide whether to
+put something on call.**
 
-> This metric and its implementation come from [`tracebench`](https://github.com/sandeepyadav1478/tracebench),
-> an earlier harness that scores CrewAI runs on OpenTelemetry spans. It was brought in rather
-> than invented here.
+⛔ **It is not `pass@k`**, which conventionally means *at least one of k succeeded*. The caret is
+the distinction, and a reader who skims past it reads the gate as far weaker than it is.
+
+> The reliability framing came from [`tracebench`](https://github.com/sandeepyadav1478/tracebench),
+> an earlier harness that scores CrewAI runs on OpenTelemetry spans. **The metric itself is
+> τ²-bench's, computed by τ²-bench's code** — we adopted the name rather than coining one.
 
 ---
 
@@ -259,29 +276,34 @@ to decide whether to put something on call.**
 **Read this before quoting any number this repo ever produces.** These are properties of the
 design, so they hold whether or not a run has happened yet.
 
-- **The incidents are synthetic.** A generator writes them. This system has never seen a real
-  alert, a real pager, or a real production system, and is not designed to.
-- **A planted root cause is not a real one.** Real incidents have several contributing causes,
-  ambiguous evidence, and sometimes no single correct answer. The suite is cleaner than
-  reality, which makes the correctness number an upper bound on a harder problem.
-- **Only five of the eleven failure classes can be shaped against real telemetry; six cannot.**
-  The renderers are specified to be built after reading public fault-injection corpora —
-  chiefly [RCAEval](https://github.com/phamquiluan/RCAEval) RE2 — but those inject at the
-  infrastructure layer, so `db_pool_exhausted`, `slow_query_after_migration`, `cache_stampede`,
-  `bad_deploy_regression`, `config_drift` and `insufficient_evidence` have to be built from the
-  documented mechanism instead. ⛔ **No public data is loaded, imported or vendored here** — it
-  is read to shape the renderers and nothing else (D-029, [docs/01](docs/01-spec.md) §4).
+- **The tasks are a simulation, and the customer is a language model.** τ²-bench's user side is
+  a simulator, not a person. A failure it causes is attributed to the agent unless something
+  measures it — which is why the user simulator is a **frozen** pin and why `--auto-review
+  --review-mode user` is a phase-1 exit box rather than an optional extra. D-067.
+- **A benchmark task is cleaner than a real ticket.** The gold actions are known, the database
+  is small, and there is a right answer. Real customer service has ambiguous requests and
+  sometimes no correct resolution. **That makes the reward an upper bound on a harder problem.**
+- **The gate is a component, not the whole reward.** touchstone gates on
+  `reward_breakdown["DB"]` because retail's composite reward includes an LLM-judged
+  `NL_ASSERTION` on 112 of 114 tasks (D-069). Both numbers are reported. ⛔ **A `DB` figure and a
+  composite figure are different measurements** — quoting one as the other is the mistake this
+  design is most likely to invite.
+- ⛔ **`COMMUNICATE` is a substring match and we did not fix it.** Upstream's own code carries
+  `# TODO: This could be improved!`. A scorer we quietly improved is a scorer nobody can compare
+  us against, so the brittleness is recorded and kept.
 - **The agent does not learn, and the suite does not grow yet either.** Nothing here trains,
   fine-tunes or updates weights. A human writes each candidate version; the gate only decides
   whether it ships. **Mining a failure into a permanent regression case is designed and
   unbuilt** — the mechanism is D-024, the reason it is not in this tag is D-030, so the bar
   currently rises only when a human raises it. ⛔ **"It improves itself" fuses two loops, and
   the fused sentence is false on both halves.**
-- **What is designed and deliberately not built**, each with the trigger that would revive it:
-  the two-tier suite and case mining, the nightly
-  run, an n=30 benchmark, agent memory as v5, and a second agent topology. ⚠️ **`n=10` and
-  `k=3` mean every figure here is a count, not a rate** — ⛔ no percentage is quoted from ten
-  cases.
+- **The benchmark is a frozen *subset* of τ² retail's 114 tasks, not all of them.** ⚠️ **At that
+  n every figure here is a count, not a rate** — ⛔ no percentage is quoted from a double-digit
+  task set. Widening the subset is the deferred item that attacks the biggest stated limit.
+- **We do not own the corpus, and that is deliberate — but it cuts both ways.** τ² can change
+  its tasks under us; it already has (`CHANGELOG:214` rewrote two tasks' `reward_basis`). The
+  benchmark therefore stores **task ids and a hash**, so a corpus that moved is detectable
+  rather than silent. ⛔ **No task bytes are vendored here.**
 - **Cost figures are measured but never billed.** They come from the Agent SDK's own
   `total_cost_usd`, which is cache-aware — so they are a real per-call figure and not
   tokens × list price. But runs go through a **Claude Code subscription**, so the number is
@@ -289,18 +311,19 @@ design, so they hold whether or not a run has happened yet.
   invoice. Both halves of that sentence are load-bearing.
 - **Rate-limited attempts are void, not failed.** A 429 means the attempt did not happen;
   scoring it as wrong would let a quota limit look like a regression. `void_attempts` is
-  reported in every results file.
+  reported in every results file, and τ²'s own `INFRASTRUCTURE_ERROR` is handled the same way
+  — ⛔ **say which convention a `pass^k` used**, because upstream has two.
 - **Single service, single machine.** The traces are not distributed.
-- **The escalation threshold is a rule**, hand-written and stated in
-  [docs/01-spec.md](docs/01-spec.md) §5. It does not adapt.
-- **No claim about MTTR, incident volume, or comparison against human responders.** There is
-  no baseline to compare against and none is implied.
+- **No claim about time-to-resolution, ticket volume, or comparison against a human agent.**
+  There is no baseline to compare against and none is implied.
 
 ---
 
 ## Prior work this builds on
 
-- [`tracebench`](https://github.com/sandeepyadav1478/tracebench) — `all_k` over OTel spans.
+- [`tracebench`](https://github.com/sandeepyadav1478/tracebench) — reliability over OTel spans.
+- [τ²-bench](https://github.com/sierra-research/tau2-bench) (MIT) — the specimen: the corpus,
+  the environment and the evaluator. **We drive it; we do not fork it.**
 - [`evalloop`](https://github.com/sandeepyadav1478/evalloop) — mining eval sets from traces,
   and the health guard that refuses to report drift from a dead window. The
   [`mine`](docs/02-gates.md#5-mine) stage is that idea with a real domain under it.
