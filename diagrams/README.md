@@ -44,6 +44,14 @@ hosted diagram, `manually_create_diagram` from the committed file, diff the roun
 `imageQuality: 1` twice until the hash settles, then **open it and look**. The looking is the step
 that found finding 8 after every instrument had passed the picture.
 
+⚠️ **One open observation can only be settled by that re-export.** The last render carried **two
+unlabelled empty container rectangles mid-canvas**. They are not in the source — checked
+2026-08-20, no unlabelled group and no group with an empty body — so either the layout engine
+produced them, or they belonged to a group the D-062 rewrite has since deleted. **It is not
+separately actionable and it is not closed**; it is a thing to look for on the next picture,
+which is exactly the kind of item that disappears if it is not written next to the procedure
+that would find it.
+
 **Five tracked files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
 drew the same system in six encodings — **was deleted 2026-08-15** by
 D-036, which also records why, and what it cost. `.check.log` is a run log,
