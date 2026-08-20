@@ -213,9 +213,20 @@ asserted rather than inferred: `touchstone doctor` requires `ANTHROPIC_API_KEY` 
 
 ## 4. The dependency manifest
 
-**Resolved against PyPI 2026-08-14. All 28 exist; nothing below is a guess.** Pin the minor,
-let the patch float. ⚠️ **27 of the 28 are declared in `pyproject.toml`; `arize-phoenix` itself
-is the 28th and runs as a container** — the Python side only talks to it.
+**Resolved against PyPI 2026-08-14. All of them exist; nothing below is a guess.** Pin the minor,
+let the patch float. ⚠️ **`arize-phoenix` itself is not declared — it runs as a container** and
+the Python side only talks to it.
+
+*(Cross-foot, 2026-08-20: `pyproject.toml` declares **28** — 20 runtime, 3 in the `fallback`
+extra, 5 dev — plus the container, so **29** packages are named on this page. This line read
+*"27 of the 28 are declared"* and was off by one in the direction that hides a package. ⚠️ **A
+manifest that states its own size has to recount when it changes**, and nothing here does that
+automatically.)*
+
+🔴 **Existence is not the property that matters, and checking it was the wrong check.** Every
+package below resolved on PyPI and two of them still cannot do the job the table gives them —
+`openinference-instrumentation-anthropic` has nothing to patch, and `arize-phoenix-evals`
+duplicates a judge τ² already ships. **Ask what fires, not what installs.**
 
 ### Core — phase 0, install all of these
 
@@ -236,7 +247,7 @@ is the 28th and runs as a container** — the Python side only talks to it.
 | `opentelemetry-api` / `-sdk` | `1.44.0` | The spans that are the score (`docs/04`). ✅ Transport and SDK, both stable |
 | `opentelemetry-exporter-otlp` | `1.44.0` | → Phoenix's OTLP endpoint. ⚠️ **The only line that names a backend** |
 | `openinference-instrumentation-langchain` | `0.1.70` | Auto-instruments LangGraph nodes into OTel spans. **Without it every span is hand-written** |
-| `openinference-instrumentation-anthropic` | `1.1.2` | Model-call spans under **OpenInference** attributes — see the warning below |
+| ~~`openinference-instrumentation-anthropic`~~ | `1.1.2` | 🔴 **CANNOT FIRE — delete it.** Its declared dependency is `anthropic >= 0.84.0`, and **we never install `anthropic`**: `claude-agent-sdk` ships a single transport, `_internal/transport/subprocess_cli.py`, which **shells out to the Claude Code CLI**. There is no in-process client object for an instrumentor to wrap, in any configuration. ⛔ **And `instrument()` returns normally**, logging `DependencyConflict` and patching nothing — a silent no-op, which is the failure mode this repo has now hit three times. **Model-call spans at the seam are hand-written or they do not exist** (measured 2026-08-20) |
 | `openinference-semantic-conventions` | `0.1.32` | The attribute names, as a dependency rather than as strings in our code |
 | `arize-phoenix` | `20.2.0` | The trace backend — ⚠️ a container, not an import. Self-hosted, Apache-2.0, no account and no API key, 682 releases |
 | `arize-phoenix-otel` | `0.17.1` | Three lines of exporter setup instead of thirty |
@@ -263,15 +274,15 @@ protocol is, the AI-specific vocabulary is not, and OpenInference is what fills 
 
 | Package | Version | Job | ⛔ Not for |
 |---|---|---|---|
-| `arize-phoenix-evals` | `3.4.0` | The judged dimension only. Results land as annotations on the span, so the judge's output is scored from the same substrate as everything else | ⛔ **never a gating metric** |
+| ~~`arize-phoenix-evals`~~ | `3.4.0` | 🔴 **No job left — delete it.** The judged dimension is **τ²'s** `NL_ASSERTION`, computed by `evaluator_nl_assertions.py:121` through `generate()` — **our seam**, so it is already scored from the same substrate. ⚠️ **The row was written when the judged dimension was ours to build**; D-062 handed it to the benchmark and this outlived the reason | ⛔ **never a gating metric** — unchanged, and now enforced by there being no second judge to turn on |
 | `pytest` / `pytest-asyncio` | `9.1.1` / `1.4.0` | Invariants and the eval suite | — |
 
 ### MCP — phase 2, **not** deferred
 
 | Package | Version | Job |
 |---|---|---|
-| `mcp` | `1.29.0` (`~=1.24`) | The official SDK. Serves the five read-only tools over MCP. ⚠️ **Not 2.0** — see below |
-| `langchain-mcp-adapters` | `0.3.2` | Bridges those same tools back into LangGraph, so **one definition serves both paths** |
+| `mcp` | `1.29.0` (`~=1.24`) | The official SDK. 🆕 **Serves *our* tools** — the five read-only ones named here were the archived specimen's and no longer exist. Under retail it is the `policy` node's path to the domain policy document. ⛔ **Never τ²'s sixteen**: a protocol hop inserted into the agent under test makes v1–v4 incomparable to τ²'s published baseline. ⚠️ **Not 2.0** — see below |
+| `langchain-mcp-adapters` | `0.3.2` | Bridges those same tools back into LangGraph, so **one definition serves both paths**. ✅ **The reason survived D-062 and D-071 unchanged** — it is a property of having one tool definition, not of any particular domain |
 
 ⛔ **`mcp~=2.0` and this bridge do not resolve together, and the failure is disguised as a
 success.** 0.3.2 declares `mcp<2.0.0`, so asking for 2.0 silently resolves the *adapters* down to
