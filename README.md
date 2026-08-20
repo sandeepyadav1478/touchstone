@@ -124,16 +124,29 @@ is real.
               └───────────────────┬─────────────────────┘
                                   │ OpenTelemetry spans
                                   ▼
-         run ──▶ score ──▶ compare ──▶ accept ──▶ record        the loop
-                   │           ▲
-                   │           │  benchmark — frozen, hashed
-                   │           │  ⛔ changing it resets every comparison
-                   │           │
-                   └─▶ mine ──▶ admission ──▶ regression — grows, never shrinks
-                      failures    5 gates,     ✅ adding to it resets nothing
-                                  mechanical   🔒 a case locks the first time an
-                                                  accepted version passes it
+   run ──▶ attempt ──┬─▶ void · incomplete · parse_failure ──▶ counts toward NOTHING
+                     │      a run that never produced a comparable number.
+                     │      parse_failure is scored WRONG, not retried (D-013).
+                     │
+                     └─▶ scored ──▶ score ──▶ compare ──┬─▶ ACCEPT ──▶ record
+                                      │          ▲      │   WHY: all five conditions held
+                                      │          │      │
+                                      │          │      └─▶ REJECT ──▶ back to the developer
+                                      │          │          WHY NOT: which task regressed,
+                                      │          │          and the rejection IS the result
+                                      │   benchmark — frozen, hashed
+                                      │   ⛔ changing it resets every comparison
+                                      │
+                                      └─▶ mine ──▶ admission ──▶ regression suite
+                                         failures   5 gates      grows, never shrinks
+                                         ⛔ DEFERRED (D-030) — specified in full, built by
+                                            no phase. Drawn because a mechanism nobody
+                                            scheduled is how this repo lost one before.
 ```
+
+⚠️ **`budget_exceeded` is a flag, never a fifth status.** It lands *beside* whichever of the
+four an attempt reached, never instead of one — a run can be both `scored` and over budget, and
+collapsing the two loses the case where the number is real but cost too much to get.
 
 **One function is the whole integration.** Every model role τ² runs — the agent, the user
 simulator, the hallucination reviewer, the NL-assertion evaluator — imports the same
@@ -143,15 +156,17 @@ behind all four without touching a call site. **Enforcement attaches at a second
 already knows which tools mutate state.
 
 ⛔ **No human is a step in that picture, and none is a state in the agent.** Nothing pauses for
-approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
-([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
+approval: a gate is a predicate, and a mined case would be admitted by five mechanical gates
+([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. ⛔ **Would be**
+— `mine` is deferred (D-030), so that branch is specified and unbuilt. **People
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
 is what everything below is instrumented for.
 
 **Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
 must not move. The regression suite only ever answers *"did something that used to work stop
 working?"* — a binary with no denominator to corrupt, so it can grow forever without
-invalidating anything. That asymmetry is what makes `mine` affordable enough to actually run.
+invalidating anything. That asymmetry is what would make `mine` affordable enough to run at all
+— it is the reason the branch stays specified rather than deleted.
 [docs/02](docs/02-gates.md) §1.
 
 ⛔ **The benchmark stores task ids and a hash, never task bytes.** τ²'s corpus is upstream's and
