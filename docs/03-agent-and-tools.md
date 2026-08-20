@@ -86,11 +86,18 @@ table compares two different systems under one row.
 | user simulator | `user_simulator.py:235` | `claude-haiku-4-5-20251001` — ⛔ **frozen apparatus**, never a candidate |
 | NL-assertion evaluator | `evaluator_nl_assertions.py:121` | `claude-opus-5` — in the composite, **outside the gate** (D-069) |
 | hallucination reviewer | `hallucination_reviewer.py:196` | `claude-opus-5` — diagnostic |
-| touchstone's rubric judge | `tests/evals/` | `claude-opus-5` — **reported, never gates** |
+| touchstone's rubric judge | `tests/evals/` | `claude-haiku-4-5-20251001` — **reported, never gates** |
 
 ⚠️ **Only the first row may change between versions.** Moving the simulator's pin changes the
 ruler, and every earlier row in the version table silently stops being comparable. That is why
 it is listed as apparatus rather than as configuration.
+
+⚠️ **The judge is the one apparatus role not on `claude-opus-5`, and the asymmetry is deliberate.**
+The other two run rarely; the judge is the most numerous call in the loop, and quota here
+**rejects rather than bills** — so a frontier pin there buys fewer iterations per five-hour
+window and nothing else. It is affordable to weaken precisely because ⛔ **it cannot gate**: a
+weaker judge costs accuracy on a *reported* number, never correctness on a promotion. The
+ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third amendment).
 
 - The model id is a **versioned parameter** — changing it makes a new candidate, exactly like
   changing a prompt (D-013).

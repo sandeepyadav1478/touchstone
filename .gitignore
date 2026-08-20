@@ -38,11 +38,20 @@ scripts/p0-*
 # produces is README.md, docs/, diagrams/ and src/.
 #
 # ⚠️ The D-xxx, DEF-xxx and Pn.n tags in the published docs therefore resolve to nothing a
-# reader can open — 176 decision citations, 22 defect ones, 54 phase ones, plus 15 baked into
-# the rendered diagram's labels. That is deliberate: they mark where a choice was made, and
+# reader can open — several hundred of them, including some baked into the rendered diagram's
+# labels where no edit can reach them. That is deliberate: they mark where a choice was made, and
 # README.md says so in one paragraph rather than leaving it to be discovered. ⛔ The rule that
 # keeps this honest: if a reason is needed to understand the design, WRITE IT IN THE DOC. A
 # tag is a bookmark, never a substitute for the argument.
+#
+# 🔴 Exact counts stood here — "176 decision citations, 22 defect ones, 54 phase ones, plus 15
+# baked into the rendered diagram's labels" — and were removed on 2026-08-20 because no counting
+# method reproduces them. Recounted over every tracked text file: 401 / 43 / 65 as occurrences,
+# 50 / 21 / 20 as distinct ids, and narrowing to docs/ or excluding diagrams/README.md lands
+# nowhere near either. Discarded rather than corrected: a census figure whose query was never
+# recorded cannot be repaired, only replaced with a different unverifiable one. ⛔ And a count
+# in a .gitignore comment is the worst possible home for one — nothing re-runs it, and it was
+# doing no work here that "several hundred" does not do.
 #
 # scripts/check-diagram.py reads DECISIONS.md and DEFECTS.md, which is why it is local too —
 # it could not run here even if it were published.

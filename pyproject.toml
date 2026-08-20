@@ -92,7 +92,14 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 # Tests document themselves by name; the assertion IS the docstring.
-"tests/**" = ["D103", "D100", "ANN201", "ANN001"]
+# ⛔ D103 ONLY. D100, ANN201 and ANN001 stood here and were removed on 2026-08-20 after
+# being measured one at a time: dropping D103 produces 6 errors, dropping any of the other
+# three produces none. They were exempting nothing.
+# 🎯 ANN201/ANN001 are the dangerous pair to leave lying around: they exempt exactly the
+# un-annotated test signatures that mypy's own dead `tests.*` override had been silently
+# permitting for this project's whole life. Two tools carrying the same hole, one of which
+# had already fired, is not a hole worth keeping for symmetry.
+"tests/**" = ["D103"]
 
 [tool.mypy]
 python_version = "3.12"

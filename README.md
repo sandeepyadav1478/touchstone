@@ -165,7 +165,7 @@ standing inside a run, it is also the **only** place a person can see what happe
 
 | Doc | What it covers |
 |---|---|
-| [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the three model paths, `touchstone doctor` |
+| [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the five model pins, `touchstone doctor` |
 | [docs/01-spec.md](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, 13 live invariants numbered to 14 |
 | [docs/02-gates.md](docs/02-gates.md) | ⛔ **The three decisions**, the two tiers, the acceptance rule, the stages, case provenance |
 | [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The adapter at the seam, what we may and may not change about the τ² agent |
@@ -193,7 +193,7 @@ understanding the design, it is written out in the doc rather than delegated to 
 ```bash
 git clone git@github.com:sandeepyadav1478/touchstone.git && cd touchstone
 uv sync
-uv run touchstone doctor                # ✅ works today — checks the CLI, login and fallbacks
+uv run touchstone doctor                # ✅ works today — CLI, login, model pin, no stray API key
 ```
 
 ⚠️ `uv sync` does not put `touchstone` on your `PATH`. Use `uv run touchstone …`, or activate
@@ -222,9 +222,12 @@ times per task per candidate is the whole point of this repo, and that is what m
 affordable.
 
 ```bash
-touchstone doctor   # checks the CLI, the login, and all five model pins
+touchstone doctor   # checks the CLI, the login, and the AGENT pin — by live call
                     # ⛔ and asserts ANTHROPIC_API_KEY is *absent* — if it is set,
                     #    runs quietly bill an API account instead of the subscription
+                    # ⚠️ ONE of the five pins is probed. The other four have no live
+                    #    caller until phase 1, and a check with nothing behind it
+                    #    would report green on a pin that was never resolved.
 ```
 
 ⛔ **Anthropic models only, in every role.** `ollama` and Cerebras are reachable from this
@@ -244,7 +247,7 @@ invoice, it **kills a run in flight.** That shapes the model pins more than pric
 | user simulator | `claude-haiku-4-5-20251001` — **frozen apparatus**, deliberately not the agent's model |
 | NL-assertion evaluator | `claude-opus-5` — runs, but **outside the gate** (D-069) |
 | reviewer / hallucination checker | `claude-opus-5` — opt-in, `--auto-review` |
-| touchstone's own rubric judge | `claude-opus-5` — reported, **never gates** |
+| touchstone's own rubric judge | `claude-haiku-4-5-20251001` — reported, **never gates** |
 
 **Every id comes from a live call rather than a config file** — `doctor` asks the running CLI
 what it actually answered as, because the id is part of a candidate's identity and a config file

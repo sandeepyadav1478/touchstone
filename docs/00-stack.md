@@ -368,13 +368,18 @@ every past row a claim about a dependency set nobody can reconstruct.
 One command, run before anything else, that fails loudly rather than producing a quietly wrong
 number. **This is real output, 2026-08-14** — the same block is pasted in D-001:
 
-⚠️ **It is a dated record and three of its lines have since been overtaken. Kept verbatim
+⚠️ **It is a dated record and four of its lines have since been overtaken. Kept verbatim
 anyway**, because rewriting a pasted measurement to match today is how a record stops being
 one. What changed: the `model` line reads `claude-sonnet-4-6`, and the pin is now
 `claude-sonnet-5` (D-067). The two ⚠ lines about `CEREBRAS_API_KEY` and `ollama` describe them
 as *unavailable paths* — under D-067 both are diagnostics and **absent is the correct state**,
-so `doctor` now reports the Cerebras key as a **pass** when it is missing. **Re-run the command
-to refresh this block; do not hand-edit it.**
+so `doctor` now reports the Cerebras key as a **pass** when it is missing. And the `uv.lock`
+line says **27 direct deps** where the formula in `_lockfile()` now yields **28**. **Re-run the
+command to refresh this block; do not hand-edit it.**
+
+⚠️ **That fourth line was found by recomputing it, not by reading it** — the annotation above
+said *three* for a day while sitting directly on top of a fourth. A count pasted inside a record
+is invisible to every sweep that greps for vocabulary, because nothing about `27` looks stale.
 
 ```
 touchstone doctor

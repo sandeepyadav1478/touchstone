@@ -98,10 +98,12 @@ USER_MODEL = "claude-haiku-4-5-20251001"
 # the judge grades the *agent*, never the simulator.
 # ⚠️ Ceiling, stated where the number is made: a smaller judge is a weaker judge.
 #
-# 🔴 CONFLICT, open: README §Limits says "The judge never runs on the Claude quota; it cannot
-# gate anything, so it is the cheapest thing to move off the constrained provider." Anthropic-only
-# means it now DOES draw on the same five-hour cap. The constraint wins; the README line is stale
-# and gets corrected in the docs pass.
+# ✅ CLOSED 2026-08-20. This carried a 🔴 open conflict against README §Limits, which used to say
+# "The judge never runs on the Claude quota ... the cheapest thing to move off the constrained
+# provider". Under Anthropic-only it does draw on the same five-hour cap, so the constraint won
+# and the README line went. Grepped before closing: the sentence is not in README.md any more.
+# ⚠️ The comment outlived the conflict by a day and read as an open problem the whole time —
+# a pointer at another file's error is a claim with a shelf life, and nothing re-runs it.
 JUDGE_MODEL = "claude-haiku-4-5-20251001"
 
 # τ²'s natural-language assertion evaluator — pinned defensively, because as configured it is

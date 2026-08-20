@@ -567,7 +567,7 @@ is the ordering that keeps the scorer independent of the agent's shape.
 | Variable | Set where | Purpose | ⛔ |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | **nowhere** | — | ⛔ **Asserted absent by `touchstone doctor`.** If set, runs bill an API account instead of the subscription and nothing else notices (D-001) |
-| `CEREBRAS_API_KEY` | `.env`, local only | ⛔ **`touchstone doctor` diagnostic only.** This row said *"the judge (D-016)"*; there is no non-Anthropic model anywhere in the loop, and the judged dimension runs on `claude-opus-5` (D-067) | Never in CI — CI calls no model (D-014) |
+| `CEREBRAS_API_KEY` | `.env`, local only | ⛔ **`touchstone doctor` diagnostic only.** This row said *"the judge (D-016)"*; there is no non-Anthropic model anywhere in the loop, and that judge is now `JUDGE_MODEL` = `claude-haiku-4-5-20251001` (D-067). ⚠️ It said `claude-opus-5` until 2026-08-20 — the correction that moved the judge back on-quota did not reach this row, and *"the judged dimension"* was ambiguous between two different pins, so the constant is named here instead of the role | Never in CI — CI calls no model (D-014) |
 | `OLLAMA_HOST` | shell, optional | ⛔ Same — a `doctor` reachability check, **never a model source** | Never in a scored run |
 | `TOUCHSTONE_TRACE` | shell | `console` prints the span tree; unset exports OTLP | — |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | compose | Phoenix, `http://phoenix:6006` | The one variable the backend swap changes — docs/04 §4 |

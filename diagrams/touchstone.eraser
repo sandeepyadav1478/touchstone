@@ -202,7 +202,7 @@ Gen --> LiteLLM: what it used to call
 Adapter > Sdk > Anthropic
 Cfg > Adapter: which pin, per role
 NoOther --> Cfg
-Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · asserts all five pins resolve"]
+Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · probes the AGENT pin by live call"]
 Doctor > Cfg
 
 // ── 3 · the gates. Shadow earns enforce; nothing here carries a model in its verdict.

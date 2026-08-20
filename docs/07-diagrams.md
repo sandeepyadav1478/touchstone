@@ -68,7 +68,7 @@ Four kinds, and the change decides which. Most changes need one; a phase usually
 | Kind | Use it for | Eraser type |
 |---|---|---|
 | **Graph / flowchart** | The agent graph, any node or edge change, the scoring pipeline | `flowchart-diagram` |
-| **Sequence** | Anything crossing a boundary — a suite run, the MCP round trip, a fallback provider switch | `sequence-diagram` |
+| **Sequence** | Anything crossing a boundary — a suite run, the MCP round trip, the adapter's hand-off at `llm_utils.py:355` | `sequence-diagram` |
 | **Entity / schema** | The two suite manifests, the span attributes, the results file, `Verdict` | `entity-relationship-diagram` |
 | **Infrastructure** | The compose topology, the CI job, where Phoenix and the MCP server live | `cloud-architecture-diagram` |
 
