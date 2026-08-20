@@ -1,9 +1,14 @@
 # ⛔ Two things that look ignorable and are NOT — read before adding a line here.
 #
-#   suite/benchmark/truth.json   the answer key. Committed on purpose: "frozen" has to be
-#                                checkable by a stranger, and the key is not a secret — the
-#                                agent never sees it (invariant 1 is what enforces that,
-#                                not this file).
+#   suite/benchmark/manifest.json  the frozen task IDS and the hash they were read at.
+#                                Committed on purpose: "frozen" has to be checkable by a
+#                                stranger. ⛔ IDs and a hash — NEVER task bytes; vendoring
+#                                the corpus makes us its owner again (D-062).
+#                                ⚠️ This bullet used to name `truth.json`, our own answer
+#                                key. D-062 moved the answer key upstream — it is now
+#                                τ²'s `reward_breakdown` — so the file it argued about no
+#                                longer exists in the design. A .gitignore comment is a
+#                                claim like any other and nothing re-runs it.
 #   uv.lock                      an application, not a library. A version table whose runs
 #                                cannot be reproduced is a table of anecdotes.
 #
@@ -53,10 +58,24 @@ phase0.log
 *.log
 
 .pytest_cache/
+.mypy_cache/
 .ruff_cache/
 .coverage
 
 .idea/
 .vscode/
 .DS_Store
+
+# ⛔ The D-068 node guard — local for a different reason from check-diagram.py above.
+# It does not read the local-only registers; it hardcodes ABSOLUTE machine paths as its
+# approved roots (this checkout, and the tau2-bench checkout beside it). Published, it
+# would resolve nothing for anyone else and would read as a check that passes vacuously —
+# which is the exact defect it was carrying on 2026-08-20, before the no-args guard.
 scripts/check-diagram-nodes.sh
+
+# ⛔ The session's own working directory. Machine-specific by construction — the settings
+# file names absolute paths under /home/sandeep — so publishing it helps nobody and
+# leaks the shape of a machine. This repo is PUBLIC; the working record stays local, the
+# same rule the three registers above are ignored under.
+.claude/
+CLAUDE.md

@@ -10,7 +10,7 @@ import typer
 
 app = typer.Typer(
     name="touchstone",
-    help="A production-incident triage agent that is required to get better.",
+    help="An agent-improvement loop that is required to prove the improvement.",
     no_args_is_help=True,
     add_completion=False,
 )

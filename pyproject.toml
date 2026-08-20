@@ -1,7 +1,7 @@
 [project]
 name = "touchstone"
 version = "0.1.0"
-description = "A production-incident triage agent that has to get better, and can prove it"
+description = "An agent-improvement loop that is required to prove the improvement"
 readme = "README.md"
 authors = [
     { name = "Sandeep Yadav", email = "sandeepyadav1478@gmail.com" }
@@ -103,6 +103,10 @@ warn_unreachable = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-disallow_untyped_defs = false
+# ⛔ There is NO tests exemption, and the reason is that the one written here never
+# worked. `module = ["tests.*"]` matched nothing: `tests/` has no `__init__.py`, so
+# mypy computes the module name as `test_doctor`, not `tests.unit.test_doctor`. The
+# declared standard and the enforced one had disagreed since the file was written —
+# `uv run mypy src tests` reported 4 errors the whole time. Fixed by annotating the
+# tests rather than by making the exemption match, because the exemption was lowering
+# a standard D-054 exists to raise.
