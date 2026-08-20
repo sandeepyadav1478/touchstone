@@ -2,6 +2,21 @@
 
 > ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
+🔴 **CUT TWICE — read this before anything below it.** **D-030 cut v5**, and then **D-062 cut
+the corpus v5 would have read.** Nothing in this file is scheduled, and `history/`, `mem0` and
+the negative control are not on the roadmap. It is kept whole rather than archived for one
+reason: **§4 and §8 are the only place in this repo where the *false-friend* argument is worked
+out end to end** — that a retrieval version which changes nothing scores identically to one that
+helps, and that you cannot tell them apart without a control. That argument is specimen-free and
+it is the reason docs/05 reports the judged dimension beside the gate instead of inside it.
+
+⚠️ **§9's conclusion survives the cut and is the one to carry forward**: mem0 goes nowhere, and
+**the write path is the reason** — a store that writes during a scored run has made the run
+un-repeatable, whatever it retrieves. That is a fact about scored runs, not about the specimen,
+so it binds τ²-bench retail exactly as it bound the incident suite.
+
+---
+
 **The earlier answer was too small.** D-022 established that memory must not be infrastructure,
 which is correct and still stands. It left the impression that memory is a coin-flip experiment
 — *"we tried it, maybe it helped"* — and an agent whose only memory story is a null result reads

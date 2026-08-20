@@ -35,10 +35,14 @@ measurement, not a claim made here.
 ## 1. CLI
 
 ```bash
-# corpus
-touchstone incidents generate --n 10 --seed 1478   # → suite/benchmark/, with truth.json
-touchstone incidents show inc-007                  # agent-visible view only
-touchstone incidents show inc-007 --truth          # ⚠️ prints the answer key
+# corpus — ⛔ THE WHOLE GROUP IS GONE (D-062). There is nothing to generate: the 114
+#    retail tasks are upstream, read from data/tau2/domains/retail/tasks.json.
+# touchstone incidents generate --n 10 --seed 1478
+# touchstone incidents show inc-007
+# touchstone incidents show inc-007 --truth
+touchstone tasks list                              # the 114, id + reward_basis
+touchstone tasks show retail_1                     # one task, agent-visible view only
+touchstone tasks show retail_1 --criteria          # ⚠️ prints the answer key
 
 # the loop
 touchstone run     v4 --k 3                        # → traces; one tier until D-024 is built
@@ -56,8 +60,8 @@ touchstone record                                  # → regenerates the README 
 # touchstone suite admit                           # runs the five admission gates: proposed/ → regression/
 # touchstone suite quarantine r-031 --why "…"      # stops it gating; --why is required
 
-# single incident
-touchstone triage inc-007 --version v4             # one run, prints the verdict
+# single case
+touchstone run retail_1 --version v4               # one simulation, prints the reward breakdown
 ```
 
 ⛔ **There is no `touchstone approve`, and there is no `suite review`.** No run ever pauses, so
@@ -93,21 +97,23 @@ FastAPI. Small on purpose.
 
 | Method | Path | Does |
 |---|---|---|
-| `POST` | `/triage` | Submit an incident, get the verdict. Synchronous — the run always terminates |
-| `GET` | `/runs/{run_id}` | Status, verdict, trace id — for a run submitted earlier |
+| `POST` | `/run` | Submit a task id, get the `RewardInfo`. Synchronous — the simulation always terminates, with one of ten `TerminationReason` values |
+| `GET` | `/runs/{run_id}` | Status, reward breakdown, trace id — for a run submitted earlier |
 | `GET` | `/versions` | The version table as JSON — the README's source |
 | `GET` | `/healthz` | Liveness |
 
 ⛔ **Two endpoints are gone with D-040**: `POST /runs/{run_id}/approve`, and the `202` + `run_id`
-shape of `/triage`. Both existed only to expose a pause that no longer happens.
+shape of `/run`. Both existed only to expose a pause that no longer happens.
 
-⚠️ **A triage still takes tens of seconds**, so a synchronous `/triage` is a slow request — an
+⚠️ **A simulation still takes tens of seconds** — longer now, since it is a multi-turn
+conversation with a simulated user rather than one completion — so a synchronous `/run` is a slow
+request. An
 honest one, but slow. If that turns out to matter, the fix is a job queue with a polled
 `/runs/{run_id}`, **which is a different mechanism from a durable interrupt and would need its
 own reason.** It is not one this project has yet.
 
 - [ ] 🔴 **This surface no longer has an acceptance check, because the one it had tested the
-      interrupt.** It was: submit an incident whose action is ≥ `restart_service`, kill the
+      interrupt.** It was: submit a case whose action was high blast-radius, kill the
       container, bring it back, approve, get the verdict. **Nothing replaces it, and that is the
       finding** — a surface whose only distinguishing test is gone is a surface with no argument
       for existing. See the note at the top of this file.
@@ -189,7 +195,7 @@ evening starts with docker and the fast route is not fast.
 | **Is `ollama` in the compose file?** | ⭢ **No — cut.** It was an orphan node here, with no arrow to anything, which is the diagram saying what the prose would not: the judge runs on Cerebras and ollama was a third fallback. It stays documented in [docs/00](00-stack.md) as *use the host's if running*, and **a compose service nothing connects to is maintenance bought for nothing** |
 | **One Phoenix project or two?** | ⭢ **One**, `touchstone`. A run span carries `version`, `case_id`, `tier` and `benchmark_hash`, so the scorer selects on those; a stray `POST /triage` demo simply matches no manifest entry. **Two project ids would mean the scorer had to know which surface produced a run**, which is exactly the coupling [docs/04](04-observability.md) §1 exists to avoid |
 
-⛔ **There is no arrow from any container to `suite/`.** The tools read the incident handed to
+⛔ **There is no arrow from any container to `suite/`.** The tools read the environment handed to
 them; a container that could reach `suite/benchmark/truth.json` is the leakage path that produces
 a perfect score ([docs/00](00-stack.md) §2). ⚠️ **`ANTHROPIC_API_KEY` appears nowhere in this
 picture** — the subscription path is the CLI's, and a key in the API container's environment
@@ -208,7 +214,7 @@ silently switches quota to invoice (D-001).
 | Auth | Nothing served here is worth protecting, and a login screen would only look like production |
 | A web UI | The Phoenix UI shows traces; a bespoke dashboard is a week for nothing |
 | Multi-tenancy | One user |
-| A real incident source (PagerDuty, Datadog) | ⛔ **It would make the suite unfreezable**, which breaks the version comparison — the point of the project |
+| A real order-management backend, or a live customer channel | ⛔ **It would make the suite unfreezable**, which breaks the version comparison — the point of the project |
 | Kubernetes | Compose is the honest scope |
 
 ⚠️ **An absence that is explained is a decision; an absence that is not reads as unfinished.**

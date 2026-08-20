@@ -19,7 +19,7 @@ is load-bearing and stays correct.
 | Tool calls made | invisible | counted, with arguments |
 | Tokens spent | needs threading through every call | on the LLM span, free |
 | Where the time went | one total | per node, per tool |
-| Why the agent escalated | one boolean, no context | the whole path that led to it |
+| Why a run scored zero | one number, no context | the whole path that led to it |
 | Retries, parse failures | swallowed | visible |
 
 **And the practical reason:** the agent's structure changes between versions — v1 has one
@@ -45,8 +45,8 @@ touchstone.run                      run_id, version, case_id, attempt, tier, ben
     ├── touchstone.node.synthesizer
     │   └── LLM
     └── touchstone.verdict          ← exactly one, per invariant 3
-                                      root_cause_id, affected_service, confidence,
-                                      recommended_action, blast_radius, escalate
+                                      reward_breakdown[DB]  ← THE GATE, no model
+                                      reward (composite), termination_reason, cost
 ```
 
 ⛔ **There is no `touchstone.gate` span, because there is no gate node** (D-040). `blast_radius`
@@ -71,8 +71,8 @@ same test.** A contract enforced for one reader and hoped for by the other is on
 | `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | scorer | Tool-call count, truncation rate |
 | `LLM` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference** | scorer | Cost, and the model on record |
 | `LLM` | `llm.prompt_template.template` — **the rendered prompt** | **OpenInference** | 🆕 **human** | ⚠️ **Declared, not inherited.** OpenInference may capture input messages by default; *Why not `gen_ai.*`* below argues that a default is not a contract, and the rest of this table relied on one |
-| `touchstone.verdict` | `root_cause_id`, `affected_service`, `confidence`, `recommended_action`, `blast_radius`, `escalate` | ours | scorer | **Correctness and escalation — the primary metrics.** ⚠️ `blast_radius` is here because a mismatch against `recommended_action` and the [docs/01](01-spec.md) §5 table is exactly invariant 4 failing, and the trace is where that becomes visible |
-| `touchstone.node.*` | `hop` on **every** node span, not only the supervisor's — plus the span's own start and end times | ours + OTel intrinsics | scorer | **Invariant 14** — no two specialist spans overlap (D-026). `next` stays on the supervisor alone; it is a routing decision, and only one node makes it |
+| `touchstone.reward` | `reward_breakdown` (per `RewardType`), `reward` (composite), `reward_basis`, `termination_reason` | ours, read off τ²'s `RewardInfo` | scorer | **`reward_breakdown["DB"]` is the gate and the only gating number** (D-069). ⚠️ The composite is on the span **beside** it, unmodified, because it is what the public leaderboard compares — a span that carried only our number would make the two indistinguishable later |
+| `touchstone.turn.*` | turn index on every model call, plus the span's own start and end times | ours + OTel intrinsics | scorer | ⚠️ **This row replaced the node/specialist row with D-062** — there are no nodes, and invariant 14's overlap assertion is retired in place ([docs/01](01-spec.md) §6). The times stay recorded anyway: they are what would make a fan-out visible on the day one is added, and adding the attribute afterwards means the earlier versions cannot be checked |
 | `touchstone.node.supervisor` | 🆕 `findings_seen` — the finding **headers** it routed on (D-025) | ours | 🆕 **human** | *Why did it route wrong?* Without this the question is unanswerable from the trace, which guts the router metric ([docs/05](05-scoring.md) §5a) at the moment it is most useful |
 | `touchstone.run` | 🆕 `attempt_status`, and `parse_error` when there is one | ours | 🆕 **human** | §1 claims spans make parse failures visible and no attribute named them. `parse_failure` is one of four attempt states ([docs/09](09-schemas.md) §6), scored **wrong** and never retried (D-013) — **a state the trace cannot express is a state nobody can diagnose** |
 
@@ -82,7 +82,7 @@ same test.** A contract enforced for one reader and hoped for by the other is on
 dropping the attribute.**
 
 **Invariant 14 needs no new attribute and it does constrain the export.** Start and end are
-OTel intrinsics, so the assertion is *"no specialist span starts before another ends"* over what
+OTel intrinsics, so the assertion was *"no specialist span starts before another ends"* over what
 is already recorded — **but only if the JSONL committed for CI keeps the timestamps.** A trace
 export that drops them scores identically and silently makes the invariant unrunnable, which is
 the shape of every quiet failure in this project. ⛔ **Assert the timestamps are present in the
@@ -282,7 +282,7 @@ failure table is full of.
 
 ⚠️ **The monitoring row is the one under pressure, so the reason is written out.** A gate list for
 an enterprise agentic system reasonably includes *realtime monitoring in production*. **This
-project has no production and no users** — a dashboard over ten synthetic incidents is a directory
+project has no production and no users** — a dashboard over 114 benchmark tasks is a directory
 that looks like a capability, which is the failure [docs/03](03-agent-and-tools.md) names by name.
 
 🎯 **The honest artifact is the substrate, not a dashboard:** the OTLP export *is* what such a

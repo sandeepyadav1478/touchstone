@@ -186,7 +186,7 @@ is the 28th and runs as a container** — the Python side only talks to it.
 | `langgraph-checkpoint-sqlite` | `3.1.1` | Run state for a process that dies mid-run. A separate package — forgetting it is the classic phase-1 stall. ⚠️ **It lost its original justification with D-040** and is kept pending a phase-1 answer on whether anything reads it back | — |
 | `langchain-core` | `1.5.4` | Messages, `@tool` schemas, the `BaseChatModel` interface the wrapper implements | ⛔ not the orchestrator |
 | `claude-agent-sdk` | `0.2.137` | **Path A — the subscription-backed model** | — |
-| `pydantic` | `2.13.4` | `Incident`, `Verdict`, `GroundTruth`; the JSON schema fed to `output_format` | — |
+| `pydantic` | `2.13.4` | ⚠️ **Ours no longer define the domain** (D-062) — τ²'s `Task`, `RewardInfo` and `TerminationReason` are pydantic and come with the package. We use it for the results file and the gate predicates | — |
 | `typer` | `0.27.1` | The CLI — the primary surface | — |
 | `rich` | `15.0.0` | The compare table. `touchstone compare` output is read by a human | ⛔ never in the results JSON |
 
