@@ -329,7 +329,7 @@ Spans --> CI
 DiagGate [shape: diamond, color: red, icon: alert-octagon, label: "STEP 0 OF EVERY PHASE — D-021, docs/07\nthe diagram, approved and committed BEFORE the first line of implementation\napproval is EXPLICIT — silence is not approval (docs/07 §6)"]
 PhaseGates [icon: check-square, label: "13 · the four phase exit gates"] {
   P0Gate [color: green, icon: check-circle, label: "phase 0 exit — ✅ PASSED\nD-001 carries the live `touchstone doctor` output, verbatim"]
-  P1Gate [color: blue, icon: check-square, label: "phase 1 exit — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\nreward_breakdown is {DB, COMMUNICATE} on EVERY scored simulation"]
+  P1Gate [color: blue, icon: check-square, label: "phase 1 exit — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\nreward_breakdown carries a DB key on EVERY scored simulation — that key is what gates"]
   P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — every gate carries a SHADOW score\na gate with no shadow number does not reach phase 3"]
   P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — a REFUSED tool call is in a committed trace\nand at least one candidate is rejected"]
 }

@@ -12,45 +12,49 @@ not. The PNG is committed alongside so the file renders for a reader who will no
 | file | shows | gates |
 |---|---|---|
 | [`touchstone.eraser`](touchstone.eraser) | **The whole system, in numbered sections, on one canvas** — the upstream corpus · the adapter at the seam · the three gate tiers · the process boundaries · how a simulation ends · telemetry · the scorer · **the acceptance conditions** · the case lifecycle, `open → locked` one-way · the version ladder · **the phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
-| [`loop.png`](loop.png) | The render of the above. **A convenience, never the record** — and 🔴 **stale**, see below | — |
+| [`loop.png`](loop.png) | The render of the above. **A convenience, never the record** — rebuilt 2026-08-20 from the current source | — |
 | [`sequence.eraser`](sequence.eraser) | **One simulation, and every boundary it crosses** — lifelines ordered by distance from the developer's process. It draws the three things a flowchart structurally cannot: the **order** of the telemetry wiring steps, the checkpoint landing after every step, and the scorer running later, in another process, from a file. **Its load-bearing element is a message that is not there** | phase 1 |
-| [`sequence.png`](sequence.png) | The render of that. Same status, and 🔴 **also stale** | — |
+| [`sequence.png`](sequence.png) | The render of that. Same status, rebuilt in the same pass | — |
 | [`phase1.mmd`](phase1.mmd) | 🆕 **The attachment diagram** — where touchstone joins τ²-bench: the adapter seam at `llm_utils.py:355` and the enforcement point at `Environment.make_tool_call()`. **Mermaid, and local by choice** — it names symbols in another repo, and drawing them as unnamed boxes would hide the only structure it exists to show. It is why D-068 had to widen the approved-repo set | phase 1 |
 
-## 🔴 Both PNGs are behind their sources — stated here rather than left to be discovered
+## ✅ Both PNGs were rebuilt on 2026-08-20 — and what the rebuild found
 
-**Measured 2026-08-20 from git, not from looking:**
+They had been behind their sources by 3 and 2 commits respectively (`DEFECTS.md` DEF-034),
+and those commits were the D-062 specimen swap and the D-069 reward correction, so the pictures
+named a corpus that no longer exists and a gating number that was wrong.
 
-| render | last committed | its source has moved since | so it is |
+⚠️ **Milestone 7 passed on both the whole time, and that is the finding worth keeping.** The
+guard measures *clipping* — four clear edges, content filling 98%+ of the frame — which is a
+property of the export, not of the content. **A perfectly-rendered picture of the wrong system
+passes every instrument in this repo.**
+
+**The procedure is CREATE-then-delete, never update**: `manually_create_diagram` from the
+committed file, diff the round-trip, delete the old hosted diagram *after* the new one exists,
+export at `imageQuality: 1` twice until the content-addressed URL settles, then **open it and
+look**. Creating first is deliberate — a failed create then leaves the stale diagram standing
+rather than nothing at all.
+
+**What the looking found, in order:**
+
+1. ⛔ **A sixth `DEFECTS.md` DEF-036 artefact, in the flowchart's phase-1 exit gate** — it
+   still asserted `reward_breakdown is {DB, COMMUNICATE}`. Caught by reading the DSL line by line
+   before porting it, not by any guard. **A picture is not a place a claim goes to be safe.**
+2. 🟡 **`DEFECTS.md` DEF-038: the renderer wraps labels mid-token**, and
+   `llm_utils.py:355` renders as `llm_utils.py:35` + `5` — a wrong citation that *resolves*.
+   Pre-existing, accepted, and the mitigation is that the DSL is the authority: **read a line
+   number off the `.eraser` file, never off the PNG.**
+3. ✅ **The two unlabelled empty rectangles are gone.** They were carried forward as an open
+   observation precisely so the next picture would be checked for them; the current render has
+   none, so they belonged to a group the D-062 rewrite deleted.
+
+| render | extent | ink | vs. the render it replaced |
 |---|---|---|---|
-| `loop.png` | `9cd3375`, 2026-08-18 | **3 commits** to `touchstone.eraser` | 🔴 stale |
-| `sequence.png` | `155e364`, 2026-08-18 | **2 commits** to `sequence.eraser` | 🔴 stale |
+| `loop.png` | 4722 × 8889 | 4.28% | was 6439 × 9606 at 2.86% — smaller canvas, denser, four sections cut |
+| `sequence.png` | 3032 × 3457 | 10.63% | was 5069 × 6252 at 14.36% — redrawn, 13 lifelines against 11 |
 
-Those commits are not cosmetic — they are the D-062 specimen swap and the D-069 reward
-correction, so **the pictures name a corpus that no longer exists and a gating number that was
-wrong**. ⛔ **A stale render is worse than no render**: it is an aspirational document that will
-be read as a factual one, and it carries the authority of having been approved
-([docs/07](../docs/07-diagrams.md) §5 rule 5).
-
-⚠️ **Milestone 7 passes on both, and that is the defect, not an exoneration.** The guard measures
-*clipping* — four clear edges, content filling 98%+ of the frame — which is a property of the
-export, not of the content. **A perfectly-rendered picture of the wrong system passes every
-instrument in this repo.** The only check that catches it is the one that cannot be automated
-here: re-export and diff. This box is the interim, and it is doing the job the doc banners do —
-making the staleness *stated* while it is still true.
-
-**Re-porting is DEF-034's procedure and it is CREATE-then-delete, never update**: delete the
-hosted diagram, `manually_create_diagram` from the committed file, diff the round-trip, export at
-`imageQuality: 1` twice until the hash settles, then **open it and look**. The looking is the step
-that found finding 8 after every instrument had passed the picture.
-
-⚠️ **One open observation can only be settled by that re-export.** The last render carried **two
-unlabelled empty container rectangles mid-canvas**. They are not in the source — checked
-2026-08-20, no unlabelled group and no group with an empty body — so either the layout engine
-produced them, or they belonged to a group the D-062 rewrite has since deleted. **It is not
-separately actionable and it is not closed**; it is a thing to look for on the next picture,
-which is exactly the kind of item that disappears if it is not written next to the procedure
-that would find it.
+⚠️ **Ink and extent are measured, not eyeballed** — a shrinking canvas with rising ink is a
+diagram that got tighter, and a shrinking canvas with falling ink is one to go and look at. Both
+were looked at.
 
 **Five tracked files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
 drew the same system in six encodings — **was deleted 2026-08-15** by
