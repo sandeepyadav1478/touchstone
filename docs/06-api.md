@@ -164,7 +164,7 @@ flowchart TB
   CLI -->|"MCP over stdio"| MCPL
   CLI -->|"in-process graph"| ANTH
   CLI -->|"OTLP 4317"| PHX
-  CLI -->|"judge, phase 2+"| CERE
+  CLI -->|"judge, phase 2+"| ANTH
   API -->|"MCP over the network"| MCP
   API --> ANTH
   API -->|"OTLP 4317"| PHX
