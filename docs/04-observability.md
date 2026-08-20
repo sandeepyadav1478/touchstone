@@ -34,20 +34,60 @@ thing that would kill the loop by attrition.
 
 ## 2. The span tree
 
+⚠️ **v1–v4 and v5 do not produce the same tree, and the difference is the measurement.**
+v1–v4 run τ²'s own `LLMAgent` — one model call per turn, no nodes at all. v5 is our LangGraph
+graph (D-071), and the node spans exist **only** there. ⛔ **A scorer that requires a node span
+cannot score the baseline**, which is four of the five rows in the version table.
+
+**v1–v4 — the τ² agent, at the seam:**
+
 ```
-touchstone.run                      run_id, version, case_id, attempt, tier, benchmark_hash
-└── touchstone.triage
-    ├── touchstone.node.supervisor  hop, next
-    │   └── LLM                     ← OpenInference, emitted by the instrumentor
-    ├── touchstone.node.resource    hop        ← and these never overlap: invariant 14
-    │   ├── touchstone.tool.get_metrics  service, metric, points, truncated
-    │   └── LLM
-    ├── touchstone.node.synthesizer
-    │   └── LLM
-    └── touchstone.verdict          ← exactly one, per invariant 3
-                                      reward_breakdown[DB]  ← THE GATE, no model
-                                      reward (composite), termination_reason, cost
+touchstone.run                        run_id, version, tier, benchmark_hash
+└── touchstone.simulation             task_id, attempt      ← one τ² simulation
+    ├── touchstone.llm                🔴 HAND-WRITTEN by adapter.py — see below
+    ├── touchstone.tool.<name>        tool.name, tool.result_size, tool.truncated
+    │                                 ⛔ emitted at make_tool_call(), not by the agent
+    └── touchstone.verdict            ← exactly one, per invariant 3
+                                        reward_breakdown[DB]  ← THE GATE, no model
+                                        reward (composite), termination_reason, cost
 ```
+
+**v5 adds one layer, and nothing else changes:**
+
+```
+    ├── touchstone.node.supervisor    hop, next
+    ├── touchstone.node.identity      hop   ← and these never overlap: invariant 14
+    ├── touchstone.node.catalogue     hop
+    ├── touchstone.node.policy        hop   ← holds no τ² tool: a reasoning node by construction
+    └── touchstone.node.synthesizer   hop   ← ⛔ the only node that may call a WRITE tool
+```
+
+🔴 **`touchstone.llm` is hand-written, and that is a finding rather than a preference.**
+This tree said `LLM ← OpenInference, emitted by the instrumentor` until 2026-08-20. **Nothing
+emits it.** Three separate paths were assumed and all three are dead:
+
+| Assumed emitter | Why it never fires |
+|---|---|
+| `openinference-instrumentation-anthropic` | There is no in-process `anthropic` client to patch — `claude-agent-sdk` ships one transport and it **shells out to the Claude Code CLI**. `instrument()` returns normally and patches nothing (D-072, [docs/00](00-stack.md) §4) |
+| `openinference-instrumentation-langchain` | Real, but it sees **LangGraph nodes** — and τ²'s agent never touches LangChain. It covers **v5 only** |
+| litellm's own OTel callback | D-063 assumed it. `P1.1` displaces litellm at `llm_utils.py:15`, and the callback leaves with it |
+
+🎯 **So the `cost` column would have been empty for v1, v2, v3 and v4 — and the failure is
+silent.** Spans still arrive, the tree still looks right, and the scorer reads a missing
+attribute as a run that simply cost nothing. **`adapter.py` writes the span or the version table
+has no cost in it.**
+
+✅ **The attributes are all obtainable at the seam.** The SDK's `ResultMessage` carries
+`total_cost_usd` and per-call usage, which [docs/05](05-scoring.md) §4 already scores from; the
+`model` argument to `generate()` names the role. **One `with tracer.start_as_current_span()` in
+the adapter covers every τ² role at once**, for the same reason the adapter itself is one
+function and not four.
+
+⚠️ **Two names in this tree changed with the specimen and the old ones are recorded, not
+deleted.** `touchstone.triage` was the per-attempt span and *triage* was the **incident
+specimen's verb** — D-062 replaced the specimen and the noun is now τ²'s, `simulation`.
+`case_id` is `task_id` for the same reason. `touchstone.node.resource` and
+`touchstone.tool.get_metrics` named tools that no longer exist in any version.
 
 ⛔ **There is no `touchstone.gate` span, because there is no gate node** (D-040). `blast_radius`
 moved onto `touchstone.verdict`, where it belongs: it is a property of the action the agent
@@ -67,12 +107,13 @@ same test.** A contract enforced for one reader and hoped for by the other is on
 
 | Span | Attribute | Convention | Read by | Used for |
 |---|---|---|---|---|
-| `touchstone.run` | `version`, `case_id`, `attempt`, `tier`, `benchmark_hash` | ours | scorer | Grouping, and the comparability guard |
+| `touchstone.run` | `version`, `tier`, `benchmark_hash` | ours | scorer | Grouping, and the comparability guard |
+| `touchstone.simulation` | `task_id`, `attempt` | ours | scorer | Per-case grouping. ⚠️ **`task_id` is τ²'s word**; `case_id` was the archived specimen's |
 | `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | scorer | Tool-call count, truncation rate |
-| `LLM` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference** | scorer | Cost, and the model on record |
-| `LLM` | `llm.prompt_template.template` — **the rendered prompt** | **OpenInference** | 🆕 **human** | ⚠️ **Declared, not inherited.** OpenInference may capture input messages by default; *Why not `gen_ai.*`* below argues that a default is not a contract, and the rest of this table relied on one |
+| `touchstone.llm` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference names, written by us** | scorer | Cost, and the model on record. ⚠️ **We keep OpenInference's attribute names while emitting the span ourselves** — Phoenix reads them, and v5's instrumentor-emitted span lands in the same shape |
+| `touchstone.llm` | `llm.prompt_template.template` — **the rendered prompt** | **OpenInference names, written by us** | 🆕 **human** | ⚠️ **Declared, not inherited** — and as of 2026-08-20 there is no instrumentor left to inherit it *from*. This row already said *"a default is not a contract"*. **The default was not weak; it was absent.** |
 | `touchstone.reward` | `reward_breakdown` (per `RewardType`), `reward` (composite), `reward_basis`, `termination_reason` | ours, read off τ²'s `RewardInfo` | scorer | **`reward_breakdown["DB"]` is the gate and the only gating number** (D-069). ⚠️ The composite is on the span **beside** it, unmodified, because it is what the public leaderboard compares — a span that carried only our number would make the two indistinguishable later |
-| `touchstone.turn.*` | turn index on every model call, plus the span's own start and end times | ours + OTel intrinsics | scorer | ⚠️ **This row replaced the node/specialist row with D-062** — there are no nodes, and invariant 14's overlap assertion is retired in place ([docs/01](01-spec.md) §6). The times stay recorded anyway: they are what would make a fan-out visible on the day one is added, and adding the attribute afterwards means the earlier versions cannot be checked |
+| `touchstone.turn.*` | turn index on every model call, plus the span's own start and end times | ours + OTel intrinsics | scorer | ⚠️ **This row replaced the node/specialist row with D-062, and D-071 put the nodes back** — invariants 13 and 14 are un-retired ([docs/01](01-spec.md) §6) and the overlap assertion is live again, **for v5**. The turn index still earns its place: it is the only ordering v1–v4 have, having no node spans to order |
 | `touchstone.node.supervisor` | 🆕 `findings_seen` — the finding **headers** it routed on (D-025) | ours | 🆕 **human** | *Why did it route wrong?* Without this the question is unanswerable from the trace, which guts the router metric ([docs/05](05-scoring.md) §5a) at the moment it is most useful |
 | `touchstone.run` | 🆕 `attempt_status`, and `parse_error` when there is one | ours | 🆕 **human** | §1 claims spans make parse failures visible and no attribute named them. `parse_failure` is one of four attempt states ([docs/09](09-schemas.md) §6), scored **wrong** and never retried (D-013) — **a state the trace cannot express is a state nobody can diagnose** |
 
@@ -126,11 +167,18 @@ spans.
 
 1. `phoenix.otel.register()` — `TracerProvider` + OTLP exporter, **before importing anything
    that instruments**
-2. `LangChainInstrumentor().instrument()` — LangGraph nodes become spans
-3. `AnthropicInstrumentor().instrument()` — model calls become `LLM` spans
-4. Application code
+2. `LangChainInstrumentor().instrument()` — LangGraph nodes become spans. ⚠️ **v5 only**;
+   there is nothing for it to see in v1–v4
+3. Application code — and `adapter.py` opens `touchstone.llm` itself
 
-`telemetry.py` does all four in `init_telemetry()`, called once from `cli.py`. ⚠️ **A test
+~~`AnthropicInstrumentor().instrument()` — model calls become `LLM` spans~~ 🔴 **Struck
+2026-08-20. It cannot fire** (§2), and it stays visible because deleting it loses the reason.
+🎯 **Note what this list did:** its own header warns that getting the order wrong
+*"produces traces that look right and are missing the LLM spans"* — and then prescribed a step
+that produces exactly that, in a repo where a silent no-op has now been found four times.
+**A numbered procedure is a claim about the code, and nobody had run this one.**
+
+`telemetry.py` does all three in `init_telemetry()`, called once from `cli.py`. ⚠️ **A test
 asserts the span tree shape on a canned run** — the wiring is the part that breaks silently
 on a dependency upgrade.
 
@@ -190,7 +238,7 @@ does not survive: the scorer and the agent never speak.
 
 ✅ **Everything in this picture is phase 1 except `Cmp` (`compare.py`, `P2.4`)**, which needs a
 second version before it means anything. **The telemetry lifeline was `[phase 2]` until 2026-08-15**
-and D-037 moved `telemetry.py` to `P1.5` — so phase 1 now ends with the
+and D-037 moved `telemetry.py` into phase 1 (it is `P1.2`; `P1.5` is `score.py`) — so phase 1 now ends with the
 emitter, the scorer, and a `results/v1.json` built from spans the agent actually produced.
 
 ⛔ **The phase-2 half is the *backend*, not the emission.** `P1.5` ships the console and file

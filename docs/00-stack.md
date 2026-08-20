@@ -344,30 +344,22 @@ it** — which would silently destroy the evidence behind every past row of the 
 
 ## 5. `pyproject.toml`
 
-```toml
-[project]
-name = "touchstone"
-requires-python = ">=3.12"
-dependencies = [
-  "langgraph~=1.2", "langgraph-checkpoint-sqlite~=3.1", "langchain-core~=1.5",
-  "claude-agent-sdk~=0.2", "pydantic~=2.13", "typer~=0.27", "rich~=15.0",
-  "opentelemetry-api~=1.44", "opentelemetry-sdk~=1.44", "opentelemetry-exporter-otlp~=1.44",
-  "openinference-instrumentation-langchain~=0.1", "openinference-instrumentation-anthropic~=1.1",
-  "openinference-semantic-conventions~=0.1",
-  "arize-phoenix-otel~=0.17", "arize-phoenix-client~=3.1",
-  "mcp~=1.24", "langchain-mcp-adapters~=0.3.2",   # ⛔ not ~=2.0 and not ~=0.3 — D-031
-  "fastapi~=0.141", "uvicorn~=0.52", "httpx~=0.28",
-]
+⛔ **The file is in the repo — [`pyproject.toml`](../pyproject.toml) — and this section no
+longer copies it.** A verbatim copy here was a **second source of truth with nothing keeping it
+in sync**, and it drifted twice: it still listed `fastapi`, `uvicorn`,
+`openinference-instrumentation-anthropic` and a `[project.optional-dependencies] fallback` of
+`cerebras-cloud-sdk` / `langchain-ollama` **after D-067 banned every non-Anthropic model source
+and D-072 deleted the packages**. 🎯 **A published doc quoting a file that lives four
+directories away is a stale claim waiting to happen** — §4 above carries the *reasons*, which is
+the part a file cannot carry.
 
-[project.optional-dependencies]
-fallback = ["cerebras-cloud-sdk~=1.91", "langchain-cerebras~=0.8", "langchain-ollama~=1.1"]
+**What the file says that is not obvious from reading it:**
 
-[dependency-groups]
-dev = ["pytest~=9.1", "pytest-asyncio~=1.4", "arize-phoenix-evals~=3.4", "ruff~=0.16"]
-
-[project.scripts]
-touchstone = "touchstone.cli:app"
-```
+- ⛔ **`langchain-mcp-adapters~=0.3.2`, not `~=2.0` and not `~=0.3`** — D-031.
+- ⛔ **`tau2==1.0.1`, pinned twice on purpose** — the version *and* a `[tool.uv.sources]` git
+  entry, because `tau2` on PyPI is a different project (DEF-050). **The code ships; the data
+  does not** — set `TAU2_DATA_DIR` (DEF-051).
+- **`dev` holds `mypy~=1.19`.** Typing is total and there is no tests exemption — D-054.
 
 ⛔ **Commit `uv.lock`.** The version table is a comparison across time; an unpinned tree makes
 every past row a claim about a dependency set nobody can reconstruct.
