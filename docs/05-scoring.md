@@ -247,32 +247,31 @@ single point of failure wearing a table**, and counting them separately is how a
 impressive without getting stronger.
 ---
 
-## 5a. The router — measured, never gated (D-042)
+## 5a. ⛔ The router — cut by D-062, and its argument is the one to keep
 
-**The supervisor is a router and nothing scored it.** It picks the next specialist, `next` is on
-every supervisor span ([docs/04](04-observability.md) §2), and no metric read it — so **a failing
-version could not be attributed to *routed wrong* versus *synthesised wrong*.** That is a hole in
-the one thing this project sells.
+**There is no router.** The supervisor that picked the next specialist is archived with the graph
+([docs/03](03-agent-and-tools.md) §1), so `required_specialist`, the per-specialist precision and
+the `next` attribute are all gone. D-042 is retired.
 
-It closes with **no judge and no labeller**, because the answer is already computed three times
-over: [docs/01](01-spec.md) §3 gives each root cause its distinguishing evidence,
-[docs/03](03-agent-and-tools.md) §1 assigns the tools to the specialists, and
-[docs/02](02-gates.md) §2's mine pre-check already tests *"signal present and fetchable"* — and
-then throws the answer away. So `required_specialist` is **planted in `truth.json` by the
-generator**, and router precision/recall per specialist is exact match against `next`. Invariant 1
-is untouched: the agent never reads `truth.json`; only the scorer does.
+⚠️ **The hole it was closing is still open, in a different shape.** The complaint was that *a
+failing version could not be attributed to "routed wrong" versus "synthesised wrong"* — and today
+it cannot be attributed to *"the agent misread the policy"* versus *"the user simulator never said
+the thing"*. **A wrong answer in a two-party conversation has two authors**, and the reward says
+which run failed, never which party. `hallucination_review` (§6, upstream's reviewer at
+`hallucination_reviewer.py:196`) is the nearest instrument and it reads only one side.
 
-⛔ **It never becomes a fifth promotion condition.** A router metric measures *which mechanism*
-produced an answer, and gating on a mechanism forbids a version that reaches the right answer a
-different way — the opposite of what the version table is for. It is a reported column, like the
-judged one, for the same reason — and since D-045 it sits inside §6's
-`diagnostics` object, where a test enforces what this paragraph asserts.
+⛔ **The rule that outlived the metric, and it is the more valuable half:** *a metric that measures
+**which mechanism** produced an answer must never gate.* Gating on a mechanism forbids a version
+that reaches the right answer a different way, which is the opposite of what the version table is
+for. That is why §6's `diagnostics` object is a **boundary** rather than a heading, and why the
+test that perturbs every value inside it survives D-062 intact while the field that motivated it
+does not.
 
-🔴 **The field has a deadline, and it is the reason this is not a phase-2 item.** `truth.json` is
-inside `benchmark_hash` byte for byte ([docs/09](09-schemas.md) §5), so adding a key to it after
-the benchmark freezes is **a benchmark version bump that orphans every past score.** It costs one
-key in `generate.py` (P1.2) and is expensive at every later moment. ⚠️ **It is inert at v1** —
-D-038 makes v1 the synthesizer alone, with no supervisor to route — and that is fine.
+🔴 **And one warning transfers verbatim.** The old note said adding a key to the answer key after
+the benchmark freezes is *a benchmark version bump that orphans every past score*. **That is now
+someone else's file** — `tasks.json` is upstream — so the risk inverted: we cannot add a key at
+all, and an upstream one arriving is a CI failure by invariant 7. **Losing the ability to make
+that mistake is worth more than the metric was.**
 
 ---
 
@@ -283,12 +282,10 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
 ```json
 {
   "version": "v4",
-  "benchmark_hash": "9f2a1c…",
+  "benchmark_hash": "9f2a1c…",                          // sha256 of tasks.json — invariant 7
   "benchmark_version": "v2",
   "regression_version": "v7",
-  "runbook_hash": "c41e7b…",
   "k": 3,
-  "max_hops": 6,                                        // ⛔ null at v1 — no supervisor (D-038)
   "domain": "retail",                                   // ⛔ τ² task ids are bare integers and
                                                         //    are NOT unique across domains
   "tau2_version": "1.0.1",                              // the scorer is upstream's; pin it
@@ -298,11 +295,18 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
   "auth": "subscription",
   "aggregate": {
     "reward_mean": 0.0, "pass_hat_1": 0.0, "pass_hat_k": 0.0,
-    "reward_breakdown_zeroed": {"DB": 0, "COMMUNICATE": 0},  // which component killed the reward
+    "reward_breakdown_zeroed": {"DB": 0, "NL_ASSERTION": 0}, // which component killed the reward
+                                                             // ⛔ NL_ASSERTION, not COMMUNICATE —
+                                                             //    retail declares zero of it (DEF-036)
     "infra_error_convention": "counted_as_failed",           // ⛔ leaderboard convention, §2
     "cost_per_success_usd": 0.0, "tool_calls_mean": 0.0, "p95_latency_s": 0.0,
-    "budget_exceeded": 0, "hops_exhausted": 0, "parse_failures": 0, "void_attempts": 0,
-    "termination_reasons": {"agent_stop": 0, "max_steps": 0, "infrastructure_error": 0}
+    "budget_exceeded": 0, "void_attempts": 0,
+    "termination_reasons": {                                 // ⛔ ALL TEN, always, even at zero —
+      "user_stop": 0, "agent_stop": 0, "max_steps": 0,       //    a key that appears only when it
+      "timeout": 0, "too_many_errors": 0, "agent_error": 0,  //    fires cannot be read as "never
+      "user_error": 0, "infrastructure_error": 0,            //    fired" vs "not recorded"
+      "context_window_exceeded": 0, "unexpected_error": 0
+    }
   },
   "cases": [{"id": "47", "success_k": 5, "attempts": [...]}],   // attempt record: docs/09 §6
 
@@ -313,8 +317,8 @@ D-038 makes v1 the synthesizer alone, with no supervisor to route — and that i
                                                         //    "not yet"; NL_ASSERTION stays off
     "criterion_1_agreement": null,
     "evidence_cross_check": {"cited_without_fetch": 0}, // mechanical, and therefore gate-eligible
-    "router": {"macro_f1": 0.0,                         // vs required_specialist (D-042)
-               "per_specialist": {"timeline": {"precision": 0.0, "recall": 0.0}}}
+    "hallucination_review": null                        // upstream's reviewer, D-067 — a model
+                                                        // reads the transcript; it never gates
   },
 
   "regression": {
@@ -331,32 +335,21 @@ files ([docs/02](02-gates.md) §2.6). Per-attempt records and the four `status` 
 [docs/09](09-schemas.md) §6.
 
 🎯 **`diagnostics` is a boundary, not a heading (D-045).** Both things inside it are opinions about
-*how* an answer was produced — a judge's read of the reasoning, and which specialist the router
-picked — and §5 and §5a each promise, in prose, never to gate on them. **A promise in prose is
+*how* an answer was produced — a judge's read of the reasoning, and upstream's hallucination
+reviewer's read of the transcript — and §5 promises, in prose, never to gate on them. **A promise in prose is
 worth what the next reader knows about it.** So the fields move inside one named object and
 `test_compare_ignores_diagnostics` asserts that perturbing **every value in it** leaves the
 promotion decision byte-identical. ⚠️ **The point is not that the judge is trustworthy. It is that
 the gate cannot be affected by whether it is** — the same construction that keeps `truth.json` from
 the agent by a directory boundary rather than by an instruction.
 
-⚠️ **`max_hops` is here because it is part of the candidate's identity, not because it is
-interesting** — D-013 makes a candidate `(graph, prompts, parameters, provider, model)`, and two
-rows that differed on the bound while claiming to differ on the graph would be an unattributable
-diff. It is config-sourced, like `provider` and unlike `model` (D-039), and falsifiable against
-the run anyway: **no attempt can report `hops` above it.**
-
-⛔ **`hops_exhausted` counts the attempts that stopped because the ceiling fired, not because the
-supervisor emitted `done`** — the last `touchstone.node.supervisor` span named a specialist and the
-synthesizer ran regardless. Scored attempts only; a `void` run stopped for a quota, not a bound.
-**It is diagnostic and it is not a fifth promotion axis** — condition 3's four are closed (§1 of
-[docs/02](02-gates.md)). ⚠️ **It only catches the bound being too *small*.** Too large is a
-supervisor that wanders, and that already lands on `cost_per_correct_usd`, which *is* a promotion
-metric — so the two failure directions have separate detectors and neither needs a new one.
-
-⚠️ **`runbook_hash` is separate from `benchmark_hash` because editing a runbook changes v3's
-score and nothing else would record it.** The runbooks are not cases, so they are not in the
-benchmark digest — but retrieval is a versioned capability, and a corpus that changed silently
-between two rows would be indistinguishable from the agent improving.
+⛔ **`max_hops`, `hops_exhausted` and `runbook_hash` were removed by D-062, and each for its own
+reason rather than as a batch.** The first two named a supervisor's routing budget and there is no
+supervisor; the third hashed a runbook corpus that is archived. ⚠️ **What the hop bound was *for*
+does not go away**: it caught an agent that wanders, and that failure now lands on
+`cost_per_success_usd` and on `max_steps` in `termination_reasons` — τ²'s own bound, enforced by
+τ²'s own orchestrator. **Two detectors replaced by two detectors is the honest description; "we
+dropped a metric" is not.**
 
 ⛔ **`aggregate` covers the benchmark and nothing else, and the regression block carries no
 aggregate at all.** That asymmetry is deliberate and it is the whole reason the suite can grow
