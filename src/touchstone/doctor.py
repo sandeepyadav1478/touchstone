@@ -101,12 +101,25 @@ def _lockfile() -> Check:
 
 
 def _cerebras() -> Check:
+    """Report the Cerebras key, with the polarity D-067 requires.
+
+    ⛔ **Absent is the CORRECT state and must read as a pass.** This check was written
+    the other way round: absent warned with *"path B unavailable, the judge has no
+    fallback"*, and present passed with *"path B available"*. That was the pre-D-067
+    design, where Cerebras judged and stood in when the Claude quota ran out. Under
+    D-067 every role is Anthropic and Cerebras is a `doctor` diagnostic, never a model
+    source — so the old wording made the correct environment emit a warning, and a
+    warning on the correct state is how a whole column of warnings stops being read.
+
+    Returns:
+        A pass when the key is absent, a warning when it is set.
+    """
     if os.environ.get("CEREBRAS_API_KEY"):
-        return Check("pass", "CEREBRAS_API_KEY", "present — path B available")
-    return Check(
-        "warn", "CEREBRAS_API_KEY", "absent",
-        "path B unavailable, the judge has no fallback",
-    )
+        return Check(
+            "warn", "CEREBRAS_API_KEY", "set",
+            "nothing here reads it — D-067 allows no non-Anthropic model source",
+        )
+    return Check("pass", "CEREBRAS_API_KEY", "absent — correct, no fallback provider is used")
 
 
 def _http(url: str, name: str, hint: str) -> Check:
@@ -218,7 +231,8 @@ def run(probe: bool = True) -> int:
         ))
     checks += [
         _cerebras(),
-        _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "path C unavailable"),
+        # ⛔ Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
+        _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "a diagnostic — never a model source"),
         _http(config.PHOENIX_URL, "phoenix", "`docker compose up -d phoenix`"),
         _lockfile(),
     ]

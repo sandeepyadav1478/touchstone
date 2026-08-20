@@ -5,8 +5,10 @@ call on haiku sorts *first*. Reading position instead of name reported a correct
 model as a failed pin (D-035). These two cases are that bug, frozen.
 """
 
+import pytest
+
 from touchstone import config
-from touchstone.doctor import model_check
+from touchstone.doctor import _cerebras, model_check
 
 HOUSEKEEPING = "claude-haiku-4-5-20251001"
 
@@ -31,3 +33,14 @@ def test_a_pin_that_did_not_take_fails() -> None:
 
 def test_no_model_at_all_fails() -> None:
     assert model_check({}, 0.0).status == "fail"
+
+
+def test_absent_cerebras_key_is_a_pass_not_a_warning(monkeypatch: pytest.MonkeyPatch) -> None:
+    # D-067: Anthropic only. Absent is the correct state; it warned here until 2026-08-20.
+    monkeypatch.delenv("CEREBRAS_API_KEY", raising=False)
+    assert _cerebras().status == "pass"
+
+
+def test_a_set_cerebras_key_warns(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CEREBRAS_API_KEY", "sk-whatever")
+    assert _cerebras().status == "warn"

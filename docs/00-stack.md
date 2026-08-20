@@ -35,14 +35,35 @@ same day rather than from memory. That filter removed more candidates than the f
 
 ## 1. The model path — Anthropic first
 
-**Claude drives the agent.** Three paths, in priority order, and the difference between them
-is *how they authenticate*, which is the whole reason this section exists.
+⛔ **Anthropic models only, in every role — D-067.** There is **one** path, not three. It is
+`claude-agent-sdk` spawning the `claude` CLI, authenticated by the Claude Code login already on
+this machine (`~/.claude/.credentials.json`) and billed to the **subscription**: no API key, no
+separate invoice.
 
-| # | Path | Auth | Bills | Use for |
-|---|---|---|---|---|
-| **A** | **`claude-agent-sdk` → the `claude` CLI** | The Claude Code login already on this machine (`~/.claude/.credentials.json`) | **The Pro subscription.** No API key, no separate invoice | **The agent under test. The default.** |
-| **B** | **Cerebras** (`langchain-cerebras`) | `CEREBRAS_API_KEY` | Its own free/paid tier | **The judge**, high-k runs, and the fallback when A is rate-limited |
-| **C** | **ollama** (`langchain-ollama`) | none | nothing | Last resort — offline, and when both A and B are unavailable |
+**Five roles, five pins, all of them Anthropic.** The constants are in
+[`config.py`](../src/touchstone/config.py); this table restates them, and **`config.py` is the
+authority if the two ever disagree.**
+
+| Constant | Model | Role |
+|---|---|---|
+| `MODEL` | `claude-sonnet-5` | **The agent under test** — the thing being measured |
+| `USER_MODEL` | `claude-haiku-4-5-20251001` | The τ² user simulator — **frozen apparatus**, changing it changes the instrument |
+| `JUDGE_MODEL` | `claude-haiku-4-5-20251001` | The rubric judge — cheapest tier on purpose, and it **cannot gate** |
+| `NL_ASSERTION_MODEL` | `claude-opus-5` | τ²'s NL-assertion evaluator |
+| `REVIEW_MODEL` | `claude-opus-5` | The opt-in hallucination reviewer — validates the *simulator*, not the agent |
+
+⛔ **ollama and Cerebras are `doctor` diagnostics and never model sources.** Both are reachable
+from this machine, which is exactly why the rule has to be written down rather than enforced by
+absence. A run that quietly falls back to a local model is not a cheaper run — it is a
+different experiment wearing the same version number.
+
+⚠️ **This section said the opposite until 2026-08-20**, and the way it was wrong is the useful
+part. It carried a three-path table — path B **Cerebras** as *"the judge, high-k runs, and the
+fallback when A is rate-limited"*, path C **ollama** as *"last resort"* — which is a coherent,
+sensible design. It was simply not this project's design any more. D-067 settled Anthropic-only,
+the README and both diagrams were corrected, **and nothing walked backwards to the stack doc**:
+the correction reached every artifact that cited the rule and missed the one that *stated* it.
+A reader following the docs in order would have hit the retired answer first.
 
 ### ⚠️ The distinction that matters, stated precisely
 
@@ -66,14 +87,25 @@ the runs start billing the API account. `touchstone doctor` asserts it is absent
 The subscription has usage windows, and the suite is not small:
 
 ```
-one candidate scored = n cases × k attempts × model calls per run
-                     = 10      × 5          × ~5 (v2+)          ≈ 250 Claude calls
+one candidate scored = tasks × k attempts × model calls per task
+                     = 114   × 3          × (agent + simulator turns, UNMEASURED)
 ```
 
-**That is a real constraint and it shapes three design decisions** — the resumable runner
-(D-015), the judge living on Cerebras (D-016), and CI scoring committed spans instead of
-calling a model (D-014). Each is in `DECISIONS.md`. **They are not workarounds; they are the
-honest consequences of a quota, and each one is a better answer than what it replaced.**
+⚠️ **Only two of those three factors are known.** 114 is τ² retail's task count and `K = 3` is
+the constant in `config.py`; **calls per task has never been measured here**, because no run has
+happened. Multiplying by a guess would produce a total that reads like a measurement. The
+honest statement is the shape: **a candidate costs hundreds of model calls, and the two knobs
+are the task subset and `k`.**
+
+*(This block read `10 × 5` until 2026-08-20 — the archived specimen's ten cases at the `k` that
+D-030 lowered to 3. Both factors were stale and the product was quoted as ≈250.)*
+
+**That is a real constraint and it shapes two design decisions** — the resumable runner
+(D-015) and CI scoring committed spans instead of calling a model (D-014). Both are in
+`DECISIONS.md`. **They are not workarounds; they are the honest consequences of a quota.**
+⛔ **A third once sat here — D-016, "the judge lives on Cerebras" — and it is retired.** The
+judge is `JUDGE_MODEL`, Anthropic, cheapest tier; what makes it affordable is that it runs on a
+completed session, and what makes it safe is that it cannot gate.
 
 **The SDK hands you the quota state, so use it.** `RateLimitInfo` carries
 `status` (`"allowed" | "allowed_warning" | "rejected"`), `utilization` (0.0–1.0),
@@ -85,9 +117,16 @@ suite; one that does not dies at 3am halfway through and leaves a partial table.
 
 ## 2. The seam: one wrapper, ~60 lines
 
-LangGraph nodes want a chat-model interface. The Agent SDK returns an agent result. **One
-small adapter is the entire integration**, and keeping it small is what lets path B and C drop
-in unchanged.
+**One small adapter is the entire integration**, and the reason it can be one is structural:
+`tau2.utils.llm_utils.generate()` at `llm_utils.py:355` is the **single chokepoint** for every
+model role in τ² — the agent, the user simulator and the hallucination reviewer all import that
+one function. So the adapter dispatches on the `model` argument rather than existing four times.
+
+⚠️ **This paragraph used to justify the same smallness differently** — *"keeping it small is
+what lets path B and C drop in unchanged"* — which was true of the pre-D-067 design and is now
+an argument for a property nothing needs. **There are no paths B and C.** Smallness still earns
+its keep; it just earns it for a different reason, and a stale justification for a surviving
+decision is harder to spot than a stale decision.
 
 ```python
 # src/touchstone/models.py  — the only place the SDK is imported
@@ -257,7 +296,14 @@ past that, it has stopped being worth the phase-2 slot.
 | `uvicorn` | `0.52.3` | Serving |
 | `httpx` | `0.28.1` | The Cerebras path and the API tests |
 
-### Fallback providers — phase 0, install but do not use
+### Fallback providers — 🔴 **RETIRED by D-067, removal tracked as DEF-039**
+
+⛔ **There are no fallback providers.** Anthropic in every role; ollama and Cerebras are `doctor`
+diagnostics and never model sources. The three packages below are still declared in
+`pyproject.toml` and are **the clearest deletion in that file** — held back only so the whole
+dependency question lands as one reviewed change at P1.1 rather than in pieces. The *Job* column
+names paths that no longer exist; it is left as written so the removal has something to check
+itself against.
 
 | Package | Version | Job |
 |---|---|---|
@@ -322,6 +368,14 @@ every past row a claim about a dependency set nobody can reconstruct.
 One command, run before anything else, that fails loudly rather than producing a quietly wrong
 number. **This is real output, 2026-08-14** — the same block is pasted in D-001:
 
+⚠️ **It is a dated record and three of its lines have since been overtaken. Kept verbatim
+anyway**, because rewriting a pasted measurement to match today is how a record stops being
+one. What changed: the `model` line reads `claude-sonnet-4-6`, and the pin is now
+`claude-sonnet-5` (D-067). The two ⚠ lines about `CEREBRAS_API_KEY` and `ollama` describe them
+as *unavailable paths* — under D-067 both are diagnostics and **absent is the correct state**,
+so `doctor` now reports the Cerebras key as a **pass** when it is missing. **Re-run the command
+to refresh this block; do not hand-edit it.**
+
 ```
 touchstone doctor
   ✓ claude CLI         2.1.232  (~/.local/bin/claude)
@@ -357,7 +411,7 @@ filled, from the machine rather than from memory.
 |---|---|
 | **Raw `anthropic` SDK + `ANTHROPIC_API_KEY`** | Bills separately from Pro. The suite is ~250 calls per candidate, so this turns the loop into something run monthly by hand — which is the failure this project is about. ⚠️ It is also the *easy* thing to reach for; that is why §6 asserts against it |
 | **`langchain-anthropic`** | Clean and idiomatic, and it is an **API-key** path. Same problem. ✅ Keep it in mind as the swap if API credits ever exist — the wrapper is the only file that changes |
-| **A local model as the default** | An earlier draft chose it, and it answers the wrong question. The comparison this project exists to make is between *versions of the agent*; a weak default model compresses every version difference toward noise, so the instrument stops resolving what it was built to resolve. Kept as path C, where a local model is a fallback rather than the baseline |
+| **A local model as the default** | An earlier draft chose it, and it answers the wrong question. The comparison this project exists to make is between *versions of the agent*; a weak default model compresses every version difference toward noise, so the instrument stops resolving what it was built to resolve. ⚠️ **The original line ended *"kept as path C, where a local model is a fallback rather than the baseline"* — and path C is gone (D-067).** The rejection stands and its reasoning is untouched; only the consolation prize was withdrawn |
 | **LiteLLM as a universal router** | One config for three providers, and ⚠️ **it drops `think: False` on ollama and returns empty content** — measured here before. Three thin adapters beat one leaky abstraction |
 | **The SDK's own subagents instead of LangGraph** | The SDK can orchestrate. Then the graph is Claude Code's, not yours, and there is nothing versionable to put in the table. **LangGraph owns orchestration; the SDK is transport** |
 | 🔴 **MLflow** | Its job here was *comparing versions*, which is **exactly what `results/*.json` and the README table already do** — from committed artifacts, in git, readable in a diff. **Two stores answering one question, and the one being cut is the one nobody can read in a diff.** ⚠️ Not a judgement on MLflow; a judgement on a second store for already-versioned data |

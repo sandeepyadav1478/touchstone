@@ -243,8 +243,13 @@ The adapter in [docs/00](00-stack.md) §2 returns `tuple[dict, Usage]`. **It is 
 what `ResultMessage` actually carries, which is less than the docs for the TypeScript SDK
 suggest** (D-033): `model_usage` is a bare `dict[str, Any]`, the model id is its **key**, and
 `provider` is on no field at all. `canonical_model` is therefore still per-call and still from the
-run — **and a mid-suite provider switch is visible in *it*, not in `provider`**, because path B
-answers as `llama-3.3-70b` and path C as an ollama tag.
+run — **and a mid-run MODEL switch is visible in *it*, not in `provider`**: the id that answered
+is the only thing the call reports.
+
+⚠️ **This sentence used to say *provider* switch**, and illustrated it with *"path B answers as
+`llama-3.3-70b` and path C as an ollama tag"*. D-067 makes every role Anthropic, so there is no
+second provider to switch to. **What the field is for did not change** — five Anthropic pins can
+still drift, and `canonical_model` is still what catches it. Only the example was impossible.
 
 ```python
 class Usage(BaseModel):
