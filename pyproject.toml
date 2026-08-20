@@ -11,14 +11,12 @@ dependencies = [
     "arize-phoenix-client~=3.1",
     "arize-phoenix-otel~=0.17",
     "claude-agent-sdk~=0.2",
-    "fastapi~=0.141",
     "httpx~=0.28",
     "langchain-core~=1.5",
     "langchain-mcp-adapters~=0.3.2",
     "langgraph~=1.2",
     "langgraph-checkpoint-sqlite~=3.1",
     "mcp~=1.24",
-    "openinference-instrumentation-anthropic~=1.1",
     "openinference-instrumentation-langchain~=0.1",
     "openinference-semantic-conventions~=0.1",
     "opentelemetry-api~=1.44",
@@ -26,19 +24,12 @@ dependencies = [
     "opentelemetry-sdk~=1.44",
     "pydantic~=2.13",
     "rich~=15.0",
+    "tau2==1.0.1",
     "typer~=0.27",
-    "uvicorn~=0.52",
 ]
 
 [project.scripts]
 touchstone = "touchstone.cli:app"
-
-[project.optional-dependencies]
-fallback = [
-    "cerebras-cloud-sdk~=1.91",
-    "langchain-cerebras~=0.8",
-    "langchain-ollama~=1.1",
-]
 
 [build-system]
 requires = ["uv_build>=0.12.4,<0.13.0"]
@@ -46,7 +37,6 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "arize-phoenix-evals~=3.4",
     "pytest~=9.1",
     "pytest-asyncio~=1.4",
     "ruff~=0.16",
@@ -109,6 +99,21 @@ warn_unreachable = true
 # THIRD-PARTY code is tolerated; untyped code in `src/` is not.
 ignore_missing_imports = true
 disallow_untyped_defs = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# D-072 — tau2 is the specimen and it is pinned twice on purpose: the version in
+# [project.dependencies] and the tag here. `tau2` on PyPI is an UNRELATED project
+# ("magnetic relaxation rates", gitlab.com/chilton-group/tau2) — DEF-050 — so a
+# bare requirement without this source table resolves to the wrong package.
+#
+# ⛔ THE CODE SHIPS; THE DATA DOES NOT. `data/` sits outside `src/` in that repo,
+# so no wheel contains it. Installed, tau2 computes DATA_DIR as
+# `Path(__file__).parents[3] / "data"` => `.venv/lib/python3.12/data`, which does
+# not exist — and it only logs a WARNING. Set TAU2_DATA_DIR to a checkout's
+# `data/` or the 114 tasks, db.json and policy.md are all absent. DEF-051.
+# ─────────────────────────────────────────────────────────────────────────────
+[tool.uv.sources]
+tau2 = { git = "https://github.com/sierra-research/tau2-bench", rev = "v1.0.1" }
 
 # ⛔ There is NO tests exemption, and the reason is that the one written here never
 # worked. `module = ["tests.*"]` matched nothing: `tests/` has no `__init__.py`, so
