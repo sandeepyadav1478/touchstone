@@ -121,7 +121,7 @@ changed is that we no longer have to enforce it ourselves.
 many of those cases to plant.
 
 **τ²-bench retail has an analogue and it will not carry a metric.** `transfer_to_human_agents`
-exists (`domains/retail/tools.py:731`), but:
+exists (`domains/retail/tools.py:732`), but:
 
 - it is named in **4 of 114** tasks — an F1 over four positives is a number that moves when one
   attempt flips;

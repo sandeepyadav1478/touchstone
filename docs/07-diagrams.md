@@ -125,18 +125,29 @@ boundary, it is drawn in Mermaid, locally, or it is not drawn.
 ```
 diagrams/
   README.md                  # index: file → what it shows → which phase/change
-  touchstone.eraser          # source, committed, diffable — THE artifact
-  loop.png                   # export, committed alongside — never instead
+  touchstone.eraser          # the flowchart — source, committed, diffable
+  loop.png                   # its export, committed alongside — never instead
+  sequence.eraser            # the run→span→gate sequence
+  sequence.png               # its export
+  phase1.mmd                 # the τ²-bench attachment diagram — Mermaid, local
 ```
 
-⚠️ **That is the whole directory, and the shape is deliberate — it is not the shape this
-section used to describe.** The tree here once listed `phase-1-graph.eraser`,
-`phase-2-mcp-sequence.eraser` and `v5-memory-graph.mmd`, one file per change per rule 3
-below. **One file draws both phases instead**, because a reviewer holding two pictures
-cannot see a contradiction that spans them — which is exactly how the verdict edge and the
-`no arrow here` note coexisted for a whole draft ([`../diagrams/README.md`](../diagrams/README.md),
-finding 2). ⛔ **Rule 3 still binds the moment a second file appears**; what changed is that
-the second file has not been needed, not that the rule was dropped.
+⚠️ **Six files, and the count is the argument this section keeps losing.** The tree here once
+listed `phase-1-graph.eraser`, `phase-2-mcp-sequence.eraser` and `v5-memory-graph.mmd` — one
+file per change, per rule 3 below. Then it said **one file draws both phases instead**, because
+a reviewer holding two pictures cannot see a contradiction that spans them, which is exactly how
+the verdict edge and the `no arrow here` note coexisted for a whole draft
+([`../diagrams/README.md`](../diagrams/README.md), finding 2). **Then a second file appeared
+anyway, and a third**, and each had a reason the one-file argument does not answer:
+
+| file | why it is not a section of `touchstone.eraser` |
+|---|---|
+| `sequence.eraser` | a sequence and a flowchart are **different renderers** in Eraser, not two sections of one canvas — a shared Eraser file is a shared canvas, and the two would fight over it |
+| `phase1.mmd` | it names symbols in **another repo**, so it is the one drawing whose node names D-068 had to widen the boundary to permit. Mermaid and local, because it never needed to go through the hosted service at all |
+
+⛔ **The one-file argument was not wrong — it was scoped to one renderer, and nobody said so.**
+The real invariant is the weaker one that survives: **a contradiction that spans two files is
+invisible to review, so every split needs a stated reason and this table is where it goes.**
 
 **Rules, each with a reason:**
 
@@ -193,9 +204,9 @@ the precondition for the phase existing.
 | Phase | The diagram that gates it | Kind |
 |---|---|---|
 | **0 — foundation** | Repo and compose topology: what runs where, what talks to what, which processes exist. ✅ Drawn: [docs/06](06-api.md) §3 — and it earned its keep, since **the checkpointer volume and the absent `suite/` arrow are both visible only in the picture** | infra |
-| **1 — the loop closes** | The v1/v2 graph *and* the run→span→score sequence. Two, and the sequence is the important one. ✅ **Sequence drawn**, and **re-drawn 2026-08-17 as [`diagrams/sequence.eraser`](../diagrams/sequence.eraser)** — the load-bearing element is still an arrow that is *not* there, and the replacement adds the two boundaries the Mermaid version had no participants for: `agent/models.py` → the `claude` subprocess → the network. [docs/04](04-observability.md) §4a keeps the argument and points at the file. ⚠️ **The port dropped the `tools/` lifeline and every guard passed** (DEF-021); it was caught by reading the old drawing against the new one, line by line, which is the only check that finds a participant nobody typed. ✅ **Graph drawn, and this row is CLEARED** by [`diagrams/touchstone.eraser`](../diagrams/touchstone.eraser) §2, §3 and §6 — the failure paths [docs/03](03-agent-and-tools.md) §1 said were missing are section 6's four terminal statuses, the state read/write edges are section 3's five, and **D-025 and D-026 are cited on the elements that carry them** rather than named in a caption — D-025 on the `findings → supervisor` edge, D-026 on the supervisor node itself. ⚠️ **This cell said "the two edges" until 2026-08-16**, and D-026 was never on an edge; the wording came from the shape the sentence wanted rather than from the file. It is the same error the citation checker exists to catch, in the one place the checker does not read. ⚠️ **Cleared 2026-08-15, after reading as cleared for a day while this cell still said no** — DEF-007 | graph + sequence |
+| **1 — the loop closes** | The v1/v2 graph *and* the run→span→score sequence. Two, and the sequence is the important one. ✅ **Sequence drawn**, and **re-drawn 2026-08-17 as [`diagrams/sequence.eraser`](../diagrams/sequence.eraser)** — the load-bearing element is still an arrow that is *not* there, and the replacement adds the two boundaries the Mermaid version had no participants for: `agent/models.py` → the `claude` subprocess → the network. [docs/04](04-observability.md) §4a keeps the argument and points at the file. ⚠️ **The port dropped the `tools/` lifeline and every guard passed** (DEF-021); it was caught by reading the old drawing against the new one, line by line, which is the only check that finds a participant nobody typed. ✅ **Graph drawn, and this row is CLEARED** by [`diagrams/touchstone.eraser`](../diagrams/touchstone.eraser) §2, §3 and §6 — the failure paths [docs/03](03-agent-and-tools.md) §1 said were missing are section 6's four terminal statuses, the state read/write edges are section 3's five, and **D-025 and D-026 are cited on the elements that carry them** rather than named in a caption — D-025 on the `findings → supervisor` edge, D-026 on the supervisor node itself. ⚠️ **This cell said "the two edges" until 2026-08-16**, and D-026 was never on an edge; the wording came from the shape the sentence wanted rather than from the file. It is the same error the citation checker exists to catch, in the one place the checker does not read. ⚠️ **Cleared 2026-08-15, after reading as cleared for a day while this cell still said no** — DEF-007. 🆕 **A third drawing joined this row on 2026-08-19**: [`diagrams/phase1.mmd`](../diagrams/phase1.mmd), the attachment diagram for the τ²-bench specimen (D-062). It exists because the two load-bearing attachment points — the adapter seam at `llm_utils.py:355` and the enforcement point at `Environment.make_tool_call()` — live **outside** this repo, and a box that cannot be named is a box that hides the only structure the diagram is for. It is Mermaid, **local**, and it is the reason D-068 had to widen the approved-repo set. | graph + sequence + attachment |
 | **2 — measurement** | The MCP round trip and the Phoenix span path, end to end | sequence |
-| **3 — the promotion gate** | The CI gate: what runs, what it reads, what makes it block | flowchart |
+| **3 — the gates** | The CI gate: what runs, what it reads, what makes it block. ⚠️ *Was "the promotion gate" — renamed with the vocabulary, D-064* | flowchart |
 | **3 — the mine loop (D-024)** | `score → mine → proposed → review → regression → locked`, showing which edges reset the baseline and which do not. ✅ Drawn: [docs/02](02-gates.md) §5 | flowchart |
 | **4 — the one option** | Whichever option is chosen — and for v5-memory it must show the reset boundary explicitly (D-022). ✅ Drawn: [docs/08](08-memory.md) §5 | graph |
 | **any later change** | Whatever it touches. **No exemption for small ones** | — |
