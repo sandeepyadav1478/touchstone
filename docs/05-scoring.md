@@ -238,7 +238,7 @@ rows in the table. Four layers here are independent, and the reason is nameable 
 |---|---|
 | The invariants ([docs/01](01-spec.md) §6) | No model call at all — it cannot hallucinate |
 | The evidence cross-check, above | Structural: the span says fetched, or it does not |
-| τ²'s mechanical reward (§1) | `DB` state diff and `COMMUNICATE` substring — upstream's code, not ours |
+| τ²'s mechanical reward (§1) | `DB` state diff — upstream's code, not ours. ⛔ **The `DB` key alone**: the composite has `NL_ASSERTION` in it on 112 of 114 tasks, and a judge in a gate is the one thing this table exists to forbid (D-069) |
 | The acceptance conditions ([docs/02](02-gates.md) §1) | Arithmetic over the three above |
 
 **A judged column would be a fifth entry but not a fifth layer** — it shares its model with any
