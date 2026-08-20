@@ -125,9 +125,12 @@ title touchstone — the loop that has to get better
 //  THE FIVE MODEL PINS, AND THE CONSTRAINT THAT SET THEM.
 //
 //  ⛔ ANTHROPIC ONLY. ollama and Cerebras are reachable from this machine and both
-//  stay `doctor` diagnostics — never model sources. D-067 third amendment. The
-//  README's Limits section still says the judge never runs on the Claude quota;
-//  that line is what is wrong, and it is on the docs list.
+//  stay `doctor` diagnostics — never model sources. D-067 third amendment.
+//  ⚠ THIS BLOCK USED TO SAY THE README CONTRADICTED IT, AND THE README WAS FIXED
+//  FIRST. So for a while the DIAGRAM was the stale document, asserting a defect in
+//  a file that no longer had one — and it said so in a RENDERED LABEL, not just
+//  down here. A pointer at another file's error is a claim with a shelf life, and
+//  nothing sweeps backwards from the fix to the pointer (rule 22).
 //
 //  The deciding constraint is QUOTA SHAPE, not price. Measured off the SDK's
 //  RateLimitEvent: rate_limit_type='five_hour', overage_status='rejected',
@@ -192,7 +195,7 @@ Seam [color: blue, icon: git-merge, label: "2 · the seam — P1.1"] {
 }
 
 Cfg [color: green, icon: settings, label: "config.py — P0 ✅ shipped · FIVE model pins (D-067)\nMODEL · USER_MODEL · JUDGE_MODEL · NL_ASSERTION_MODEL · REVIEW_MODEL"]
-NoOther [shape: document, color: red, icon: alert-octagon, label: "ANTHROPIC ONLY — ollama and Cerebras are `doctor` diagnostics\nNEVER model sources · a README line still says otherwise and it is WRONG"]
+NoOther [shape: document, color: red, icon: alert-octagon, label: "ANTHROPIC ONLY — ollama and Cerebras are `doctor` diagnostics\nNEVER model sources · the quota REJECTS, so a wrong pin kills a run (D-067)"]
 
 Gen > Adapter: REPLACED at the seam
 Gen --> LiteLLM: what it used to call

@@ -39,13 +39,19 @@ rather than nothing at all.
 1. ⛔ **A sixth `DEFECTS.md` DEF-036 artefact, in the flowchart's phase-1 exit gate** — it
    still asserted `reward_breakdown is {DB, COMMUNICATE}`. Caught by reading the DSL line by line
    before porting it, not by any guard. **A picture is not a place a claim goes to be safe.**
-2. 🟡 **`DEFECTS.md` DEF-038: the renderer wraps labels mid-token**, and
+2. 🟡 **`DEFECTS.md` DEF-038, extending DEF-029: the renderer wraps labels mid-token**, and
    `llm_utils.py:355` renders as `llm_utils.py:35` + `5` — a wrong citation that *resolves*.
    Pre-existing, accepted, and the mitigation is that the DSL is the authority: **read a line
    number off the `.eraser` file, never off the PNG.**
 3. ✅ **The two unlabelled empty rectangles are gone.** They were carried forward as an open
    observation precisely so the next picture would be checked for them; the current render has
    none, so they belonged to a group the D-062 rewrite deleted.
+4. 🔴 **The flowchart was asserting a defect in a file that had already been fixed**, and it did
+   so in a **rendered label** — the `NoOther` box said a README line contradicted the
+   Anthropic-only rule and was wrong. The README's Limits section had been corrected first, so
+   the *diagram* was the stale document. Forced a second port the same day. **A pointer at
+   another file's error is a claim with a shelf life**, and nothing in this repo sweeps backwards
+   from a fix to the documents pointing at it.
 
 | render | extent | ink | vs. the render it replaced |
 |---|---|---|---|
@@ -55,6 +61,14 @@ rather than nothing at all.
 ⚠️ **Ink and extent are measured, not eyeballed** — a shrinking canvas with rising ink is a
 diagram that got tighter, and a shrinking canvas with falling ink is one to go and look at. Both
 were looked at.
+
+⛔ **Both were exported at `imageQuality: 1`, which contradicts the dated table below.** That
+table's *The quality that works* row says `sequence.png` needs **2**, because **1** had returned a
+0.07%-ink blank on 2026-08-18. On 2026-08-20 quality **1** returned a 10.63%-ink render of the
+redrawn diagram. **Quality 2 was not retried**, so this is not evidence the old row was wrong —
+`DEFECTS.md` DEF-028 already says the setting behaves per *diagram*, and the sequence diagram was
+rewritten between the two dates. **Measure ink before trusting either number**; the failure mode
+is a silent blank, not an error.
 
 **Five tracked files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
 drew the same system in six encodings — **was deleted 2026-08-15** by
