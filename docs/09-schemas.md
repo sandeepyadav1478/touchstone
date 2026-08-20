@@ -1,4 +1,4 @@
-# 09 — Schemas, file map and the contracts implementation runs against
+# 09 — Schemas: the file map, the hash, and what the archived specimen defined
 
 > ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
@@ -15,6 +15,8 @@ needed one.
 ---
 
 ## 1. The evidence surface — the gap `Incident` left open
+> ⛔ **Archived specimen (D-062).** `Evidence`, `Series`, `LogLine` and `Deploy` were the rendered incident the agent read; retail's agent reads a database through 16 tools instead. The section is kept because §9's archived map points at it, and the *shape* of the problem it solved — how much evidence to render, and what to leave out — is the same question the τ² user simulator's `known_info`/`unknown_info` split answers upstream.
+
 
 [docs/01](01-spec.md) §2 defines `Incident` as the alert, the window, the topology and the seed.
 **The tools read the generated incident** ([docs/03](03-agent-and-tools.md) §2) and there is no
@@ -82,6 +84,8 @@ deletion ([docs/01](01-spec.md) §4 rule 4) rather than by noise.
 ---
 
 ## 2. The closed sets
+> ⛔ **Archived specimen (D-062).** `RootCause`, `Specialist` and `Action` were ours. The closed sets that matter now are upstream: `RewardType` (5 members) and `TerminationReason` (10) — docs/01 §2. The section is kept because `ESCALATION_THRESHOLD`'s argument — that a value compared against an enum belongs beside the enum, not in `config.py` (D-056) — outlived the enum, and `config.py` still follows it for the model pins.
+
 
 ```python
 class RootCause(StrEnum):
@@ -150,6 +154,8 @@ reader concludes the system has one.
 ---
 
 ## 3. Tool return types — and the one signature that was wrong
+> ⛔ **Archived specimen (D-062).** Those five tools are on the branch. Retail's 16 are upstream, typed by `ToolType`, and we do not define their returns — docs/01 §5. The section is kept because the *finding* is not specimen-bound: a signature in a spec disagreed with the signature in the prose beside it, and only writing both out caught it.
+
 
 ```python
 class LogPage(BaseModel):
@@ -192,6 +198,8 @@ make every retrieval correct by construction and the experiment would measure no
 ---
 
 ## 4. Graph state
+> ⛔ **Archived specimen (D-062).** There is no graph. τ² runs one agent through its own orchestrator (`orchestrator.py:260`); `AgentState`, `Finding` and `FindingHeader` are archived with `agent/`. The section is kept because D-025 and D-026 — no specialist reads another's finding, no two spans overlap — are the reason invariants 13 and 14 exist, and docs/01 §6 keeps them retired-in-place rather than deleted.
+
 
 ```python
 class Finding(BaseModel):
@@ -293,6 +301,15 @@ recorded per call.
 Referenced by seven places and gating every comparison, so it needs one definition rather than
 seven compatible guesses.
 
+⛔ **D-062 inverted what it hashes, and that is a strengthening.** It used to hash *our* suite —
+fields we chose, over cases we generated, checked against tampering by us. It now hashes
+`data/tau2/domains/retail/tasks.json`, **a file we do not own**, so a silent upstream edit is a
+CI failure rather than a moved goalpost (docs/01 §6, invariant 7). The `HASHED_FIELDS` selection
+below is archived with the generator: there is nothing to select, because the whole file is the
+input. ⚠️ **Pin the collation if the input ever becomes a *list* of files again** — a hash over
+a list is a hash over its order, and a shell `sort` and Python's `sorted()` disagree on
+punctuation (D-068).
+
 ```python
 HASHED_FIELDS = ("id", "seed", "root_cause_id", "precedent")
 
@@ -336,6 +353,12 @@ first.
 
 `results/<version>.json` elides `"attempts": [...]`. One entry per attempt, written by
 `touchstone score` from spans and by nothing else:
+
+⚠️ **The keys below are the archived specimen's** — `root_cause_id`, `affected_service`,
+`escalate`. The live shape is docs/05 §6, and the fields that replace them are
+`reward_breakdown`, `termination_reason` and `tau2_version`. **The structure is unchanged**:
+one record per attempt, written from spans, never edited by hand — which is the part D-062 was
+supposed to leave standing.
 
 ```json
 {
@@ -382,6 +405,8 @@ all; it reaches the judge through the span and nowhere else.
 ---
 
 ## 7. The runbook corpus
+> ⛔ **Archived specimen (D-062).** 13 markdown runbooks were v3's whole delta, and there is no v3 corpus to search. Retail's equivalent is the domain policy, which upstream hands the agent directly. The section is kept because **it is the closest thing here to what a retrieval version would look like**, and if one is ever built it starts from this shape rather than from nothing.
+
 
 `runbooks/` — **13 markdown files, committed, frozen with the benchmark.**
 
@@ -400,6 +425,8 @@ in prose."
 ---
 
 ## 8. The prompt contract
+> ⛔ **Archived specimen (D-062).** One prompt per node, and there are no nodes. The section is kept because the contract idea survives the swap intact: a prompt is a *candidate under a version number*, not a doc, and that is why §11 still refuses to put wording here.
+
 
 `prompts/` — one file per node, versioned with the candidate (D-013). **The wording is written
 during phase 1; the interface is fixed here**, because a node that receives something not on this
@@ -424,65 +451,95 @@ if any, come from cases generated with a different seed and are recorded in `DEC
 
 ## 9. The file map
 
-`mkdir -p` in `ROADMAP.md` phase 0 creates the directories; this places the files the phases name.
+`mkdir -p` in `ROADMAP.md` phase 0 creates the directories; this places the files the phases
+name. ⛔ **This section is an authority, not documentation** — `scripts/check-diagram.py`
+milestone 4 rejects any path a diagram cites that does not appear here or in `ROADMAP.md`. A
+file that is real but unlisted fails the guard, which is the intended direction: the map is
+what makes a fabricated path detectable.
 
 ```
 src/touchstone/
-  domain.py            §1–3 + §4's `Usage`, + docs/01 §2 — write first, everything imports it
-  config.py            env vars (§10 below), paths, the interval constant
-                       ⛔ NOT ESCALATION_THRESHOLD — it is in domain.py beside the enum it
-                       compares against, and §2 above says it is not a config value (D-056)
-  models.py            the SDK wrapper, ~60 lines — docs/00 §2
-  telemetry.py         span tree, required attributes, exporter setup — docs/04     [phase 1, P1.5]
+  config.py            env vars (§10 below), paths, the five model pins (D-067)   [phase 0 ✅]
+  doctor.py            phase 0, first file written — docs/00 §6                   [phase 0 ✅]
+  cli.py               typer app; every command in docs/06 §1                     [phase 0 ✅]
+  adapter.py           ⛔ THE ONE THAT MATTERS. The Claude Agent SDK behind τ²'s
+                       `generate()` seam, dispatching on `model`. ONE adapter, FOUR
+                       roles, because there is one chokepoint — `llm_utils.py:355`
+                                                                                  [P1.1]
+  telemetry.py         span tree, required attributes, exporter setup — docs/04    [P1.5]
                        ⛔ console + file exporters only; the Phoenix container is P2.8.
                        Moved out of phase 2 by D-037 — a phase that emits no span
                        ends with a scorer that has never read one.
-  cli.py               typer app; every command in docs/06 §1
   api.py               fastapi; the four endpoints in docs/06 §2 — ⚠️ its reason is open (D-040)
-  incidents/
-    generate.py        truth first, then render — docs/01 §4. Also the TOPOLOGY, the ten-case
-                       SUITE, `write_suite`, and ⛔ `benchmark_hash` (§5): the hash lives beside
-                       the thing it hashes, because a digest defined away from its generator is
-                       a digest that survives a change to the generator (D-060)
-    renderers.py       ten cause renderers + the deletion path for insufficient_evidence
-    signature.py       Signature extraction                                         [deferred]
-  agent/
-    graph.py           StateGraph, edges, checkpointer. ⛔ no interrupt (D-040)
-    nodes.py           supervisor, three specialists, synthesizer — five, no gate node
-    state.py           AgentState, Finding, FindingHeader (§4)
-  tools/
-    read.py            four of the five read-only tools — the incident's own state
-    runbooks.py        the fifth: BM25 over runbooks/ (§7) — v3's whole delta
-    history.py         search_incident_history over history/                        [deferred]
-    mcp_server.py      the same five over MCP — FastMCP, mcp 1.x (D-019, D-031)     [phase 2]
+  gate/
+    tier1.py           the hand-written DB constraints — NO model                 [P2.1]
+    extract.py         the model TRANSLATES a stated policy into a predicate. ⛔ The
+                       VERDICT is mechanical; it never judges "did well" (D-064)   [P2.2]
+    enforce.py         REFUSES the call before it executes — the hook at
+                       `Environment.make_tool_call()` (D-065)                      [P3.1]
   loop/
     run.py             suite runner, k attempts, --resume, attempt cache (D-015)
-    score.py           spans → results/*.json (§6)
-    compare.py         the five promotion conditions — docs/02 §1                   [phase 2]
+    score.py           spans + τ² `RewardInfo` → results/*.json (§6)
+    compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
-    mine.py            failures → suite/proposed/                                   [phase 3]
-    suite.py           show / diff / log / review / quarantine                      [phase 3]
-    budget.py          thresholds from v1's measured numbers                        [phase 2]
-    record.py          → the README table                                           [phase 2]
-  doctor.py            phase 0, first file written — docs/00 §6
+    mine.py            failures → suite/proposed/ ⚠️ **DEFERRED by D-030**         [phase 3]
+    suite.py           show / diff / log / review / quarantine                     [phase 3]
+    budget.py          thresholds from v1's measured numbers                       [phase 2]
+    record.py          → the README table                                          [phase 2]
 
-prompts/               one per node (§8)
-runbooks/              13 markdown files (§7)
 suite/                 benchmark/ · regression/ · proposed/ · CHANGELOG.md
-                       ⛔ truth.json lives INSIDE each tier — §5's hash reads
-                       suite_dir/truth.json, and suite_dir is the tier (DEF-005)
-  benchmark/README.md  🆕 what each frozen case is for, and what v1 does NOT measure
-history/               v5 only — docs/01 §4                                         [deferred]
+                       ⛔ **The benchmark tier is now the 114 upstream retail tasks**, read
+                       from `data/tau2/domains/retail/tasks.json` and never copied here.
+                       `suite/benchmark/manifest.json` records the hash it was read at —
+                       invariant 7 — rather than the cases themselves
 results/               one json per version + index.json + negative-control.md
-diagrams/              the D-021 artifacts, committed before their implementation
-tests/unit/            13 invariants numbered to 14 (5 retired, D-040), zero model calls, under 2s
+diagrams/              the D-021 artifacts, committed before their implementation.
+                       `diagrams/README.md` is the index — docs/07 §5
+tests/unit/            the invariants of docs/01 §6, zero model calls, under 2s
 tests/evals/           judged dimension only — never gates
 scripts/               🆕 tooling that checks the OTHER files — not imported by anything
-  check-diagram.py     the D-021 guard: 9 milestones over diagrams/*.eraser — 7 reads the
+  check-diagram.py     the D-021 guard: 9 milestones over diagrams/*.eraser — 4 reads THIS
+                       section, 4a hashes the 8 upstream files we attach to, 7 reads the
                        RENDER, 8 greps the DSL for a `[` — which Eraser eats the message for
   check-links.py       every markdown link resolves — against git, not the working tree
   p0-deps.sh           the phase 0 install, one command
   p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
+.github/workflows/
+  touchstone.yml       CI — ⛔ calls no model (D-014). Named in ROADMAP P2.7
+docker-compose.yml     phase 0 topology — docs/06 §3
+```
+
+### ⛔ Archived by D-062 — kept here because the guard reads this section
+
+**These files are on branch `incident-specimen` at `109c424` and are not on `main`.** They stay
+listed because a reader meeting them in an old diagram, an old decision or a commit message
+needs somewhere that says *where they went*, and because deleting a name from a map is how a
+citation becomes unresolvable rather than merely stale.
+
+```
+src/touchstone/
+  domain.py            the Incident/Alert/GroundTruth/Verdict models — docs/01 §2, archived.
+                       ⛔ It will not be rewritten: the domain types are upstream now
+  models.py            the SDK wrapper — superseded by adapter.py, which attaches at a
+                       seam instead of wrapping a client
+  incidents/
+    generate.py        truth first, then render — the generator, cut whole
+    renderers.py       ten cause renderers + the deletion path for insufficient_evidence
+    signature.py       signature extraction                                        [never built]
+  agent/
+    graph.py           StateGraph, edges, checkpointer. ⛔ no interrupt (D-040)
+    nodes.py           supervisor, three specialists, synthesizer
+    state.py           AgentState, Finding, FindingHeader (§4)
+    models.py          the per-node model binding
+  tools/
+    read.py            four of the five read-only tools — the incident's own state
+    runbooks.py        the fifth: BM25 over runbooks/ (§7) — v3's whole delta
+    history.py         search_incident_history over history/                       [never built]
+    mcp_server.py      the same five over MCP — FastMCP, mcp 1.x (D-019, D-031)    [never built]
+prompts/               one per node (§8)
+runbooks/              13 markdown files (§7)
+history/               v5 only — cut twice, by D-030 and D-062                     [never built]
+suite/benchmark/truth.json   the planted answer key — §5's hash read this
 ```
 
 ⚠️ **`scripts/` was missing from this map until 2026-08-16, and the diagram guard is what
@@ -493,9 +550,10 @@ than clerical — this map places *"the files the phases name"*, and **nothing t
 the work is ever named by a phase**, so the map could not see it by construction. Any tooling
 added later lands in the same blind spot; put it here when it lands.
 
-⚠️ **`domain.py` and `doctor.py` are the only two files with a fixed order.** Everything else
-follows the build order in `ROADMAP.md`, which is the ordering that keeps the scorer independent
-of the agent's shape.
+⚠️ **`domain.py` was the only file with a mandatory first position, and D-062 deleted the
+position along with the file.** `doctor.py` keeps its own: it is what tells you whether the
+machine can run anything at all. Everything else follows the build order in `ROADMAP.md`, which
+is the ordering that keeps the scorer independent of the agent's shape.
 
 ---
 
@@ -504,7 +562,8 @@ of the agent's shape.
 | Variable | Set where | Purpose | ⛔ |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | **nowhere** | — | ⛔ **Asserted absent by `touchstone doctor`.** If set, runs bill an API account instead of the subscription and nothing else notices (D-001) |
-| `CEREBRAS_API_KEY` | `.env`, local only | Fallback path B, and the judge (D-016) | Never in CI — CI calls no model (D-014) |
+| `CEREBRAS_API_KEY` | `.env`, local only | ⛔ **`touchstone doctor` diagnostic only.** This row said *"the judge (D-016)"*; there is no non-Anthropic model anywhere in the loop, and the judged dimension runs on `claude-opus-5` (D-067) | Never in CI — CI calls no model (D-014) |
+| `OLLAMA_HOST` | shell, optional | ⛔ Same — a `doctor` reachability check, **never a model source** | Never in a scored run |
 | `TOUCHSTONE_TRACE` | shell | `console` prints the span tree; unset exports OTLP | — |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | compose | Phoenix, `http://phoenix:6006` | The one variable the backend swap changes — docs/04 §4 |
 | `PHOENIX_SQL_DATABASE_URL` *or* `PHOENIX_WORKING_DIR` | compose | ⚠️ **Without one, traces die with the container** and every past row loses its evidence | — |
@@ -525,9 +584,12 @@ in [docs/06](06-api.md) §3 exists to catch.
   a candidate belongs in git under a version number, not in a doc.
 - ⛔ **`n` and `k` stay at 10 and 3.** Changing either is a decision with a cost (D-024, D-030),
   not a schema detail.
-- ⚠️ **No `Verdict` validator is specified beyond the type.** Whether an `escalate` that
-  disagrees with `recommended_action`'s blast radius is a schema error or a scored wrong answer
-  is decided by invariant 4's test in phase 1 — and it should be decided *there*, against a real
-  agent's failure mode, rather than guessed here. ⛔ **The two are not interchangeable**: a schema
-  error voids the attempt, a wrong answer counts against the version. Guessing that here would
-  put a number in the table that nobody derived.
+- ⛔ **No repair of upstream's evaluator.** `COMMUNICATE`'s substring match carries upstream's
+  own `# TODO: This could be improved!` (`evaluator_communicate.py:69`) and stays as it is —
+  repairing it would break comparability with the published leaderboard, which is the only
+  reason a third-party benchmark is worth more than one we wrote.
+- ⚠️ **No schema for what a gate *refusal* returns to the agent.** Whether `enforce` raises,
+  returns an error string the agent can read, or returns a silent no-op changes what the agent
+  learns from being refused — and it should be decided in P3.1 against a real refusal, not
+  guessed here. ⛔ **The three are not interchangeable**: one voids the run, one is a turn the
+  agent can recover from, one is a measurement that lies.
