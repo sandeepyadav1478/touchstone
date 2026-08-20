@@ -487,7 +487,7 @@ src/touchstone/
     score.py           spans + τ² `RewardInfo` → results/*.json (§6)
     compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
-    mine.py            failures → suite/proposed/ ⚠️ **DEFERRED by D-030**         [phase 3]
+    mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]
     suite.py           show / diff / log / review / quarantine                     [phase 3]
     budget.py          thresholds from v1's measured numbers                       [phase 2]
     record.py          → the README table                                          [phase 2]

@@ -34,6 +34,10 @@ title touchstone — the loop that has to get better
 //         whose own explanation trips it is a rule that gets switched off.
 //         scripts/check-diagram-nodes.sh is what caught it and it fails on
 //         ambiguity now rather than taking the first hit.
+//      ⚠ AND THE GUARD'S APPROVED ROOT IS NARROWER THAN D-068's. It resolves inside
+//         src/tau2 only, so the retail POLICY file — which lives under data/ — does
+//         not resolve there. Section 8b names it in prose rather than as a path,
+//         because loosening a guard to make a label pass is the wrong direction.
 //
 // ═══════════════════════════════════════════════════════════════════════════════
 //  WHAT THIS REDRAW CHANGED — D-068, and it is a redraw rather than an amendment.
@@ -85,7 +89,7 @@ title touchstone — the loop that has to get better
 //
 //    1 · refuse a TOOL CALL          runtime, at make_tool_call()   — P3.1
 //    2 · reject a CANDIDATE VERSION  at compare                     — P2.4
-//    3 · admit a MINED CASE          at suite admit                 — DEFERRED
+//    3 · admit a MINED CASE          at suite admit                 — P3.5
 //
 //  ⛔ ALL THREE ARE MECHANICAL. ANYTHING WITH A MODEL IN IT CANNOT GATE. That is
 //  the invariant this whole picture is arranged around, and it is why every node
@@ -93,10 +97,12 @@ title touchstone — the loop that has to get better
 //  model IS allowed to sit: TRANSLATION — turn a stated constraint into a
 //  predicate — never VERDICT.
 //
-//  ⚠ DECISION 3 HAS NO BUILD ROW AND IS DRAWN ANYWAY, IN GREY, SAYING SO. D-030
-//  cut mining. The failure this project has already had once is a mechanism
-//  specified in full and built by no row (DEF-009), and the fix for that is not to
-//  stop drawing it — it is to make the picture say which of the three ships.
+//  ⚠ DECISION 3 WAS DRAWN IN GREY FOR FOUR PASSES WITH NO BUILD ROW, AND IT HAS
+//  ONE NOW (D-070). D-030 cut mining as the largest single cut; what it cut turned
+//  out to be the INNER LOOP — section 8b, the one stage here that makes the
+//  measurement bigger instead of reporting it. It stayed drawn throughout, because
+//  the failure this project has already had once is a mechanism specified in full
+//  and built by no row (DEF-009) — which is exactly why it was still findable.
 //
 // ═══════════════════════════════════════════════════════════════════════════════
 //  WHY THE SCORER STAYS HONEST, MEASURED RATHER THAN ASSERTED.
@@ -272,7 +278,7 @@ Cmp [color: orange, icon: filter, label: "8 · loop/compare.py — P2.4 · ALL F
   C2 [color: red, icon: alert-triangle, label: "2 · NO per-task regression — THE ONE THAT WORKS\nfires on pass^k → not-pass^k ONLY (D-008)"]
   C3 [icon: trending-up, label: "3 · strict improvement on ≥ 1 metric\nelse a no-op is accepted"]
   C4 [icon: dollar-sign, label: "4 · no budget breach — cost per success, p95"]
-  C5 [color: grey, icon: lock, label: "5 · no locked task fails — ONE-WAY\nVACUOUS while decision 3 is deferred"]
+  C5 [color: grey, icon: lock, label: "5 · no locked task fails — ONE-WAY\nVACUOUS until P3.5 locks its first mined case"]
 }
 C1 > C2 > C3 > C4 > C5
 ScorePy > Cmp: results/(version).json — the scored half only
@@ -282,18 +288,47 @@ C5 > Accepted: all five hold
 Cmp > Refused: any ONE fails
 Refused --> Dev: informed by WHICH task broke
 
+// ── 8b · THE INNER LOOP (D-070). Every other stage on this page runs ONCE per
+//  candidate version. This one runs up to n times on a SINGLE failing trace, and it
+//  is the only mechanism here that makes the measurement grow rather than report it.
+//  The model sits in TRANSLATE and nowhere else — the verdict at TEST is a predicate
+//  evaluation, which is the invariant of section 9 applied to the loop that feeds it.
+//  ⚠ THE SCOPE FILTER IS THE PART THAT GOES WRONG. Only a failure that breaks a rule
+//  someone WROTE DOWN can be gated: the retail policy document, and the tool
+//  contracts. A failure that is merely "the agent was not good enough" has nothing
+//  to translate, and a loop pointed at one will keep inventing rules until one
+//  sticks. That is why MSkip exists and why the phase-3 exit gate requires at least
+//  one recorded UNMINEABLE.
+Mine [color: pink, icon: refresh-cw, label: "8b · mine — THE INNER LOOP · up to n = 5 attempts on ONE failing trace\nthe outer loop REPORTS a number; this loop makes the number COVER MORE"] {
+  M0 [color: pink, icon: alert-circle, label: "in · one failing session — the mechanical DB component came back zero\nD-069 · labelled by τ²'s own evaluator, before we looked at it"]
+  MScope [shape: diamond, color: pink, icon: help-circle, label: "does it break a rule someone WROTE DOWN?\nthe retail policy document · the tool contracts"]
+  MSkip [shape: oval, color: grey, icon: minus-circle, label: "capability failure — RECORDED, NOT MINED\nno stated rule means nothing to translate, and nothing to gate"]
+  MT [color: orange, icon: cpu, label: "1 · TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
+  MTest [shape: diamond, color: orange, icon: check-square, label: "2 · TEST — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY always-pass session? must be NO"]
+  MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
+}
+M0 > MScope
+MScope > MSkip: no
+MScope > MT: yes
+MT > MTest
+MTest > MT: either fails — hand back the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
+MTest > MGive: attempt n
+Cmp --> M0: the sessions that failed
+Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — which is why an admitted case arrives `open`\nand cannot gate until it has been quiet under an ACCEPTED version"]
+Overfit --> MTest
+
 // ── 9 · the three decisions, side by side. None of them may contain a model.
 Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {
   D1 [icon: shield, label: "1 · refuse a TOOL CALL — runtime, P3.1\nno model in the verdict"]
   D2 [icon: filter, label: "2 · reject a CANDIDATE VERSION — at compare, P2.4\nno model in the verdict"]
-  D3 [color: grey, icon: pause-circle, label: "3 · admit a MINED CASE — DEFERRED by D-030\ndrawn because DEF-009 was a mechanism nobody scheduled"]
+  D3 [icon: filter, label: "3 · admit a MINED CASE — at suite admit, P3.5\nno model in the verdict · fed by the inner loop, section 8b"]
 }
 Enforce > D1
 Cmp > D2
 Invariant [shape: document, color: red, icon: alert-octagon, label: "ANYTHING THAT GATES IS MECHANICAL\nANYTHING WITH A MODEL IN IT CANNOT GATE\nD-064 puts the model in TRANSLATION, never in the VERDICT"]
 Invariant --> Decisions
 
-Admit [color: grey, icon: filter, label: "10 · the five admission gates — DEFERRED with decision 3"] {
+Admit [color: green, icon: filter, label: "10 · the five admission gates — P3.5, all mechanical, no human is a step"] {
   A1 [icon: repeat, label: "1 · reproducible"]
   A2 [icon: activity, label: "2 · not_flaky"]
   A3 [icon: slash, label: "3 · not_a_void"]
@@ -302,6 +337,7 @@ Admit [color: grey, icon: filter, label: "10 · the five admission gates — DEF
 }
 A1 > A2 > A3 > A4 > A5
 A5 > D3
+MTest --> Admit: both hold — the predicate goes to the five gates
 Admit --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. Four versions, and each one names what changed.
@@ -334,13 +370,14 @@ PhaseGates [icon: check-square, label: "13 · the four phase exit gates"] {
   P0Gate [color: green, icon: check-circle, label: "phase 0 exit — ✅ PASSED\nD-001 carries the live `touchstone doctor` output, verbatim"]
   P1Gate [color: blue, icon: check-square, label: "phase 1 exit — the strongest gate here\nscore v1 TWICE from committed spans → byte-identical results/v1.json\nreward_breakdown carries a DB key on EVERY scored simulation — that key is what gates"]
   P2Gate [color: orange, icon: alert-triangle, label: "phase 2 exit — every gate carries a SHADOW score\na gate with no shadow number does not reach phase 3"]
-  P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — a REFUSED tool call is in a committed trace\nand at least one candidate is rejected"]
+  P3Gate [color: pink, icon: x-circle, label: "phase 3 exit — a REFUSED tool call is in a committed trace\none candidate is rejected · ONE trace mined end to end · ONE recorded UNMINEABLE"]
 }
 DiagGate > PhaseGates: blocks the START of every phase — the other four block the end
 P0Gate > P1Gate > P2Gate > P3Gate
 NegControl --> P2Gate: the proof the gate can reject
 Doctor --> P0Gate: its verbatim output IS D-001
 Enforce --> P3Gate: a refusal that was SEEN, not one that was wired
+MGive --> P3Gate: the loop is only tested when it has been seen to GIVE UP
 
 // ── 14 · the guards.
 Guards [color: grey, icon: shield, label: "14 · scripts/ — the tooling that checks the WORK\nCOMMITTED and NAMED BY NO PHASE"] {

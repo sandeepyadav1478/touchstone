@@ -51,9 +51,9 @@ touchstone compare v4 --against v3                 # → promote | reject
 touchstone promote v4                              # → results/index.json
 touchstone record                                  # → regenerates the README table
 
-# ⛔ DEFERRED — designed, not built for v0.2.0 (D-030). Kept here because the design is
-#    settled and the reasoning is D-024; ⚠️ nothing below is a working command.
-# touchstone mine  v4                              # → suite/proposed/
+# ⛔ NOT BUILT YET — ⚠️ nothing below is a working command. `mine` and `suite admit` are
+#    P3.4 / P3.5 (D-070); the reading verbs stay deferred, and the reasoning is D-024.
+# touchstone mine  v4                              # THE INNER LOOP: one trace, n attempts
 # touchstone suite log                             # every suite version: what entered, why, when
 # touchstone suite show r-018                      # one case: origin, why, the mining trace, history
 # touchstone suite diff v6..v7                     # what changed between two suite versions

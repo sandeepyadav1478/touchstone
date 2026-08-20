@@ -113,8 +113,8 @@ What survives the cut, in one line each:
   specimen-dependent and moves intact onto the 114 tasks. [docs/02](02-gates.md) §4.
 - **Invariant 11** — every case carries a `why`, an `added` date and an `origin` — still binds,
   and now applies to *mined* cases rather than generated ones, since mining is the only way a
-  case enters. ⚠️ **Case admission is DEFERRED by D-030**, so today the answer is *all 114, no
-  selection*, and that is the honest state.
+  case enters. ⚠️ **Case admission is specified and unbuilt until P3.5**, so today the answer is
+  *all 114, no selection*, and that is the honest state.
 - **The `history/` corpus for v5** is cut twice over: by D-062 with the generator, and by D-030
   with v5 itself.
 

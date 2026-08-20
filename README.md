@@ -137,11 +137,30 @@ is real.
                                       │   benchmark — frozen, hashed
                                       │   ⛔ changing it resets every comparison
                                       │
-                                      └─▶ mine ──▶ admission ──▶ regression suite
-                                         failures   5 gates      grows, never shrinks
-                                         ⛔ DEFERRED (D-030) — specified in full, built by
-                                            no phase. Drawn because a mechanism nobody
-                                            scheduled is how this repo lost one before.
+                                      └─▶ mine ──▶ THE INNER LOOP, and the only stage that
+                                         one         runs more than once per input (P3.4):
+                                         failing
+                                         trace       ┌──▶ translate ── a model turns the STATED
+                                                     │      rule the trace broke into a predicate.
+                                                     │      A candidate, never a verdict (D-064).
+                                                     │           │
+                                                     │           ▼
+                                                     │    test ── mechanical, and this is the
+                                                     │      WHOLE verdict:
+                                                     │        fires on the failing trace?  YES
+                                                     │        fires on one that passes?    NO
+                                                     │           │
+                                                     │           ├─▶ both ──▶ admission ──▶ regression
+                                                     │           │            5 gates       suite
+                                                     │           │            WHY: it caught a real
+                                                     │           │            failure and nothing else
+                                                     │           │
+                                                     └───────────┘ else, hand back the counterexample
+                                                                   and try again — up to n = 5
+
+                                                     after n ──▶ UNMINEABLE. WHY NOT: no written
+                                                       rule covers this trace, so there is nothing
+                                                       to translate. ⚠️ A RESULT, not an error.
 ```
 
 ⚠️ **`budget_exceeded` is a flag, never a fifth status.** It lands *beside* whichever of the
@@ -156,17 +175,17 @@ behind all four without touching a call site. **Enforcement attaches at a second
 already knows which tools mutate state.
 
 ⛔ **No human is a step in that picture, and none is a state in the agent.** Nothing pauses for
-approval: a gate is a predicate, and a mined case would be admitted by five mechanical gates
-([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. ⛔ **Would be**
-— `mine` is deferred (D-030), so that branch is specified and unbuilt. **People
+approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
+([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
 is what everything below is instrumented for.
 
 **Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
 must not move. The regression suite only ever answers *"did something that used to work stop
 working?"* — a binary with no denominator to corrupt, so it can grow forever without
-invalidating anything. That asymmetry is what would make `mine` affordable enough to run at all
-— it is the reason the branch stays specified rather than deleted.
+invalidating anything. **That asymmetry is what makes the inner loop safe to run at all** — a
+mined predicate can only land in the tier that has nothing to distort, and it arrives `open`, so
+it cannot gate until it has been quiet under a version that was already accepted.
 [docs/02](docs/02-gates.md) §1.
 
 ⛔ **The benchmark stores task ids and a hash, never task bytes.** τ²'s corpus is upstream's and
@@ -309,12 +328,12 @@ design, so they hold whether or not a run has happened yet.
 - ⛔ **`COMMUNICATE` is a substring match and we did not fix it.** Upstream's own code carries
   `# TODO: This could be improved!`. A scorer we quietly improved is a scorer nobody can compare
   us against, so the brittleness is recorded and kept.
-- **The agent does not learn, and the suite does not grow yet either.** Nothing here trains,
-  fine-tunes or updates weights. A human writes each candidate version; the gate only decides
-  whether it ships. **Mining a failure into a permanent regression case is designed and
-  unbuilt** — the mechanism is D-024, the reason it is not in this tag is D-030, so the bar
-  currently rises only when a human raises it. ⛔ **"It improves itself" fuses two loops, and
-  the fused sentence is false on both halves.**
+- **The agent does not learn.** Nothing here trains, fine-tunes or updates weights. A human
+  writes each candidate version; the gate only decides whether it ships. ⛔ **"It improves
+  itself" fuses two loops and is false on the half that matters** — what iterates is the
+  **ruler**, never the thing being measured. ⚠️ **The suite does grow, and that is the inner
+  loop above** — but it is unbuilt at this tag, so today the bar rises only when a human
+  raises it.
 - **The benchmark is a frozen *subset* of τ² retail's 114 tasks, not all of them.** ⚠️ **At that
   n every figure here is a count, not a rate** — ⛔ no percentage is quoted from a double-digit
   task set. Widening the subset is the deferred item that attacks the biggest stated limit.

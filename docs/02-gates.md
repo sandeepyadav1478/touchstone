@@ -19,7 +19,7 @@ interesting one.
 |---|---|---|---|---|
 | **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
 | **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | **P2.4** |
-| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the five admission gates in §5 | ⛔ **deferred** (D-030) |
+| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the five admission gates in §5 | **P3.5** |
 
 ⛔ **All three are mechanical, and that is the invariant this file exists to protect:**
 
@@ -37,11 +37,12 @@ opinion, and an opinion that blocks a write is the worst of both.
 swap (D-062) because **decision 1 has no analogue in it** — there is nothing to promote when the
 question is *"does this tool call execute, right now, before the row is written?"*
 
-⚠️ **Decision 3 is drawn everywhere and built nowhere, and that is stated rather than left to be
-noticed.** D-030 cut mining as the fast route's largest single cut. It stays specified here — §5
-still carries all five admission gates — because this project has already had one mechanism
-specified in full and scheduled by no row (DEF-009 (`DEFECTS.md`)), and the fix for that is not
-to stop writing it down. It is to say which of the three ship. **One and two ship. Three is scope.**
+⚠️ **Decision 3 was drawn everywhere and built nowhere for four passes, and it is scheduled now
+(D-070).** D-030 cut mining as the fast route's largest single cut; what that cut turned out to be
+is the **inner loop** (§5) — the only mechanism here that makes the measurement grow instead of
+reporting it. **It stayed fully specified throughout the deferral**, because this project has
+already had one mechanism specified in full and scheduled by no row (DEF-009 (`DEFECTS.md`)) — and
+that is precisely why it was still findable when it turned out to be the core. **All three ship.**
 
 ---
 
@@ -139,12 +140,14 @@ actually resolve, and everything else is reported without being acted on.
 ## 2. The stages
 
 ```
-                 ┌─────────── the loop that ships ───────────┐
+       ┌──────────── the OUTER loop — once per candidate ────────────┐
   run ──▶ score ──▶ compare ──▶ accept ──▶ record
-                        │                      │
-                        └──── mine ◀───────────┘   ⛔ deferred — D-030
+                        │                     │
+                        └──── mine ◀──────────┘
                                  │
-                                 └─▶ admit ─▶ regression suite
+                                 │  the INNER loop — up to n times per TRACE
+                                 └─▶ translate ⇄ test ─▶ admit ─▶ regression suite
+                                                    └─▶ unmineable
 ```
 
 ⚠️ **`promote` was the fourth verb here and it is retired.** The stage still exists — a candidate
@@ -153,9 +156,12 @@ project that has three (§0), and it named the least interesting one. **`accept`
 its counterpart `reject` is the deliverable**: a candidate that gets refused, with the task that
 refused it named, is the strongest artifact this project can produce.
 
-⛔ **`mine` and `admit` are deferred**, not optional. Everything downstream of `score` in that
-second row is scope, and §5 keeps its full specification so that deferring it stays a decision
-rather than an omission.
+🎯 **The two loops nest, and the inner one is the point.** The outer loop runs once per candidate
+version and answers *is this better?* The inner loop runs up to `n` times **on a single failing
+trace** and answers *what check would have caught this?* — the outer loop reports a number, the
+inner loop is what makes the number cover more. ⚠️ **`mine` and `admit` are specified and unbuilt**
+(P3.4 / P3.5); everything above them ships first, because the inner loop needs a failing trace and
+a control set before it has anything to work on.
 
 ### 1. `run`
 
@@ -186,9 +192,73 @@ Writes the version into `results/index.json` as the new incumbent. **In CI this 
 ⚠️ **Accepting is the cheap half.** The stage exists so that *rejecting* has somewhere to happen,
 and §3 is the check that it can.
 
-### 5. `mine`
+### 5. `mine` — the inner loop
 
-**Every failure becomes a candidate case, and the machine does everything except say yes.**
+**This is the loop the project is arranged around, and it is the only stage that runs more than
+once.** Everything above it *measures*: one candidate, one pass, one verdict. This stage takes
+**one failing trace** and works it **repeatedly**, up to `n` attempts, until it has produced
+something that would have caught it. The outer loop asks *is this version better?* The inner loop
+makes the thing that answers.
+
+| | |
+|---|---|
+| **In** | one τ² retail session with `reward_breakdown["DB"] == 0` — a real failure, labelled by the benchmark's own evaluator, not by us |
+| **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
+| **Or** | *unmineable* — after `n` attempts, recorded as a result, **not an error** |
+
+⛔ **The loop does not try to fix everything, and the filter is mechanical.** A gate can only be
+written against something that was **written down**: retail's `policy.md` (136 lines, `tau2-bench`
+1.0.1) and the tool contracts the environment already enforces. A failure that maps to a stated
+rule — a refund outside the stated window, a mutation without authentication, a restriction the
+agent was told and stepped over — is mineable. A failure that is only *the agent was not good
+enough* has no rule to point at and nothing to translate. **Record it and move on.** Trying to
+gate capability is exactly how a suite fills with cases that punish correct behaviour (§4).
+
+#### The iteration, and where it stops
+
+```
+   failing session (DB == 0)
+             │
+             ▼
+     ┌──▶ 1. TRANSLATE ─── model reads the trace and policy.md, names the stated
+     │       (D-064)       rule this session broke, and writes it as a predicate
+     │                     over DB state and tool calls. A MODEL IS ALLOWED HERE,
+     │           │         because it is producing a candidate, not a verdict.
+     │           ▼
+     │    2. TEST ──────── mechanical, no model, and this IS the whole verdict:
+     │                       fires on the target session?       must be YES
+     │                       fires on any always-pass session?  must be NO
+     │           │
+     │           ├──▶ both hold ──▶ 3. ADMIT ──▶ regression suite, status `open`
+     │           │                  the five admission gates below still apply
+     │           │
+     │           └──▶ either fails ──▶ hand back the COUNTEREXAMPLE: the passing
+     └───────────────── session it wrongly fired on, or the fact that it missed
+                        the target. Attempt i+1 sees what attempt i got wrong.
+
+   after n attempts (n = 5) ──▶ UNMINEABLE — every attempt and its counterexample
+                                recorded. ⚠️ NOT an error and NOT retried forever:
+                                a trace nobody can write a rule for is a finding
+                                about the policy, not a bug in the miner.
+```
+
+**Why the stopping rule is that and not a score.** *Fires on the failure, silent on what passes*
+is precision and recall over a set that **already exists** — it needs no judge, no threshold and
+no new labels, so it holds the invariant that anything which gates is mechanical. It is also the
+defence against the obvious cheat: a predicate that merely quotes the failing session
+(`task_id == 47`) satisfies the first half and fails the second the moment it meets a session
+that passes.
+
+⚠️ **The always-pass set is the control, so it has to be earned rather than picked** — the
+sessions the v1 baseline passed on **every one of `k`** attempts, not a convenient handful.
+
+⚠️ **And silent-on-the-passing-set is a claim about the sessions that were run, never about the
+domain.** Same shape as `pass^k` in [docs/05](05-scoring.md): a predicate can be quiet on all of
+them and still be wrong about a task nobody has run. That is why an admitted case arrives `open`
+and cannot gate until it has been quiet under an accepted version — `open → locked` above is the
+second, slower control, and it exists precisely because this one is not sufficient.
+
+#### Which failure goes in — clustering picks the trace
 
 A case that failed carries a trace showing *how*. The mine stage clusters failures by the
 **way** the session failed. For τ²-bench retail that taxonomy is not invented here — it is the ten
@@ -208,9 +278,14 @@ point of the swap.
 ```mermaid
 flowchart TB
   SCORE["score — candidate C"] --> FAIL["failures + traces"]
-  FAIL --> MINE["mine · cluster by failure class · 12 derivable from the evaluator"]
-  MINE --> GEN["select the τ² task and the turn<br/>the label comes from reward_breakdown — no judge, no labeller"]
-  GEN --> CHECK["mechanical pre-checks<br/>dedupe by signature · signal present and fetchable · seed determinism"]
+  FAIL --> PICK["cluster · pick one failing session · DB == 0"]
+  PICK --> RULE{"does it break a STATED rule?<br/>policy.md · tool contracts"}
+  RULE -->|no| SKIP["recorded as capability · not mined<br/>there is nothing to translate"]
+  RULE -->|yes| TRANS["1. TRANSLATE — model writes a candidate predicate<br/>D-064 · candidate, never verdict"]
+  TRANS --> TEST{"2. TEST — mechanical, no model<br/>fires on the target · silent on the always-pass set"}
+  TEST -->|"either fails · attempt < n"| TRANS
+  TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
+  TEST -->|both hold| CHECK["mechanical pre-checks<br/>dedupe by signature · signal present · seed determinism"]
   CHECK --> PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> ADMIT{"⛔ admission gates — all five, mechanical<br/>reproducible · not flaky · not a void · distinct · justified"}
   ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
