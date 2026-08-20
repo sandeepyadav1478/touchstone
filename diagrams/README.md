@@ -11,12 +11,40 @@ not. The PNG is committed alongside so the file renders for a reader who will no
 
 | file | shows | gates |
 |---|---|---|
-| [`touchstone.eraser`](touchstone.eraser) | **The whole system, in fourteen numbered sections, on one canvas** — the frozen corpus · the agent graph · the state · the tools · the process boundaries · how an attempt ends · telemetry · what survives · the scorer · **the gate, all five promotion conditions** · **the case lifecycle, `open → locked` one-way** · the version ladder · the phase-2 surfaces · **the four phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
-| [`loop.png`](loop.png) | The render of the above, exported from Eraser. **A convenience, never the record** | — |
-| [`sequence.eraser`](sequence.eraser) | **One attempt, and every boundary it crosses** — eleven lifelines, ordered by distance from the developer's process. It draws the three things a flowchart structurally cannot: the **order** of the four telemetry wiring steps, the checkpoint landing *after every node*, and the scorer running later, in another process, from a file. **Its load-bearing element is a message that is not there** — nothing goes between `Graph` and `Score` in either direction | phase 1 |
-| [`sequence.png`](sequence.png) | The render of that. Same status: a convenience | — |
+| [`touchstone.eraser`](touchstone.eraser) | **The whole system, in numbered sections, on one canvas** — the upstream corpus · the adapter at the seam · the three gate tiers · the process boundaries · how a simulation ends · telemetry · the scorer · **the acceptance conditions** · the case lifecycle, `open → locked` one-way · the version ladder · **the phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
+| [`loop.png`](loop.png) | The render of the above. **A convenience, never the record** — and 🔴 **stale**, see below | — |
+| [`sequence.eraser`](sequence.eraser) | **One simulation, and every boundary it crosses** — lifelines ordered by distance from the developer's process. It draws the three things a flowchart structurally cannot: the **order** of the telemetry wiring steps, the checkpoint landing after every step, and the scorer running later, in another process, from a file. **Its load-bearing element is a message that is not there** | phase 1 |
+| [`sequence.png`](sequence.png) | The render of that. Same status, and 🔴 **also stale** | — |
+| [`phase1.mmd`](phase1.mmd) | 🆕 **The attachment diagram** — where touchstone joins τ²-bench: the adapter seam at `llm_utils.py:355` and the enforcement point at `Environment.make_tool_call()`. **Mermaid, and local by choice** — it names symbols in another repo, and drawing them as unnamed boxes would hide the only structure it exists to show. It is why D-068 had to widen the approved-repo set | phase 1 |
 
-**Four files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
+## 🔴 Both PNGs are behind their sources — stated here rather than left to be discovered
+
+**Measured 2026-08-20 from git, not from looking:**
+
+| render | last committed | its source has moved since | so it is |
+|---|---|---|---|
+| `loop.png` | `9cd3375`, 2026-08-18 | **3 commits** to `touchstone.eraser` | 🔴 stale |
+| `sequence.png` | `155e364`, 2026-08-18 | **2 commits** to `sequence.eraser` | 🔴 stale |
+
+Those commits are not cosmetic — they are the D-062 specimen swap and the D-069 reward
+correction, so **the pictures name a corpus that no longer exists and a gating number that was
+wrong**. ⛔ **A stale render is worse than no render**: it is an aspirational document that will
+be read as a factual one, and it carries the authority of having been approved
+([docs/07](../docs/07-diagrams.md) §5 rule 5).
+
+⚠️ **Milestone 7 passes on both, and that is the defect, not an exoneration.** The guard measures
+*clipping* — four clear edges, content filling 98%+ of the frame — which is a property of the
+export, not of the content. **A perfectly-rendered picture of the wrong system passes every
+instrument in this repo.** The only check that catches it is the one that cannot be automated
+here: re-export and diff. This box is the interim, and it is doing the job the doc banners do —
+making the staleness *stated* while it is still true.
+
+**Re-porting is DEF-034's procedure and it is CREATE-then-delete, never update**: delete the
+hosted diagram, `manually_create_diagram` from the committed file, diff the round-trip, export at
+`imageQuality: 1` twice until the hash settles, then **open it and look**. The looking is the step
+that found finding 8 after every instrument had passed the picture.
+
+**Five tracked files, and that is the whole directory.** `touchstone.html` — a hand-written HTML poster that
 drew the same system in six encodings — **was deleted 2026-08-15** by
 D-036, which also records why, and what it cost. `.check.log` is a run log,
 gitignored.
@@ -27,6 +55,13 @@ the same run until 2026-08-17. It is gone and §4a points here. **The count went
 one drawing moved and got a render, not because a third view was added** — D-036 deleted the poster
 for having six encodings of one system, and adding sequence-as-a-second-source would have been the
 same mistake at a smaller scale.
+
+⚠️ **`phase1.mmd` made it five on 2026-08-19, and it is the first file since the poster that needs
+its own justification.** It is not a fifth encoding of the same system: it draws the *boundary*
+between two systems, and it is the one drawing whose node names live in someone else's repo.
+[docs/07](../docs/07-diagrams.md) §5 carries the split table — every file that is not a section of
+`touchstone.eraser` states why in one row, which is the mechanism that stops the count drifting
+back up.
 
 ### ✅ Both renders were refreshed 2026-08-18 — and looking at them is what earned it
 
