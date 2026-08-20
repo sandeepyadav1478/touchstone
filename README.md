@@ -73,8 +73,14 @@ it. Every cell comes from a committed artifact under `results/`, which is empty 
 |---|---|---|---|---|---|---|
 | v1 | baseline — the τ² agent, driven through our seam | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | — |
 | v2 | + a gate in shadow | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v3 | + memory across sessions | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v4 | + gates in enforce | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v3 | + the tier-1 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v4 | + the tier-2 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v5 | a different agent — ours, four nodes | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+
+⚠️ **v1–v4 are one agent gaining capabilities; v5 is a different agent.** That is a different
+kind of row and the table does not distinguish them — read v5's delta as *"does another
+architecture help?"*, never as *"does another capability help?"*. **v5 is allowed to lose**, and a
+loss is a result rather than a reason to keep tuning until it wins.
 
 ¹ From the Agent SDK's own cache-aware `total_cost_usd` — a real per-call figure, drawn from a
 subscription quota rather than billed. **Not an invoice** — see [Limits](#limits).

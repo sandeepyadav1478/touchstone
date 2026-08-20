@@ -10,6 +10,12 @@ out end to end** — that a retrieval version which changes nothing scores ident
 helps, and that you cannot tell them apart without a control. That argument is specimen-free and
 it is the reason docs/05 reports the judged dimension beside the gate instead of inside it.
 
+⛔ **And `v5` below no longer names this.** D-071 gave **v5** to the LangGraph retail agent, which
+is scheduled ([docs/03](03-agent-and-tools.md) §1). Every `v5` in *this* file means the cut memory
+version, and if memory is ever revived it takes **the next free number**, not this one. ⚠️ **A
+version number that names two systems makes every earlier row in the table ambiguous** — the
+number was free because the design was cut, and a cut design does not hold a reservation.
+
 ⚠️ **§9's conclusion survives the cut and is the one to carry forward**: mem0 goes nowhere, and
 **the write path is the reason** — a store that writes during a scored run has made the run
 un-repeatable, whatever it retrieves. That is a fact about scored runs, not about the specimen,

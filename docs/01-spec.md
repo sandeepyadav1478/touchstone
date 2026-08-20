@@ -173,15 +173,22 @@ what they say.** ⛔ **Numbers are never reused or closed up** — they are cite
 | 10 | *(v5)* ~~Nothing is ever written to `history/`~~ | ⛔ **Cut twice**, same as 9 |
 | 11 | **Every mined case has a non-empty `why`, an `added` date and an `origin`** | CI walks the regression manifest and fails on a blank field. ⛔ **A case nobody can justify does not get to gate anything** — D-024. ⚠️ Vacuous today: D-030 defers admission, so the manifest is empty |
 | 12 | **A `locked` regression case only ever became locked by passing** | `locked_at` names a version, and `results/<that version>.json` shows it passing. A lock with no run behind it is a fabricated gate |
-| 13 | ~~No specialist's prompt contains another specialist's finding~~ | ⛔ **Retired by D-062** — there are no specialists; τ² runs one agent |
-| 14 | ~~No two specialist spans overlap in time~~ | ⛔ **Retired by D-062**, same reason. ⚠️ **Its argument survives and is worth re-reading**: an orchestration bug wearing the costume of the thing being measured is still the worst defect this design can have. Nothing currently asserts against it, because nothing currently fans out |
+| 13 | 🆕 **No specialist's prompt contains another specialist's finding** | Render every `identity` / `catalogue` / `policy` prompt in a full run and assert no other node's finding text appears. ⚠️ **Retired by D-062 and un-retired by D-071** — it was retired because there were no specialists, and there are again ([docs/03](03-agent-and-tools.md) §1). A blackboard lets one node anchor the next, and then a correctness movement is attributable to neither |
+| 14 | 🆕 **No two specialist spans overlap in time** | Assert over `touchstone.node.*` span timestamps that exactly one specialist is open at a time (D-026 — a merge order is a hidden variable). ⚠️ **Un-retired by D-071.** Its argument was kept in place for *"the day something does"* fan out: **an orchestration bug wearing the costume of the thing being measured is the worst defect this design can have** — and now something asserts against it |
 | 15 | 🆕 **A gate in `shadow` mode never refuses a tool call** | Run the full suite with every gate in shadow and assert `make_tool_call()` returned for every call the agent made. ⛔ **This is what makes shadow data trustworthy**: a shadow gate that quietly changed a run is measuring its own interference. Replaces invariant 2 |
 | 16 | 🆕 **The composite reward is reported unmodified** | Assert the results file's `reward_mean` equals what τ²'s own `get_metrics_df` computes over the same simulations. **We gate on a component; we do not get to publish a different headline** — D-069 |
 
-⚠️ **Six of sixteen are retired and one more is vacuous, and that ratio is the honest picture of
-a specimen swap.** The invariants that died are the ones that asserted over *our* generator and
-*our* orchestration. The ones that lived — 7, 8, 11, 12 — assert over the boundary between the
-loop and whatever it is measuring, which is the part the swap was supposed to leave standing.
+⚠️ **Four of sixteen are retired, two more were cut with v5, and one is vacuous.** The invariants
+that died are the ones that asserted over *our generator* — 2, 4, 6 — and they died because the
+generator did. The ones that lived, 7, 8, 11 and 12, assert over the boundary between the loop and
+whatever it is measuring, which is the part the specimen swap was supposed to leave standing.
+
+🔴 **13 and 14 are back, and how they left is the lesson.** They were retired at D-062 with
+*"there are no specialists"* — a true statement about a consequence **nobody had decided**
+(D-071). An invariant retired on a side effect is the quietest way for a safety property to
+disappear, because the retirement reads as reasoned. ⛔ **Numbers are never reused or closed up**
+precisely so that this is recoverable: both kept their slots and their arguments, so restoring
+them cost an edit rather than a redesign.
 
 **Invariant 8 is what the headline number means.** Not *"the agent scored 0.8"* but *"the
 agent's final database state matched a replayed gold sequence 0.8 of the time"* — prose quality

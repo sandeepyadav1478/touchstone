@@ -5,38 +5,128 @@
 **The agent is the specimen, not the point.** It exists to be a thing touchstone can measure
 versions of. Keep it small enough that a change is attributable.
 
-🔴 **D-062 took that further than intended: we do not write the agent at all any more.**
-τ²-bench ships one, and touchstone attaches *behind* it. §1–§3 below describe the agent that was
-archived; **§4 and §5 are live**, and §5 is the most load-bearing section in this file because
-every SDK constraint in it survived the swap unchanged.
+**Two agents are in play, and conflating them is the mistake this file exists to prevent.**
+τ²-bench ships one — `LLMAgent`, upstream, unmodified — and it is **v1, the baseline**. Ours is a
+LangGraph graph (§1) that competes against it on τ²'s own 114 tasks, scored by τ²'s own DB-state
+diff. ⛔ **We write an agent; we never write the exam.**
+
+🔴 **§1 and §2 were marked `archived` from 2026-08-19 to 2026-08-20, and that was wrong.** D-062's
+subject was the corpus; it took the orchestration with it as an unstated side effect, which left
+`claude-agent-sdk` as the only thing orchestrating — **the one option [docs/00](00-stack.md) §7
+explicitly rejected.** D-071 restores the graph and records how it was lost. §5 is unaffected:
+every SDK constraint in it survived both swaps unchanged.
 
 ---
 
-## 1. The graph — ⛔ archived
+## 1. The graph — 🆕 rebuilt, and pointed at retail
 
-> ⛔ **There is no graph.** The supervisor, the three specialists and the synthesizer are on
-> branch `incident-specimen` at `109c424`. τ² runs **one** agent — `LLMAgent.generate_next_message()`
-> at `agent/llm_agent.py:128` — inside its own orchestrator (`orchestrator.py:260`), and
-> touchstone's `adapter.py` sits at the `generate()` call that agent makes, not around it.
->
-> **What survives is D-025 and D-026's argument, and it survives as a warning rather than a
-> design.** No specialist may read another's finding; no two specialist spans may overlap. Both
-> existed because *an orchestration bug wearing the costume of the thing being measured* is the
-> worst defect this design can have. Nothing fans out today, so nothing asserts it — invariants
-> 13 and 14 are retired in place ([docs/01](01-spec.md) §6) precisely so that the argument is
-> still there the day something does.
+**LangGraph owns orchestration; `claude-agent-sdk` is transport** ([docs/00](00-stack.md) §7).
+That was decided against thirteen alternatives on the grounds that matter here: *"the SDK can
+orchestrate — then the graph is Claude Code's, not yours, and there is nothing versionable to put
+in the table."* D-071.
 
-## 2. The five tools — ⛔ archived
+⚠️ **This section described an archived incident-triage graph until 2026-08-20, and the archiving
+was a side effect rather than a decision.** D-062 changed the specimen and took the orchestration
+with it without saying so. The graph below is the same architecture pointed at retail; what
+changed is the three questions, not the reasoning — `D-025`, `D-026`, `D-012` and `D-039` are
+unchanged and live.
 
-> ⛔ **Retail ships 16 and we define none of them**, typed `READ`/`WRITE`/`GENERIC` by upstream's
-> own `is_tool` decorator. The list, the counts and the mutation boundary are
-> [docs/01](01-spec.md) §5.
->
-> ⚠️ **The inversion is worth naming.** Every tool here was read-only by construction, and that
-> was invariant 2. Retail's seven `WRITE` tools *are* the measurement — the DB diff is the
-> reward — so the invariant flipped from *"nothing may mutate"* to *"a shadow gate may not
-> interfere with a mutation"* (invariant 15). **The archived agent could not have had an enforce
-> mode at all**, because there was nothing to refuse.
+```
+        ┌─────────────┐
+        │  supervisor │◀────────────┐
+        └──────┬──────┘             │ ONE per hop, up to `config.MAX_HOPS`
+     ┌─────────┼─────────┐          │
+     ▼         ▼         ▼          │
+ identity  catalogue   policy ──────┘
+   READ       READ     no domain tool
+     └─────────┼─────────┘
+               ▼  (after the loop exits)
+        ┌─────────────┐
+        │ synthesizer │  ⛔ the ONLY node that may call a WRITE tool
+        └──────┬──────┘
+               ▼
+              END
+```
+
+⛔ **There is no gate node and no node waits on anything.** Every path from `supervisor` reaches
+`END` without leaving the process — D-040.
+
+⚠️ **The three arrows are a choice of one, not a fan-out.** Exactly one specialist runs per hop and
+control returns to the supervisor. `max_hops` bounds the loop and is a **versioned parameter** —
+quoted from `config.MAX_HOPS`, never restated here, for the reason DEF-003 records about `k`
+(D-039). **The bound is a hypothesis and the loop is instrumented to break it**: `hops_exhausted`
+fires when the edge exits because `hops ≥ max_hops` rather than because the supervisor emitted
+`done`, told apart by the last `touchstone.node.supervisor` span's `next`.
+
+### The three questions, and why they are these three
+
+**The split is read off the measured tool surface, not invented.** Retail ships **16 tools — 7
+`READ`, 7 `WRITE`, 2 `GENERIC`** — typed by upstream's own `is_tool` decorator, listed with their
+counts in [docs/01](01-spec.md) §5.
+
+| node | its one question | tools |
+|---|---|---|
+| `identity` | who is this, and what did they buy? | `find_user_id_by_name_zip`, `find_user_id_by_email`, `get_user_details`, `get_order_details` |
+| `catalogue` | what exactly is this item, and what could replace it? | `get_product_details`, `get_item_details`, `list_all_product_types`, `calculate` |
+| `policy` | what does the policy permit for an order in **this** state? | ⛔ **none of τ²'s** — it reads the 6.5 KB policy document through our own MCP server (D-019) |
+| `synthesizer` | commit it | the 7 `WRITE` tools + `transfer_to_human_agents` |
+
+🎯 **Confining every mutation to one node is the load-bearing choice**, and it pays three ways:
+
+1. **The enforcement point gets exactly one caller.** `gate/enforce.py` hooks `make_tool_call()`;
+   with writes fanned across three specialists, a refusal is attributable to no node.
+2. **It restores retired invariant 2 in the only form retail allows.** *"Every tool is read-only"*
+   inverted at D-062 because the mutation **is** the measurement. *"Every **specialist** is
+   read-only"* is the same property one scope down, and it is assertable.
+3. **`policy` holding no domain tool makes it a reasoning node by construction** — it cannot
+   answer its question by fetching state instead of reading the rule.
+
+### State: who writes, who reads
+
+| Key | Written by | Read by |
+|---|---|---|
+| `task` | the runner, once | everyone |
+| `findings` | **each specialist, append-only** (`Annotated[list, add]`, D-012) | ⛔ **the synthesizer only** |
+| `hops` | supervisor | supervisor |
+
+⛔ **A specialist never reads another specialist's finding.** Its prompt is the task plus its own
+prior tool results. The supervisor sees finding *headers* — who has reported and whether it claims
+an answer — because that is what routing needs and nothing more.
+
+**The reason is the failure this project measures, one scope smaller.** A blackboard every
+specialist reads is memory with a one-run TTL: `identity` reports *"the order is `pending`"*,
+`policy` reads it before checking, inherits the framing, stops looking. It also destroys the one
+thing three specialists are for — once `policy`'s output depends on `identity`'s, a correctness
+movement is attributable to neither. D-025.
+
+⚠️ **`add` concatenates disagreement rather than resolving it, and that is deliberate.** A reducer
+that de-duplicated or picked a winner would hide the disagreement, and specialist disagreement is
+the strongest signal available that a task is being got wrong.
+
+⚠️ **Invariants 13 and 14 come out of retirement with this section** ([docs/01](01-spec.md) §6).
+They were retired with *"there are no specialists"*, and 14's note kept its argument for *"the day
+something does"* fan out. **An orchestration bug wearing the costume of the thing being measured
+is still the worst defect this design can have** — and now there is something to assert it
+against.
+
+---
+
+## 2. Tools — τ²'s sixteen, and our one
+
+**We define none of τ²'s.** Retail ships 16, typed `READ` / `WRITE` / `GENERIC` upstream; the list,
+the counts and the mutation boundary are [docs/01](01-spec.md) §5. `_is_mutating_tool()` at
+`environment/environment.py:130` already splits read from write — ⛔ **do not re-derive it.**
+
+**What we do define is one tool, and it belongs to `policy`:** a search over the retail policy
+document, shipped as an MCP server over stdio (D-019, `mcp` pinned to 1.x by D-031). It is an
+**internal** tool — τ² never sees it, and it touches no environment state, so it cannot move the
+DB diff that scores the run.
+
+⚠️ **The inversion from the archived design is worth naming.** Every tool there was read-only by
+construction, and that was invariant 2. Retail's seven `WRITE` tools *are* the measurement, so the
+invariant flipped from *"nothing may mutate"* to *"a shadow gate may not interfere with a
+mutation"* (invariant 15). **The archived agent could not have had an enforce mode at all**,
+because there was nothing to refuse.
 
 ## 3. Escalation — ⛔ archived, and cut on evidence
 
