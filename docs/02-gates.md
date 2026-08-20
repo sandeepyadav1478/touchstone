@@ -240,9 +240,9 @@ pipeline already produces:
 | Admission gate | The check | Where it comes from |
 |---|---|---|
 | **Reproducible** | fails on **every** one of k attempts, not some | `pass^k` — [docs/05](05-scoring.md) §2 |
-| **Not flaky** | re-run at the same seed reproduces the failure | §4's flaky-case row |
-| **Not a void** | no `429`, no tool error, no `hops_exhausted` — the attempt actually happened | the four attempt statuses, [docs/09](09-schemas.md) §6 |
-| **Distinct** | no case in either tier shares `(root_cause_id, affected_service, seed)` | [docs/01](01-spec.md) §6, invariant 9 |
+| **Not flaky** | re-run reproduces the failure. ⚠️ **No seed to hold** — the user simulator is a model, so this is *k out of k* rather than byte-identical replay, and it is a weaker guarantee than the archived specimen's. Stated, not hedged | §4's flaky-case row |
+| **Not a void** | no quota rejection, no `infrastructure_error`, no `unexpected_error` — the attempt actually happened | the four attempt statuses, [docs/09](09-schemas.md) §6 |
+| **Distinct** | no two cases share a `task_id`. ⛔ **Weaker than it looks and weaker than it was**: the 114 are upstream and fixed, so *distinct* can only mean *not the same task twice*, never *not the same failure twice* | [docs/01](01-spec.md) §6 |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was
@@ -270,13 +270,13 @@ every case carries its own record, in its `manifest.json` entry:
 {
   "id": "r-018",
   "tier": "regression",
-  "root_cause_id": "db_pool_exhausted",
-  "seed": 88123,
+  "task_id": "47",
+  "domain": "retail",
   "status": "locked",
   "added": "2026-09-02",
   "added_in": "regression v7",
   "origin": "mined",
-  "why": "v6 answered cache_stampede on 4 of 5 attempts for inc-009. This isolates the distinguishing signal — pool wait time — with topology, traffic and deploy history held identical.",
+  "why": "v6 zeroed reward_breakdown[DB] on 4 of 5 attempts for task 47 — it cancelled the wrong order line after the user corrected itself mid-conversation. termination_reason was agent_stop every time, so it finished confidently.",
   "mined_from": {
     "version": "v6", "case": "inc-009",
     "confusion": ["cache_stampede", "db_pool_exhausted"],
@@ -334,8 +334,8 @@ actually ran — the tell is a state file a few bytes long, months after it was 
 project must not be able to make that mistake silently.**
 
 **So: `results/negative-control.md` is a required artifact before v0.1.0.** It contains a
-deliberately damaged candidate — remove a tool, truncate the context window, drop a specialist
-— run through the full pipeline, with:
+deliberately damaged candidate — remove a tool, truncate the context window, corrupt the domain
+policy handed to the agent — run through the full pipeline, with:
 
 - the `compare` output showing the regression,
 - the CI run that failed, **linked**,
