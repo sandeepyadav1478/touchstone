@@ -378,6 +378,17 @@ iterations buy one rule instead of `n`.
 | Cost of a false positive | a duplicate rule, caught by the admit gate | ⚠️ **a real failure silently skipped** |
 | Cost of a false negative | — | a wasted iteration |
 
+⚠️ **"Silently skipped" names a DEPRIORITISED TRACE, not a rejected candidate — and after D-081
+that distinction is the whole reason this registry survives.** The registry is read where the
+inner loop *picks* its next anomalous session; it never sees a predicate and never reaches the
+verdict. The one decision point in that loop is `run_predicate()`, which holds no model. ⛔ **A
+skip that happened after translation would be the deleted scope filter under a new name** — that
+one asked *"was a written rule broken?"* before any predicate existed, which is a question only
+translation can answer. This one asks *"have we already dealt with this shape?"*, which is a
+signature match plus a prevalence rank: computable, versioned, and with its heuristic ceiling
+stated two paragraphs down. **The test is not whether a step filters. It is whether the step needs
+the loop's own output as its input.**
+
 ⛔ **Do not let the negative side pretend to be exact.** A signature over a failure is a
 bucketing heuristic and every published system that shipped one under-counted or over-counted
 by orders of magnitude. Igor (CCS'21) measures stack-hash-style deduplication at **1–2 orders
@@ -417,7 +428,7 @@ behind an equality operator is claiming a precision nobody has achieved.
 ### 11.3 Scope, and why it is not a TTL
 
 ```
-context_hash = sha(policy.md, prompt_version, tau2_version)
+context_hash = sha(policy.md, prompt_version, tau2_commit)   # a2c024725189 — DEF-055
 ```
 
 **A registry entry is valid for the context that produced it and no other.** Change the policy

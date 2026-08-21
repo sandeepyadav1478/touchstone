@@ -323,24 +323,26 @@ SelNotGate --> Select
 //  is the only mechanism here that makes the measurement grow rather than report it.
 //  The model sits in TRANSLATE and nowhere else — the verdict at TEST is a predicate
 //  evaluation, which is the invariant of section 9 applied to the loop that feeds it.
-//  ⚠ THE SCOPE FILTER IS THE PART THAT GOES WRONG. Only a failure that breaks a rule
-//  someone WROTE DOWN can be gated: the retail policy document, and the tool
-//  contracts. A failure that is merely "the agent was not good enough" has nothing
-//  to translate, and a loop pointed at one will keep inventing rules until one
-//  sticks. That is why MSkip exists and why the phase-3 exit gate requires at least
-//  one recorded UNMINEABLE.
-Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nthe outer loop REPORTS a number; this loop makes the number COVER MORE"] {
+//  ⚠ THE SCOPE FILTER USED TO STAND HERE AND IT IS DELETED — D-081, DEF-056. A diamond
+//  asked "does this break a rule someone WROTE DOWN?" and routed a `no` to a second
+//  terminal. It was called MECHANICAL in docs/02-gates.md and it named no file, no
+//  predicate and no model. ⛔ IT COULD NOT HAVE BEEN MECHANICAL: a mechanical answer to
+//  "was a stated rule broken?" IS the predicate translate produces, so the filter wanted
+//  the loop's output as its own input. run_predicate() was always the only filter that
+//  defended anything — a candidate that fires on the clean set is rejected whatever a
+//  scope check believed. ⚠ WHAT IT COST TO DELETE: up to n model calls on a trace with no
+//  rule to find. Unpaid today, and the exhaustion records ARE the measurement of it.
+//  ⚠ The phase-3 exit gate still requires one recorded UNMINEABLE and now gets a BETTER
+//  one — five attempts and five counterexamples, not a bare assertion that no rule
+//  existed.
+Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nONE decision point, and it holds no model — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
   M0 [color: pink, icon: alert-circle, label: "analyst · one ANOMALOUS session, drawn from the 834 — D-080\nevery signal computed by τ²'s own evaluator, before we looked at it"]
-  MScope [shape: diamond, color: pink, icon: help-circle, label: "rule-finder — does it break a rule someone WROTE DOWN?\nthe retail policy document · the tool contracts"]
-  MSkip [shape: oval, color: grey, icon: minus-circle, label: "capability failure — RECORDED, NOT MINED\nno stated rule means nothing to translate, and nothing to gate"]
   MT [color: orange, icon: cpu, label: "1 · author — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
   MCrit [color: orange, icon: eye, label: "2 · critic — reads the candidate BEFORE it is run · D-071\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
-M0 > MScope
-MScope > MSkip: no
-MScope > MT: yes
+M0 > MT: straight to the author — there is no pre-check, and never was one that worked
 MT > MCrit > MTest
 MTest > MT: either fails — hand back the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
 MTest > MGive: attempt n
@@ -366,7 +368,7 @@ Curator [color: pink, icon: database, label: "8c · the curator's TWO memories �
 }
 Admit --> PosMem: an admitted rule IS the positive memory
 MGive --> NegMem: every UNMINEABLE lands here, with its counterexamples
-NegMem --> MScope: what has already been tried and failed on this shape
+NegMem --> M0: has this shape already been dealt with? — prevalence ranking, D-078 · D-081 rewired this from the deleted filter
 
 // ── 8d · WITHDRAWN 2026-08-21, AND THE WITHDRAWAL IS THE ENTRY. A `Human` node stood here
 //  for one day carrying "D-079 part 3 · the HUMAN REMEDY", with edges from MSkip and Refused.
@@ -381,10 +383,11 @@ NegMem --> MScope: what has already been tried and failed on this shape
 //  ⛔ A REMARK INSIDE A HYPOTHESIS THE SPEAKER HAS ALREADY DISCLAIMED IS NOT A DECISION.
 //     Grade it U, or do not draw it. An invented reason collapses on "what else did you consider?"
 //  ✅ WHAT SURVIVES D-079 is below, and it is the half nobody disputed: evals are the forcing
-//     function, and the STANDARD they measure against does not move. MSkip and MGive are plain
-//     terminals now — they RECORD, which is all the phase-3 exit gate ever asked of them.
+//     function, and the STANDARD they measure against does not move. MGive is a plain
+//     terminal now — it RECORDS, which is all the phase-3 exit gate ever asked of it. (MSkip stood
+//     beside it until D-081 deleted the scope filter; MGive is the only terminal left.)
 Immutable [shape: document, color: red, icon: lock, label: "THE STANDARD DOES NOT MOVE — D-079\nthe retail policy document is ground truth the gate derives from · the agent's prompt, rules and tools are the lever\na gate made green by editing the standard is 'the test failed so I changed the test'"]
-Immutable --> MScope
+Immutable --> MT
 
 // ── 9 · the three decisions, side by side. None of them may contain a model.
 Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {

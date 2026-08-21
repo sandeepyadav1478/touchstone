@@ -361,7 +361,7 @@ first.
 
 ⚠️ **The keys below are the archived specimen's** — `root_cause_id`, `affected_service`,
 `escalate`. The live shape is docs/05 §6, and the fields that replace them are
-`reward_breakdown`, `termination_reason` and `tau2_version`. **The structure is unchanged**:
+`reward_breakdown`, `termination_reason` and `tau2_commit`. **The structure is unchanged**:
 one record per attempt, written from spans, never edited by hand — which is the part D-062 was
 supposed to leave standing.
 

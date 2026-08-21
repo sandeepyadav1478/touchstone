@@ -215,36 +215,33 @@ our own, and there is none.
       only stage that runs more than once per input, and the only one that makes the
       measurement BIGGER instead of reporting it (P3.4).
 
-      mine ──▶ does the trace break a rule someone WROTE DOWN?
-       one      the retail policy document · the tool contracts, and nothing else
-     anomalous       │
-       trace         ├─▶ no ──▶ UNMINEABLE BY SCOPE. *The agent was not smart enough*
-                     │           is a capability failure: recorded, then skipped. There
-                     │           is no rule to translate, so the loop would keep
-                     │           inventing one until something stuck.
-                     │           🎯 The P3 exit gate REQUIRES at least one recorded
-                     │           unmineable — a miner that has never given up has
-                     │           never been pointed at a failure it should refuse.
-                     │
-                     └─▶ yes ─┬─▶ translate ── a model turns that stated rule into a
-                              │     predicate. A candidate, never a verdict (D-064).
-                              │          │
-                              │          ▼
-                              │   test ── mechanical, and this IS the whole verdict:
-                              │       fires on the anomalous trace?  YES
-                              │       fires on one of the 878 clean?  NO
-                              │          │
-                              │          ├─▶ both ──▶ admission ──▶ regression
-                              │          │            5 gates       suite
-                              │          │            WHY: it caught a real
-                              │          │            failure and nothing else
-                              │          │
-                              └──────────┘ else, hand back the counterexample and try
-                                           again — attempt i+1 sees what i got wrong
+      mine ──┬─▶ translate ── a model reads the trace and the retail policy document
+       one     │     and turns a STATED rule into a predicate. A candidate, never a
+     anomalous │     verdict (D-064). There is NO pre-check in front of it: a scope
+       trace   │     filter stood here until D-081 and it named no mechanism.
+               │          │
+               │          ▼
+               │   test ── mechanical, and this IS the whole verdict — the only
+               │       decision the loop makes, and it holds no model:
+               │       fires on the anomalous trace?  YES
+               │       fires on one of the 878 clean?  NO
+               │          │
+               │          ├─▶ both ──▶ admission ──▶ regression
+               │          │            5 gates       suite
+               │          │            WHY: it caught a real
+               │          │            failure and nothing else
+               │          │
+               └──────────┘ else, hand back the counterexample and try again —
+                            attempt i+1 sees what i got wrong
 
-                                 after n ──▶ UNMINEABLE BY EXHAUSTION. WHY NOT: every
-                                   attempt and its counterexample, recorded. ⚠️ A RESULT,
-                                   not an error.
+                  after n ──▶ UNMINEABLE. The ONE terminal, and *the agent was not
+                    smart enough* arrives here too — a capability failure has no
+                    rule to translate, so nothing it proposes survives `test`.
+                    WHY NOT: every attempt and its counterexample, recorded.
+                    ⚠️ A RESULT, not an error.
+                    🎯 The P3 exit gate REQUIRES at least one recorded unmineable —
+                    a miner that has never given up has never been pointed at a
+                    failure it should refuse.
 
    ══ THE CURATOR'S REGISTRY ══ two memories, and only one can be exact (D-078) ══════
       ⛔ NOT the agent's memory. The agent's is FROZEN and reset per attempt, because
@@ -268,7 +265,7 @@ our own, and there is none.
         pretend to be exact — every shipped system that did was out by orders of
         magnitude (docs/08 §11.1).
               ▲
-              └── every UNMINEABLE lands here, by scope or by exhaustion
+              └── every UNMINEABLE lands here — ONE terminal since D-081, always by exhaustion
 ```
 
 ⚠️ **`budget_exceeded` is a flag, never a fifth status.** It lands *beside* whichever of the

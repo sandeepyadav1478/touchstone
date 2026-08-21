@@ -53,10 +53,10 @@ rather than nothing at all.
    another file's error is a claim with a shelf life**, and nothing in this repo sweeps backwards
    from a fix to the documents pointing at it.
 
-| render | extent | ink | vs. the render it replaced |
+| render | extent | ink — `convert("L") < 200`, the comparator named below | vs. the render it replaced |
 |---|---|---|---|
-| `loop.png` | 4722 × 8889 | 4.28% | was 6439 × 9606 at 2.86% — smaller canvas, denser, four sections cut |
-| `sequence.png` | 3032 × 3457 | 10.63% | was 5069 × 6252 at 14.36% — redrawn, 13 lifelines against 11 |
+| `loop.png` | 5870 × 10703 | 1.49% | was 5937 × 10728 at 1.51% — **D-081 deleted two nodes and an edge**, and the frame gave back 67 × 25 px |
+| `sequence.png` | 3032 × 3492 | 3.48% | was 3032 × 3457 at 3.25% — the D-080 redraw · **untouched by D-081**, so this row is here to stay measured, not because it moved |
 
 ⚠️ **Ink and extent are measured, not eyeballed** — a shrinking canvas with rising ink is a
 diagram that got tighter, and a shrinking canvas with falling ink is one to go and look at. Both
@@ -65,7 +65,8 @@ were looked at.
 ⛔ **Both were exported at `imageQuality: 1`, which contradicts the dated table below.** That
 table's *The quality that works* row says `sequence.png` needs **2**, because **1** had returned a
 0.07%-ink blank on 2026-08-18. On 2026-08-20 quality **1** returned a 10.63%-ink render of the
-redrawn diagram. **Quality 2 was not retried**, so this is not evidence the old row was wrong —
+redrawn diagram — ⚠️ **that 10.63% is the LOOSE comparator**, and the same render reads **3.25%**
+at the `< 200` the table above now states. Two numbers, one PNG, and neither row said which. **Quality 2 was not retried**, so this is not evidence the old row was wrong —
 `DEFECTS.md` DEF-028 already says the setting behaves per *diagram*, and the sequence diagram was
 rewritten between the two dates. **Measure ink before trusting either number**; the failure mode
 is a silent blank, not an error.
@@ -113,15 +114,15 @@ drawing. ⛔ **So `loop.png` was deliberately NOT replaced** — swapping 2.8 MB
 pixels is churn, and the honest record is that the picture did not move. The *hosted* copy was
 replaced, because that one had genuinely drifted.
 
-### The settled renders — `sequence.png` measured 2026-08-21, `loop.png` re-measured the same day after the Dev/Human deletion
+### The settled renders — both re-measured 2026-08-22, after D-081 deleted the scope filter
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 5264 × 10283 — **54.1 MP** | 3032 × 3457 — **10.5 MP** |
-| On disk | 3.00 MB | 0.73 MB |
-| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 40 / 64 / 37 / **63** | 14 / 14 / 20 / 11 |
-| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.5%** of the frame | **98.9%** |
-| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.64%** | **3.25%** |
+| Frame | 5870 × 10703 — **62.8 MP** | 3032 × 3492 — **10.6 MP** |
+| On disk | 3.47 MB | 0.77 MB |
+| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 43 / 68 / 40 / **64** | 14 / 14 / 20 / 11 |
+| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.6%** of the frame | **98.9%** |
+| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.49%** | **3.48%** |
 | ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs. ⛔ **AND THE SWEEP STOPPED ONE ROW SHORT — found 2026-08-18, on the pass that recreated the hosted flowchart.** The two rows above use a *third* comparator (`ImageChops.difference` against the corner pixel), not `< 200` and not the loose threshold, and neither said so. Measured at `< 200` the same padding reads **65 / 61 / 61 / 62** and **28 / 28 / 40 / 30**; at the loose threshold, **46 / 61 / 61 / 58** and **27 / 27 / 40 / 23**. Three comparators, three answers, one unlabelled row. The bottom cell also read **59** against a measured **58** — an off-by-one that no threshold explains and that survived because the row it sits in had no method to check it against |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 — ⚠️ **and quality 2's failure changed shape on 2026-08-21; see the row below.** The content-addressed URL is keyed on the render, so **a failed export poisons its own cache entry**: re-requesting quality 3 returned the same 0-byte object at the same `x-goog-generation`, and only a different quality produced a different key. ⛔ **Retrying an export is not retrying a render** | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.07%-ink blank**, finding 9 |
@@ -137,6 +138,8 @@ edges and reports the render as **CLIPPED** — sending you to re-render a diagr
 perfectly. Measured 2026-08-17: `sequence.png` came back 0/0/0/0 instead of 27/23/27/40. The guard
 now checks the alpha channel first and says `nobg`, because *a guard that fails for the wrong
 reason costs more than one that does not fire.*
+
+🔴 **And it was skipped anyway on 2026-08-22 — by the reader of this file, four days after it was written.** Both PNGs were exported without the flag, came back at `alpha255` **11.6%** and **10.5%**, and were only caught because the ink measurement read **89.54%** and **53.31%** — `.convert("L")` on RGBA drops alpha, so the transparent pixels measured as solid black. ⚠️ **The instrument that caught it was not the one aimed at it**: milestone 7's `nobg` check never ran, because the re-export happened before the guard did. A recorded step is not a mechanism, and this is the second time on this file that a paragraph failed to prevent what it describes.
 
 ⚠️ **Every row above is superseded, not corrected**, and the history is kept because *the reflow
 is the finding*. Every figure below was taken at the same `imageQuality` — see finding 3, which is
