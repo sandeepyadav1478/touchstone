@@ -60,7 +60,17 @@ DEFECTS.md
 ROADMAP.md
 scripts/check-diagram.py
 
-# phoenix owns its storage in a docker volume; nothing of it belongs in git
+# The local tracking store. D-074 made MLflow the spine with NO service, so the default
+# tracking URI is a directory in this checkout — `mlruns/`, named in doctor.py:237 and
+# docs/00 §the-stack. It did not exist as an ignore rule until 2026-08-21, which means the
+# first real run would have dropped a trace store into the tree and the next `git add -A`
+# would have committed it. The D-074 sweep read the docs and never read this file.
+mlruns/
+
+# Struck 2026-08-21. Phoenix had a docker volume; D-074 removed Phoenix, and D-040 had
+# already removed the only other service, so there is no compose file left to own one.
+# Kept as a line rather than deleted because a stale ignore rule is invisible either way,
+# and the comment that was here asserted a container that does not exist.
 .phoenix/
 
 phase0.log
