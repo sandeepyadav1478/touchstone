@@ -130,44 +130,94 @@ is real.
               └───────────────────┬─────────────────────┘
                                   │ traces (mlflow.start_span)
                                   ▼
-   run ──▶ attempt ──┬─▶ void · incomplete · parse_failure ──▶ counts toward NOTHING
-                     │      a run that never produced a comparable number.
-                     │      parse_failure is scored WRONG, not retried (D-013).
-                     │
-                     └─▶ scored ──▶ score ──▶ compare ──┬─▶ ACCEPT ──▶ record
-                                      │          ▲      │   WHY: all five conditions held
-                                      │          │      │
-                                      │          │      └─▶ REJECT ── a TERMINAL. Nothing on
-                                      │          │          this page receives it.
-                                      │          │          WHY NOT: which task regressed,
-                                      │          │          and the rejection IS the result
-                                      │   benchmark — frozen, hashed
-                                      │   ⛔ changing it resets every comparison
-                                      │
-                                      └─▶ mine ──▶ THE INNER LOOP, and the only stage that
-                                         one         runs more than once per input (P3.4):
-                                         failing
-                                         trace       ┌──▶ translate ── a model turns the STATED
-                                                     │      rule the trace broke into a predicate.
-                                                     │      A candidate, never a verdict (D-064).
-                                                     │           │
-                                                     │           ▼
-                                                     │    test ── mechanical, and this is the
-                                                     │      WHOLE verdict:
-                                                     │        fires on the failing trace?  YES
-                                                     │        fires on one that passes?    NO
-                                                     │           │
-                                                     │           ├─▶ both ──▶ admission ──▶ regression
-                                                     │           │            5 gates       suite
-                                                     │           │            WHY: it caught a real
-                                                     │           │            failure and nothing else
-                                                     │           │
-                                                     └───────────┘ else, hand back the counterexample
-                                                                   and try again — up to n = 5
+   ══ THE OUTER LOOP ══ once per candidate version · 114 tasks × k attempts · hours ═══
+      what it produces is the version table above. It is the expensive one, and it
+      only ever REPORTS a number.
 
-                                                     after n ──▶ UNMINEABLE. WHY NOT: no written
-                                                       rule covers this trace, so there is nothing
-                                                       to translate. ⚠️ A RESULT, not an error.
+   v(N) ─▶ run ─▶ attempt ──┬─▶ void · incomplete · parse_failure ─▶ counts toward
+    ▲                       │      a run that never produced a comparable      NOTHING
+    │                       │      number. parse_failure is scored WRONG,
+    │                       │      never retried (D-013).
+    │                       │
+    │                       └─▶ scored ─▶ score ─▶ compare ─┬─▶ ACCEPT ─▶ record
+    │                                       │         ▲     │   WHY: all five held,
+    │                                       │         │     │   and v(N) is the champion
+    │                                       │         │     │
+    │                                       │         │     └─▶ REJECT ── a TERMINAL.
+    │                                       │         │         Nothing on this page
+    │                                       │         │         receives it. WHY NOT:
+    │                                       │         │         which task regressed —
+    │                                       │         │         the rejection IS the result
+    │                                       │   benchmark — frozen, hashed
+    │                                       │   ⛔ changing it resets every comparison
+    │                                       │
+    └── v(N+1) ── the loop turns when a NEXT candidate is put in front of it, accepted
+        or rejected. ⛔ ONE thing changes per rung, and NOTHING here tunes itself: a
+        person writes every candidate version (D-044). That is the one turn of the
+        crank a human makes, and it is upstream of the loop, not a state inside it.
+                                      │
+                                      │  the failing sessions from the v1 baseline —
+                                      │  reward_breakdown["DB"] == 0, a label τ²'s own
+                                      ▼  evaluator computed before we looked (D-069)
+   ══ THE INNER LOOP ══ up to n = 5 attempts on ONE failing trace · seconds ══════════
+      it replays stored spans, and there is ZERO model call in its verdict. It is the
+      only stage that runs more than once per input, and the only one that makes the
+      measurement BIGGER instead of reporting it (P3.4).
+
+      mine ──▶ does the trace break a rule someone WROTE DOWN?
+       one      the retail policy document · the tool contracts, and nothing else
+      failing        │
+       trace         ├─▶ no ──▶ UNMINEABLE BY SCOPE. *The agent was not smart enough*
+                     │           is a capability failure: recorded, then skipped. There
+                     │           is no rule to translate, so the loop would keep
+                     │           inventing one until something stuck.
+                     │           🎯 The P3 exit gate REQUIRES at least one recorded
+                     │           unmineable — a miner that has never given up has
+                     │           never been pointed at a failure it should refuse.
+                     │
+                     └─▶ yes ─┬─▶ translate ── a model turns that stated rule into a
+                              │     predicate. A candidate, never a verdict (D-064).
+                              │          │
+                              │          ▼
+                              │   test ── mechanical, and this IS the whole verdict:
+                              │       fires on the failing trace?  YES
+                              │       fires on one that passes?    NO
+                              │          │
+                              │          ├─▶ both ──▶ admission ──▶ regression
+                              │          │            5 gates       suite
+                              │          │            WHY: it caught a real
+                              │          │            failure and nothing else
+                              │          │
+                              └──────────┘ else, hand back the counterexample and try
+                                           again — attempt i+1 sees what i got wrong
+
+                                 after n ──▶ UNMINEABLE BY EXHAUSTION. WHY NOT: every
+                                   attempt and its counterexample, recorded. ⚠️ A RESULT,
+                                   not an error.
+
+   ══ THE CURATOR'S REGISTRY ══ two memories, and only one can be exact (D-078) ══════
+      ⛔ NOT the agent's memory. The agent's is FROZEN and reset per attempt, because
+         it is the thing being measured; this one GROWS. Conflating the two is the
+         failure docs/08 §11 exists to prevent — same word, different object.
+      🎯 It answers one question: *has this already been dealt with?* Without it the
+         inner loop re-derives one rule from the fiftieth instance of one failure, and
+         n iterations buy one rule instead of n.
+
+      positive ── the rules already admitted ──▶ read by `mine` before it translates
+        EXACT, because it is a set membership test — you query it by RUNNING it
+              ▲
+              └── every admitted rule lands here
+
+      negative ── the traces already refused ──▶ read by `mine` before it starts
+        a SIGNATURE, taken over a backward dynamic slice from the violating write —
+        never over the raw trace, or fifty irrelevant turns split one bucket into two.
+        HEURISTIC, and it says so. A RECOMPUTABLE VIEW, derived and never stored: a
+        `sig_version` bump rebuilds it rather than migrating it. ⚠️ Its false positive
+        is a real failure silently skipped, which is why it is never allowed to
+        pretend to be exact — every shipped system that did was out by orders of
+        magnitude (docs/08 §11.1).
+              ▲
+              └── every UNMINEABLE lands here, by scope or by exhaustion
 ```
 
 ⚠️ **`budget_exceeded` is a flag, never a fifth status.** It lands *beside* whichever of the
@@ -181,7 +231,8 @@ behind all four without touching a call site. **Enforcement attaches at a second
 `Environment.make_tool_call()`, which every tool execution already passes through and which
 already knows which tools mutate state.
 
-⛔ **No human is a step in that picture, and none is a state in the agent.** Nothing pauses for
+⛔ **No human is a step in that picture, and none is a state in the agent.** A person writes
+each candidate version (D-044), and that is *upstream* of the loop — inside it nothing pauses for
 approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
 ([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
