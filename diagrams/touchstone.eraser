@@ -24,7 +24,7 @@ title touchstone — the loop that has to get better
 //         argument, and arguments live down here, where they cost no pixels.
 //
 //  3 · EVERY NODE NAMING A file.py:LINE MUST RESOLVE, IN EXACTLY ONE FILE, IN AN
-//      APPROVED REPO — touchstone, or tau2-bench — tau2 1.0.1 (MIT). D-068.
+//      APPROVED REPO — touchstone, or tau2-bench — tau2 at commit a2c024725189 (MIT). D-068.
 //      ⛔ AMBIGUITY IS A FAILURE, NOT A NEAR MISS. tau2 has SIX files called
 //         environment.py; the first draft of this diagram named the BARE file with
 //         the line number, and the guard resolved it to retail's 54-line domain file
@@ -181,7 +181,7 @@ legend [position: top-left] {
 }
 
 // ── 1 · the specimen. External, pinned, and NOT OURS — which is the whole point of D-062.
-Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · tau2 1.0.1 · attachment surface hashed, not SHA-pinned\nnot written here, not vendored here — 114 tasks stay upstream"] {
+Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · commit a2c024725189 · 257 of 257 blobs verified against upstream\nnot written here, not vendored here — 114 tasks stay upstream · the string 1.0.1 names TWO trees (DEF-055)"] {
   Orch [icon: repeat, label: "orchestrator.py:260 — Orchestrator.run\ndrives one simulation to its end"]
   AgentTurn [color: orange, icon: cpu, label: "llm_agent.py:128 — the agent under test\nTHE THING BEING MEASURED"]
   UserSim [color: orange, icon: user, label: "user_simulator.py:235 — the customer\nFROZEN APPARATUS (D-067)"]
@@ -285,12 +285,12 @@ DeepEval > Diag: trajectory diagnostics — and, like the judge, reaches NOTHING
 Shadow --> Diag: the shadow scores land here until a gate earns enforcement
 
 // ── 8 · decision 2. Five conditions, all mechanical.
-Cmp [color: orange, icon: filter, label: "8 · loop/compare.py — P2.4 · ALL FIVE must hold"] {
+Cmp [color: grey, icon: filter, label: "8 · loop/compare.py — P2.4 · DEFERRED, D-080 · NOTHING HERE RUNS\nspecified in full because this is what it revives to — it has no SECOND OPERAND until a second version exists"] {
   C1 [icon: hash, label: "1 · benchmark_hash(C) == benchmark_hash(I)"]
   C2 [color: red, icon: alert-triangle, label: "2 · NO per-task regression — THE ONE THAT WORKS\nfires on pass^k → not-pass^k ONLY (D-008)"]
   C3 [icon: trending-up, label: "3 · strict improvement on ≥ 1 metric\nelse a no-op is accepted"]
   C4 [icon: dollar-sign, label: "4 · no budget breach — cost per success, p95"]
-  C5 [color: grey, icon: lock, label: "5 · no locked task fails — ONE-WAY\nVACUOUS until P3.5 locks its first mined case"]
+  C5 [color: grey, icon: lock, label: "5 · no locked task fails — ONE-WAY\nopen/locked is DELETED, not vacuous — it locks on an ACCEPTED version and there are none (D-080)"]
 }
 C1 > C2 > C3 > C4 > C5
 ScorePy > Cmp: results/(version).json — the scored half only
@@ -298,6 +298,25 @@ Accepted [shape: oval, color: green, icon: check, label: "ACCEPT — vN is the c
 Refused [shape: oval, color: red, icon: x, label: "REJECT — the rejection IS the result\nNEVER fixed by weakening the baseline"]
 C5 > Accepted: all five hold
 Cmp > Refused: any ONE fails
+
+// ── 8a · THE FEED (D-080). The inner loop needed a failing trace and a control set, and
+//  that was the ONLY thing the outer loop owed it — so it is fed from τ²'s own shipped runs
+//  instead. ⚠ SELECTION IS NOT GATING, and reusing one number for both was the defect.
+//  reward_breakdown[DB] compares FINAL DATABASE STATE and is blind to how the state was
+//  reached: an agent that skips a required confirmation and still writes the correct row
+//  scores DB == 1. Feeding on DB == 0 alone left 371 such traces in the SILENCE SET, where
+//  a CORRECT predicate would have been rejected as a false positive.
+Feed [color: pink, icon: filter, label: "8a · the feed — D-080 · τ²'s OWN shipped runs, never a run of ours"] {
+  Corpus [color: grey, icon: archive, label: "1,712 simulations τ²-bench SHIPS — data/tau2/results/final/\n107 of 114 tasks — the 7 whose gold actions moved are EXCLUDED, not repaired"]
+  Select [shape: diamond, color: pink, icon: git-merge, label: "select — the UNION of THREE signals\n⚠ NOT reward_breakdown[DB] == 0 alone"]
+  Anom [color: orange, icon: alert-circle, label: "834 ANOMALOUS\n407 the DB check failed · +371 DB PASSED and an action_check failed · +56 a WRITE nobody confirmed"]
+  Clean [color: green, icon: check-circle, label: "878 CLEAN — none of the three signals\nTHE SILENCE SET · a gate that fires here is a FALSE POSITIVE"]
+}
+Corpus > Select
+Select > Anom
+Select > Clean
+SelNotGate [shape: document, color: red, icon: alert-triangle, label: "SELECTION IS NOT GATING — D-080\nDB stays the GATE's metric because it is mechanical, and it is a POOR SELECTOR for the same reason — it cannot see process\n⚠ the 56 is an UPPER BOUND from a regex over the last user message before each WRITE — enough to widen the selector, NOT a figure to quote"]
+SelNotGate --> Select
 
 // ── 8b · THE INNER LOOP (D-070). Every other stage on this page runs ONCE per
 //  candidate version. This one runs up to n times on a SINGLE failing trace, and it
@@ -311,12 +330,12 @@ Cmp > Refused: any ONE fails
 //  sticks. That is why MSkip exists and why the phase-3 exit gate requires at least
 //  one recorded UNMINEABLE.
 Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nthe outer loop REPORTS a number; this loop makes the number COVER MORE"] {
-  M0 [color: pink, icon: alert-circle, label: "analyst · one failing session — the mechanical DB component came back zero\nD-069 · labelled by τ²'s own evaluator, before we looked at it"]
+  M0 [color: pink, icon: alert-circle, label: "analyst · one ANOMALOUS session, drawn from the 834 — D-080\nevery signal computed by τ²'s own evaluator, before we looked at it"]
   MScope [shape: diamond, color: pink, icon: help-circle, label: "rule-finder — does it break a rule someone WROTE DOWN?\nthe retail policy document · the tool contracts"]
   MSkip [shape: oval, color: grey, icon: minus-circle, label: "capability failure — RECORDED, NOT MINED\nno stated rule means nothing to translate, and nothing to gate"]
   MT [color: orange, icon: cpu, label: "1 · author — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
   MCrit [color: orange, icon: eye, label: "2 · critic — reads the candidate BEFORE it is run · D-071\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
-  MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY always-pass session? must be NO"]
+  MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MScope
@@ -325,8 +344,9 @@ MScope > MT: yes
 MT > MCrit > MTest
 MTest > MT: either fails — hand back the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
 MTest > MGive: attempt n
-Cmp --> M0: the sessions that failed
-Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — which is why an admitted case arrives `open`\nand cannot gate until it has been quiet under an ACCEPTED version"]
+Anom > M0: one anomalous trace at a time
+Clean > MTest: the silence set — the NO half of the verdict
+Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so an admitted predicate rests ENTIRELY on this corpus"]
 Overfit --> MTest
 
 // ── 8c · THE CURATOR'S TWO MEMORIES (D-078), and the first thing to say is which memory
@@ -391,7 +411,7 @@ Admit --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with
 //  D-071 on 2026-08-20 and this section said "Four" until 2026-08-21 — see the header.
-Ladder [icon: bar-chart, label: "11 · the ladder — ONE thing changes per rung"] {
+Ladder [color: grey, icon: bar-chart, label: "11 · the ladder — ONE thing changes per rung · DEFERRED ENTIRE, D-080\nnot one of these five rungs is run — running 114 tasks is τ²'s work, and it is already done"] {
   V1 [color: blue, label: "v1 — P1.7 · the BASELINE, no gate anywhere"]
   V2 [color: orange, label: "v2 — P2.9 · + the gates, in SHADOW"]
   V3 [color: pink, label: "v3 — P3.2 · + tier-1 ENFORCEMENT"]
@@ -400,7 +420,7 @@ Ladder [icon: bar-chart, label: "11 · the ladder — ONE thing changes per rung
 }
 V1 > V2 > V3 > V4 > V5
 Gates3 --> Ladder: what changes between versions — and ONLY this
-NoInherit [shape: document, color: red, icon: alert-triangle, label: "v1 IS MEASURED HERE, NEVER INHERITED\nτ²'s four shipped baselines all ran a gpt-4.1 simulator — context, not a reference line"]
+NoInherit [shape: document, color: red, icon: alert-triangle, label: "v1 WAS TO BE MEASURED HERE, NEVER INHERITED — and it is SUPERSEDED, D-080\nits output was a corpus of traces to mine, and one already ships · ⚠ τ²'s four baselines stay CONTEXT, never a reference line\n⚠ what is genuinely gone with it: haiku's simulator-fabrication rate, which nobody else can measure for us"]
 NoInherit --> V1
 
 // ── 11b · THE AGENT GRAPH (D-071 part A). Four nodes, and the whole design is one
@@ -412,7 +432,7 @@ NoInherit --> V1
 //  reasoning node BY CONSTRUCTION, not by instruction. It cannot quietly become an actor.
 //  ⛔ THIS IS v5 AND ONLY v5. v1 through v4 run τ²'s stock LLMAgent — we own no prompt
 //     before P3.6, which is exactly why the gates are measured against someone else's agent.
-AgentGraph [color: pink, icon: git-branch, label: "11b · agent/ — OUR retail agent — P3.6 · v5 · D-071\na LangGraph graph, NOT the SDK's subagents — the SDK's graph is not versionable"] {
+AgentGraph [color: grey, icon: git-branch, label: "11b · agent/ — OUR retail agent — P3.6 · v5 · D-071 · DEFERRED with the ladder, D-080 — designed, not built\na LangGraph graph, NOT the SDK's subagents — the SDK's graph is not versionable"] {
   Sup [color: pink, icon: repeat, label: "supervisor — routes, and routes only"]
   NIdent [icon: user, label: "identity — who is this, what did they buy?\nfour READ tools"]
   NCat [icon: package, label: "catalogue — what is this item, what could replace it?\nthree READ tools + calculate, which upstream types GENERIC — not READ"]
