@@ -75,7 +75,7 @@ it. Every cell comes from a committed artifact under `results/`, which is empty 
 | v2 | + a gate in shadow | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
 | v3 | + the tier-1 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
 | v4 | + the tier-2 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v5 | a different agent — ours, four nodes | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| v5 | a different agent — ours: a supervisor and four worker nodes, five in all | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
 
 ⚠️ **v1–v4 are one agent gaining capabilities; v5 is a different agent.** That is a different
 kind of row and the table does not distinguish them — read v5's delta as *"does another
@@ -137,7 +137,8 @@ is real.
                      └─▶ scored ──▶ score ──▶ compare ──┬─▶ ACCEPT ──▶ record
                                       │          ▲      │   WHY: all five conditions held
                                       │          │      │
-                                      │          │      └─▶ REJECT ──▶ back to the developer
+                                      │          │      └─▶ REJECT ── a TERMINAL. Nothing on
+                                      │          │          this page receives it.
                                       │          │          WHY NOT: which task regressed,
                                       │          │          and the rejection IS the result
                                       │   benchmark — frozen, hashed
@@ -186,6 +187,13 @@ approval: a gate is a predicate, and a mined case is admitted by five mechanical
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
 is what everything below is instrumented for.
 
+⚠️ **That paragraph was false about the picture directly above it until 2026-08-21**, which is
+worth more than the correction. The diagram routed `REJECT` *back to the developer*, so the
+prose asserted an invariant the drawing three inches above it broke. **A claim about a picture
+has to be checked against the picture** — and the structural flowchart carried the same defect
+in a heavier form, as two person-shaped nodes that no decision had ever authorised. Both are
+terminals now: a rejection is recorded, and nothing on the page consumes it.
+
 **Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
 must not move. The regression suite only ever answers *"did something that used to work stop
 working?"* — a binary with no denominator to corrupt, so it can grow forever without
@@ -206,7 +214,7 @@ standing inside a run, it is also the **only** place a person can see what happe
 | Doc | What it covers |
 |---|---|
 | [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the five model pins, `touchstone doctor` |
-| [docs/01-spec.md](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, 13 live invariants numbered to 14 |
+| [docs/01-spec.md](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, **10 live invariants numbered to 16** — six are retired in place, four of them by the specimen swap |
 | [docs/02-gates.md](docs/02-gates.md) | ⛔ **The three decisions**, the two tiers, the acceptance rule, the stages, case provenance |
 | [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The adapter at the seam, what we may and may not change about the τ² agent |
 | [docs/04-observability.md](docs/04-observability.md) | Span schema, OpenInference conventions, why the scorer reads spans |
@@ -215,6 +223,7 @@ standing inside a run, it is also the **only** place a person can see what happe
 | [docs/07-diagrams.md](docs/07-diagrams.md) | ⛔ **The gate: no code before an approved structural diagram** — every phase, every change |
 | [docs/08-memory.md](docs/08-memory.md) | Where agent memory legitimately goes, and the **anchoring failure it is planted to catch** |
 | [docs/09-schemas.md](docs/09-schemas.md) | Every remaining type, the `benchmark_hash` algorithm, the file map, and the prompt and tool contracts |
+| [diagrams/](diagrams/README.md) | 📐 **The gate artifacts themselves** — the structural flowchart ([`loop.png`](diagrams/loop.png), source in [`touchstone.eraser`](diagrams/touchstone.eraser)) and the run sequence. ⛔ **The source text is the artifact**; the PNG is committed so the page renders for a reader who will not clone |
 
 ⚠️ **Three working files are kept out of this repo on purpose** — `DECISIONS.md`, a dated
 record of every choice and what was rejected; `ROADMAP.md`, a phase schedule; and `DEFECTS.md`,

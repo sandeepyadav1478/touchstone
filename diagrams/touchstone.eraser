@@ -415,7 +415,7 @@ NoInherit --> V1
 AgentGraph [color: pink, icon: git-branch, label: "11b · agent/ — OUR retail agent — P3.6 · v5 · D-071\na LangGraph graph, NOT the SDK's subagents — the SDK's graph is not versionable"] {
   Sup [color: pink, icon: repeat, label: "supervisor — routes, and routes only"]
   NIdent [icon: user, label: "identity — who is this, what did they buy?\nfour READ tools"]
-  NCat [icon: package, label: "catalogue — what is this item, what could replace it?\nfour READ tools"]
+  NCat [icon: package, label: "catalogue — what is this item, what could replace it?\nthree READ tools + calculate, which upstream types GENERIC — not READ"]
   NPol [color: orange, icon: book, label: "policy — what does the policy permit HERE?\nno τ² tool at all — reads the policy doc over our MCP server"]
   NSyn [color: red, icon: edit-3, label: "synthesizer — commit it\nTHE ONLY NODE THAT MAY CALL A WRITE TOOL · the 7 WRITEs + transfer_to_human_agents"]
 }
