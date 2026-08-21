@@ -42,21 +42,28 @@ branch at `109c424`: 1,954 lines across 20 files, removed from `main`. **The loo
 across that swap, and that is the claim the swap was for.** D-062, D-066.*
 
 ```bash
-touchstone run   v4                 # run the suite, k times each, emit spans
-touchstone score v4                 # score from the spans, write results/v4.json
-touchstone compare v4 --against v3  # per-task verdict → accept or reject
+touchstone mine  --from results/final     # one anomalous trace → a candidate predicate
+touchstone suite admit  r-018             # five mechanical gates → the regression suite
+touchstone run   --enforce                # the predicate refuses the call before it executes
 ```
 
 > ### ⚠️ Status: phase 0 — specified, not yet built
 >
 > **What is here now:** the full specification (`docs/00`–`09`), the acceptance rule, the
 > structural diagrams that gate implementation, and `touchstone doctor`, which runs.
-> **What is not here:** the loop. No run has happened, so there are no artifacts under
-> `results/` — the directory is created by the first run — and the version table below has no
-> data in it.
+> **What is not here:** the loop. Today `doctor` is the only implemented verb — see
+> [Quick start](#quick-start), which says so per command.
 >
-> Those three commands above are the specified interface, not a working one. Today `doctor`
-> is the only implemented verb — see [Quick start](#quick-start), which says so per command.
+> 🔴 **The scope narrowed on 2026-08-22, deliberately, and the version table below went with
+> it.** The **candidate-comparison half** — running the benchmark to produce v1…v5 and deciding
+> whether one beats the last — is **deferred**. Running 114 tasks and scoring them is τ²-bench's
+> own work, done well, and comparing two versions needs a second version that does not exist.
+> What is being built is the other half: **mining a mechanical gate out of a trace, and enforcing
+> it.** Its input is the **1,712 simulations τ²-bench already ships**.
+>
+> **So the claim this repo will make is precision and recall** — *the gate fires on these traces
+> and is silent on those* — and ⛔ **not** *the gate made the agent better*, which needs the
+> deferred half. Both are real; they are not the same sentence.
 >
 > **The empty table is deliberate and it is the point.** Every cell is filled from a committed
 > run artifact or left blank; there is no path here for a number that was not measured. A repo
@@ -64,35 +71,50 @@ touchstone compare v4 --against v3  # per-task verdict → accept or reject
 > it cannot reproduce.
 ---
 
-## The version history
+## The result table
 
-**This table is the point of the repository** — the shape of it, until there are runs to fill
-it. Every cell comes from a committed artifact under `results/`, which is empty at phase 0.
+**This table is the point of the repository** — the shape of it, until there are mined gates to
+fill it. Every cell comes from a committed artifact under `results/`, which is empty at phase 0.
 
-| version | what changed | mean reward | `pass^3` | tool calls | $/success¹ | accepted |
-|---|---|---|---|---|---|---|
-| v1 | baseline — the τ² agent, driven through our seam | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | — |
-| v2 | + a gate in shadow | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v3 | + the tier-1 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v4 | + the tier-2 gate, enforcing | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
-| v5 | a different agent — ours: a supervisor and four worker nodes, five in all | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ | ⟨…⟩ |
+| gate | the stated rule it came from | traces it fires on¹ | of the clean² | attempts | unmineable |
+|---|---|---|---|---|---|
+| ⟨…⟩ | ⟨policy.md line, or a tool contract⟩ | ⟨…⟩ / 834 | ⟨…⟩ / 878 | ⟨…⟩ / 5 | — |
 
-⚠️ **v1–v4 are one agent gaining capabilities; v5 is a different agent.** That is a different
-kind of row and the table does not distinguish them — read v5's delta as *"does another
-architecture help?"*, never as *"does another capability help?"*. **v5 is allowed to lose**, and a
-loss is a result rather than a reason to keep tuning until it wins.
+¹ The **834** anomalous traces selected out of τ²-bench's 1,712 shipped retail simulations — the
+union of *the DB check failed*, *an `action_check` failed*, and *a WRITE with no confirmation
+before it*. ⛔ **Not the 407 that merely fail the DB check**: 371 of the others **pass** it, because
+the DB check compares final state and cannot see how the state was reached.
 
-¹ From the Agent SDK's own cache-aware `total_cost_usd` — a real per-call figure, drawn from a
-subscription quota rather than billed. **Not an invoice** — see [Limits](#limits).
+² The **878** with none of those three signals. **A gate that fires here is a false positive**, and
+the second column is worth more than the third — a rule that catches everything catches the clean
+ones too.
 
-⛔ **`pass^k` is τ²-bench's metric, computed by τ²-bench's code**, and it is the *strict* one:
-`C(successes, k) / C(trials, k)`. It is **not** `pass@k`, which conventionally means *at least
-one of k succeeded*. The caret is the distinction. [docs/05](docs/05-scoring.md) §2.
+⚠️ **Both denominators come from the same 107 tasks** — the ones whose gold actions are unchanged
+between the shipped runs and the current task file. **107 of 114**, and the seven are excluded
+rather than repaired.
 
-**The rejections get written up here, next to the table.** When a candidate is refused, this
-section gains two sentences: what looked better, which task regressed, and what the trace
-showed. A gate that never visibly refuses anything is not a gate, so the refusals are the part
-worth reading.
+⛔ **This is a corpus, never a baseline.** Those simulations were produced by four third-party
+agents (`claude-3-7-sonnet`, `gpt-4.1`, `gpt-4.1-mini`, `o4-mini`) behind a `gpt-4.1` user
+simulator. **Their scores are not quoted anywhere in this repo** and putting them beside a number
+of ours would fuse two environments.
+
+<details>
+<summary>🔴 <b>The version table that was here, and why it is deferred</b></summary>
+
+It had five rows — v1 baseline, v2 gate-in-shadow, v3 and v4 enforcing, v5 a different agent —
+scored on mean reward, `pass^3`, tool calls and $/success. **Every one of them required running
+the benchmark.**
+
+Deferred 2026-08-22: running 114 tasks × k and scoring them is τ²-bench's own work, already done,
+and the comparator that would decide *did v(N) beat v(N−1)?* has **no second operand** until a
+second version exists. ⛔ **A comparator with nothing to compare is scaffolding.**
+
+**What is given up, stated plainly:** *the gate made the agent better* is unsayable, and so is any
+number of ours. ⛔ **`pass^k` does not appear in the table above** — it is a property of repeated
+attempts we did not run.
+
+**It comes back on one event:** a second candidate version exists. Not on having time.
+</details>
 
 ---
 
@@ -106,13 +128,21 @@ scorer replays them on a fresh environment and compares the resulting state to t
 agent left behind. Any path that reaches an equivalent end state passes. There is no rubric, no
 judge, and no argument about whether an answer was good enough.
 
-**What this buys, concretely:** a regression is a fact rather than a judgement. If task 47
-passes at v2 and fails at v4, CI blocks the acceptance — there is nothing to interpret and
-nobody to overrule.
+**What this buys, concretely:** a label nobody here chose. Every trace the miner reads was scored
+by τ²-bench's own evaluator before this project existed, so *which traces are failures* is not a
+call we made — and a gate mined from them cannot be tuned against a key we control.
 
-**And it buys one thing a self-authored corpus cannot buy at all:** the numbers are comparable
-to a published leaderboard we had no hand in. **What it costs** is in [Limits](#limits), and it
-is real.
+⚠️ **The DB diff is the gate's metric and a poor selector, and those are different jobs.** It
+compares **final state** and is blind to how the state was reached: an agent that skips a required
+confirmation and still writes the right row scores a pass. **371 of the traces it passes have a
+failed action check.** So the miner reads the union of three signals and the gate still reads the
+DB diff alone — ⛔ **one number cannot do both jobs**, and using the gating label to select was the
+defect that cost this the most.
+
+**And it buys one thing a self-authored corpus cannot buy at all:** the failures are a third
+party's, in a domain we did not write. **What it costs** is in [Limits](#limits), and it is real.
+🔴 **What it no longer buys is comparability to a published leaderboard** — that needed a run of
+our own, and there is none.
 
 ---
 
@@ -130,9 +160,11 @@ is real.
               └───────────────────┬─────────────────────┘
                                   │ traces (mlflow.start_span)
                                   ▼
-   ══ THE OUTER LOOP ══ once per candidate version · 114 tasks × k attempts · hours ═══
-      what it produces is the version table above. It is the expensive one, and it
-      only ever REPORTS a number.
+   ══ THE OUTER LOOP ══ 🔴 DEFERRED · specified, not built · D-080 ═══════════════════
+      It ran 114 tasks × k per candidate and REPORTED a number. Deferred because
+      running the benchmark is τ²'s work, already done, and the comparator below has
+      no second operand until a second version exists. Drawn in full because this is
+      what it revives to. ⛔ Nothing in this block executes.
 
    v(N) ─▶ run ─▶ attempt ──┬─▶ void · incomplete · parse_failure ─▶ counts toward
     ▲                       │      a run that never produced a comparable      NOTHING
@@ -155,18 +187,37 @@ is real.
         or rejected. ⛔ ONE thing changes per rung, and NOTHING here tunes itself: a
         person writes every candidate version (D-044). That is the one turn of the
         crank a human makes, and it is upstream of the loop, not a state inside it.
-                                      │
-                                      │  the failing sessions from the v1 baseline —
-                                      │  reward_breakdown["DB"] == 0, a label τ²'s own
-                                      ▼  evaluator computed before we looked (D-069)
-   ══ THE INNER LOOP ══ up to n = 5 attempts on ONE failing trace · seconds ══════════
+
+   ══ THE FEED ══ 1,712 simulations τ² ALREADY SHIPPED · 107 of 114 tasks ════════════
+      ⛔ It does NOT come from the block above. That is why the inner loop survives
+      the deferral: its input was the only thing the outer loop owed it.
+
+      1,712 ─▶ select ─┬─▶ 834 ANOMALOUS ─┐   the union of THREE signals, because one
+                       │                  │   of them is the gate's and cannot select:
+                       │                  │     407  the DB check failed
+                       │                  │   + 371  DB PASSED, action_check failed
+                       │                  │   +  56  a WRITE nobody confirmed, which
+                       │                  │          action_checks cannot see
+                       │                  │   🔴 The 371 are why. DB compares FINAL
+                       │                  │   STATE — an agent that skips a required
+                       │                  │   confirmation and writes the right row
+                       │                  │   scores a PASS. Feeding on DB==0 alone
+                       │                  │   left them in the silence set below,
+                       │                  │   where a CORRECT rule would have been
+                       │                  │   thrown out as a false positive (D-080).
+                       │                  │
+                       └─▶ 878 CLEAN ─────┼─▶ the silence set. A gate that fires here
+                           none of the    │   is a false positive, and this column is
+                           three signals  │   worth more than the other one.
+                                          ▼
+   ══ THE INNER LOOP ══ up to n = 5 attempts on ONE anomalous trace · seconds ════════
       it replays stored spans, and there is ZERO model call in its verdict. It is the
       only stage that runs more than once per input, and the only one that makes the
       measurement BIGGER instead of reporting it (P3.4).
 
       mine ──▶ does the trace break a rule someone WROTE DOWN?
        one      the retail policy document · the tool contracts, and nothing else
-      failing        │
+     anomalous       │
        trace         ├─▶ no ──▶ UNMINEABLE BY SCOPE. *The agent was not smart enough*
                      │           is a capability failure: recorded, then skipped. There
                      │           is no rule to translate, so the loop would keep
@@ -180,8 +231,8 @@ is real.
                               │          │
                               │          ▼
                               │   test ── mechanical, and this IS the whole verdict:
-                              │       fires on the failing trace?  YES
-                              │       fires on one that passes?    NO
+                              │       fires on the anomalous trace?  YES
+                              │       fires on one of the 878 clean?  NO
                               │          │
                               │          ├─▶ both ──▶ admission ──▶ regression
                               │          │            5 gates       suite
@@ -227,12 +278,14 @@ collapsing the two loses the case where the number is real but cost too much to 
 **One function is the whole integration.** Every model role τ² runs — the agent, the user
 simulator, the hallucination reviewer, the NL-assertion evaluator — imports the same
 `generate()`. Replacing it with an adapter that dispatches on `model` puts the Claude Agent SDK
-behind all four without touching a call site. **Enforcement attaches at a second point**,
+behind all four without touching a call site. ⚠️ **With the outer loop deferred nothing drives
+that seam end to end** — it is built, and it is exercised by one smoke test rather than by a run. **Enforcement attaches at a second point**,
 `Environment.make_tool_call()`, which every tool execution already passes through and which
 already knows which tools mutate state.
 
 ⛔ **No human is a step in that picture, and none is a state in the agent.** A person writes
-each candidate version (D-044), and that is *upstream* of the loop — inside it nothing pauses for
+each candidate version (D-044) — 🔴 **the part that is deferred** — and that is *upstream* of the
+loop — inside it nothing pauses for
 approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
 ([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
@@ -245,13 +298,16 @@ has to be checked against the picture** — and the structural flowchart carried
 in a heavier form, as two person-shaped nodes that no decision had ever authorised. Both are
 terminals now: a rejection is recorded, and nothing on the page consumes it.
 
-**Two tiers, and only one of them freezes.** The benchmark produces the table above, so it
-must not move. The regression suite only ever answers *"did something that used to work stop
+**Two tiers, and only one of them freezes.** The benchmark is the fixed population every gate is
+scored against, so it must not move. The regression suite only ever answers *"did something that used to work stop
 working?"* — a binary with no denominator to corrupt, so it can grow forever without
 invalidating anything. **That asymmetry is what makes the inner loop safe to run at all** — a
-mined predicate can only land in the tier that has nothing to distort, and it arrives `open`, so
-it cannot gate until it has been quiet under a version that was already accepted.
-[docs/02](docs/02-gates.md) §1.
+mined predicate can only land in the tier that has nothing to distort.
+[docs/02](docs/02-gates.md) §1. 🔴 **A second control is missing while the outer loop is
+deferred**: a mined case used to arrive `open` and gate only once an *accepted* version had been
+quiet on it, and with no accepted versions that status is unreachable — so it was deleted rather
+than left looking like it worked. **An admitted predicate now rests entirely on the corpus it was
+tested against.**
 
 ⛔ **The benchmark stores task ids and a hash, never task bytes.** τ²'s corpus is upstream's and
 stays upstream; vendoring it would fork the answer key, which is the exact thing this design
@@ -275,6 +331,13 @@ standing inside a run, it is also the **only** place a person can see what happe
 | [docs/08-memory.md](docs/08-memory.md) | Where agent memory legitimately goes, and the **anchoring failure it is planted to catch** |
 | [docs/09-schemas.md](docs/09-schemas.md) | Every remaining type, the `benchmark_hash` algorithm, the file map, and the prompt and tool contracts |
 | [diagrams/](diagrams/README.md) | 📐 **The gate artifacts themselves** — the structural flowchart ([`loop.png`](diagrams/loop.png), source in [`touchstone.eraser`](diagrams/touchstone.eraser)) and the run sequence. ⛔ **The source text is the artifact**; the PNG is committed so the page renders for a reader who will not clone |
+
+🔴 **`docs/` still specifies the deferred half in the present tense, and that is deliberate.**
+Wherever those files reason about *the version table*, *comparing a candidate against an
+incumbent*, or a case moving `open → locked`, they are describing **the design P2.4 revives to**,
+not code that runs. ⛔ **Nothing was deleted** — the arguments are why each piece is shaped the way
+it is, and they would have to be re-derived otherwise. [docs/02](docs/02-gates.md) §0 and §2 carry
+the deferral markers in place.
 
 ⚠️ **Three working files are kept out of this repo on purpose** — `DECISIONS.md`, a dated
 record of every choice and what was rejected; `ROADMAP.md`, a phase schedule; and `DEFECTS.md`,
@@ -304,11 +367,15 @@ The rest of the interface is specified in [docs/06](docs/06-api.md) and **not ye
 implemented**. It is listed here because the spec is fixed, not because it runs:
 
 ```bash
-touchstone suite freeze --domain retail  # ⬜ pin the task ids and hash them
-touchstone run v1 --k 3                 # ⬜ the frozen subset × 3 attempts
-touchstone score v1                     # ⬜ → results/v1.json
-touchstone compare v2 --against v1      # ⬜ → accept or reject, per task
+touchstone suite freeze --domain retail   # ⬜ pin the task ids and hash them
+touchstone mine --from results/final      # ⬜ one anomalous trace → a candidate predicate
+touchstone suite admit r-018              # ⬜ five mechanical gates → the regression suite
+touchstone run --enforce                  # ⬜ the predicate refuses the call before it runs
 ```
+
+🔴 **`touchstone run vN` / `score vN` / `compare` are deferred**, not merely unimplemented — they
+belong to the candidate-comparison half, and the spec for them stands in
+[docs/02](docs/02-gates.md) §2 against the day a second version exists.
 
 ### Models
 
@@ -355,6 +422,10 @@ than mixing it.** Full manifest and reasoning: [docs/00-stack.md](docs/00-stack.
 
 ## Reliability, not accuracy
 
+🔴 **This section describes the deferred half and is kept because it is the spec that half revives
+to.** `pass^k` needs repeated attempts by *our* agent; there are none, so ⛔ **no `pass^k` figure
+appears anywhere in this repo** until the version table comes back.
+
 Each task runs **k times**. The headline reliability number is **`pass^k`** — τ²-bench's own
 metric, `C(successes, k) / C(trials, k)` per task, averaged — and it is the **strict** one.
 
@@ -376,10 +447,20 @@ the distinction, and a reader who skims past it reads the gate as far weaker tha
 **Read this before quoting any number this repo ever produces.** These are properties of the
 design, so they hold whether or not a run has happened yet.
 
+- 🔴 **Nothing here has been run by this project, and the traces it reasons over are somebody
+  else's.** Every gate is mined from and scored against **1,712 simulations τ²-bench ships**,
+  produced by four third-party agents behind a `gpt-4.1` user simulator. ⛔ **It is a corpus, not
+  a baseline**, their scores are quoted nowhere here, and a gate that fires on their failures is
+  not thereby shown to fire on ours.
 - **The tasks are a simulation, and the customer is a language model.** τ²-bench's user side is
   a simulator, not a person. A failure it causes is attributed to the agent unless something
-  measures it — which is why the user simulator is a **frozen** pin and why `--auto-review
-  --review-mode user` is a phase-1 exit box rather than an optional extra. D-067.
+  measures it. ⚠️ **That risk changed owner rather than going away** — the corpus's simulator was
+  someone else's choice, already run, and **we can no longer measure its fabrication rate
+  ourselves.** It was a phase-1 exit box and it is the single largest thing the deferral gave up.
+  D-067.
+- **Enforcement is built and its effect is unmeasured.** The gate attaches at
+  `Environment.make_tool_call()` and is tested by replay; **it has never run against a live
+  environment**, and *wired but never seen to fire* reads exactly like *works*.
 - **A benchmark task is cleaner than a real ticket.** The gold actions are known, the database
   is small, and there is a right answer. Real customer service has ambiguous requests and
   sometimes no correct resolution. **That makes the reward an upper bound on a harder problem.**
@@ -396,10 +477,15 @@ design, so they hold whether or not a run has happened yet.
   itself" fuses two loops and is false on the half that matters** — what iterates is the
   **ruler**, never the thing being measured. ⚠️ **The suite does grow, and that is the inner
   loop above** — but it is unbuilt at this tag, so today the bar rises only when a human
-  raises it.
-- **The benchmark is a frozen *subset* of τ² retail's 114 tasks, not all of them.** ⚠️ **At that
-  n every figure here is a count, not a rate** — ⛔ no percentage is quoted from a double-digit
-  task set. Widening the subset is the deferred item that attacks the biggest stated limit.
+  raises it. 🔴 **And the half that decides whether a candidate ships is deferred**, so at this
+  tag *"the gate only decides whether it ships"* describes a specification, not running code.
+- **The population is 107 of τ² retail's 114 tasks**, the ones whose gold actions are unchanged
+  between the shipped runs and the current task file. **The other seven are excluded, not
+  repaired**, and the two numbers travel together — ⛔ never write 114.
+- **`action_checks` has a blind spot and the probe for it is a regex.** An agent can call the
+  right tool with the right arguments and never have asked; the count of those (**56**) comes
+  from matching the most recent user message before each WRITE, so it **over-counts** and is an
+  upper bound. ⛔ **It is enough to justify widening the selector and is not a figure to quote.**
 - **We do not own the corpus, and that is deliberate — but it cuts both ways.** τ² can change
   its tasks under us; it already has (`CHANGELOG:214` rewrote two tasks' `reward_basis`). The
   benchmark therefore stores **task ids and a hash**, so a corpus that moved is detectable

@@ -18,8 +18,15 @@ interesting one.
 | | the decision | where it is made | what makes it | ships |
 |---|---|---|---|---|
 | **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
-| **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | **P2.4** |
+| **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | 🔴 **DEFERRED — [D-080](../DECISIONS.md#d-080)** |
 | **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the five admission gates in §5 | **P3.5** |
+
+🔴 **Decision 2 is specified here and not built.** [D-080](../DECISIONS.md#d-080) deferred it: it
+compares a candidate against an incumbent, and until a second version exists it has **no second
+operand**. ⛔ **This section is left standing in full rather than cut** — it is the specification
+the row revives from, and the five conditions in §2 are load-bearing for §5's admission gates,
+which *do* ship. ⚠️ **Read every sentence about decision 2 in the present tense as a design, not a
+description of running code.**
 
 ⛔ **All three are mechanical, and that is the invariant this file exists to protect:**
 
@@ -85,6 +92,14 @@ Anything else is a **reject**, and a reject is written to `results/` exactly lik
 
 ### `open` → `locked`: why a mined case cannot gate on arrival
 
+🔴 **DELETED by [D-080](../DECISIONS.md#d-080) — not deferred, and the difference is the point.**
+`locked` is set *"automatically, the first time an accepted version scores it `pass^k`"*, and with
+decision 2 deferred **no version is ever accepted**, so the second state is unreachable. ⛔ **A
+two-state field whose second state cannot be reached reads exactly like one that works.** Until
+P2.4 ships, a mined case carries no status and **the control described below does not exist** —
+say so wherever admission is reported. It is restored **in the same commit as P2.4**, because a
+case admitted under the weaker rule would otherwise start gating on a predicate nothing confirmed.
+
 **A mined case is by definition one the agent just failed.** If it gated immediately, every
 mined case would block every candidate forever and the loop would be unusable. So each
 regression case carries a status:
@@ -140,10 +155,14 @@ actually resolve, and everything else is reported without being acted on.
 ## 2. The stages
 
 ```
-       ┌──────────── the OUTER loop — once per candidate ────────────┐
+       ┌─── the OUTER loop — once per candidate · 🔴 DEFERRED, D-080 ───┐
   run ──▶ score ──▶ compare ──▶ accept ──▶ record
-                        │                     │
-                        └──── mine ◀──────────┘
+   ⋮        ⋮          ⋮          ⋮           ⋮
+   └────────┴──────────┴──────────┴───────────┘  none of this runs
+                        │
+   1,712 shipped τ² simulations ──▶ select ──▶ 834 anomalous · 878 clean
+                        │            ⛔ NOT `DB == 0` alone — D-080 §C
+                        └──── mine ◀─┘
                                  │
                                  │  the INNER loop — up to n times per TRACE
                                  └─▶ translate ⇄ test ─▶ admit ─▶ regression suite
@@ -159,9 +178,15 @@ refused it named, is the strongest artifact this project can produce.
 🎯 **The two loops nest, and the inner one is the point.** The outer loop runs once per candidate
 version and answers *is this better?* The inner loop runs up to `n` times **on a single failing
 trace** and answers *what check would have caught this?* — the outer loop reports a number, the
-inner loop is what makes the number cover more. ⚠️ **`mine` and `admit` are specified and unbuilt**
-(P3.4 / P3.5); everything above them ships first, because the inner loop needs a failing trace and
-a control set before it has anything to work on.
+inner loop is what makes the number cover more.
+
+🔴 **[D-080](../DECISIONS.md#d-080) deferred the outer loop and the nesting is what changed.** The
+inner loop needed *a failing trace and a control set*, and that is the **only** thing the outer
+loop was supplying it — so it is fed from **τ²'s own shipped runs** instead of from ours: 1,712
+simulations over the 107 tasks with unchanged gold actions, split into **834** anomalous and
+**878** clean. ⛔ **The inner loop did not change. Its input did.** ⚠️ **What is genuinely lost is
+the return edge** — `mine` no longer feeds a next candidate, so the picture is a pipeline until
+P2.4 ships, and calling it a loop out loud would be a claim about code that is not there.
 
 ⚠️ **One naming rule, because two words were drifting apart in this file.** `mine` is a **stage**
 — a verb, a step of the inner loop, the module `mine.py`. **The curator** is the **component** that
@@ -215,13 +240,28 @@ makes the thing that answers.
 
 | | |
 |---|---|
-| **In** | one τ² retail session with `reward_breakdown["DB"] == 0` — a real failure, labelled by the benchmark's own evaluator, not by us |
+| **In** | one **anomalous** τ² retail session, drawn from the **834** selected out of 1,712 shipped simulations — [D-080](../DECISIONS.md#d-080) §C |
 | **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
 | **Or** | *unmineable* — after `n` attempts, recorded as a result, **not an error** |
 
+🔴 **`reward_breakdown["DB"] == 0` was the input and it was wrong.** The DB check compares **final
+database state** to the gold actions and is blind to *how* the state was reached, so an agent that
+skips a required confirmation and still writes the correct row scores `DB == 1`. Measured on the
+corpus: **407** traces fail DB, and a further **371** pass DB with a failed `action_check`, plus
+**56** with an unconfirmed WRITE that `action_checks` cannot see. ⛔ **Those 371 were sitting in
+the silence set** — the *is it quiet on what passes?* half of the test below — so a correct
+predicate catching a confirmation violation would have been **rejected as a false positive**. The
+selector is the **union** of the three signals: **834** in, **878** clean.
+
+⚠️ **Selection is not gating, and one number cannot be both.** `reward_breakdown["DB"]` remains the
+**gate's** metric ([D-069](../DECISIONS.md#d-069)) precisely because it is mechanical; it is a poor
+*selector* for the same reason — it cannot see process. 🔴 **The 56 is an upper bound from a regex
+over the most recent user message before each WRITE, and the error runs one way (over-counting).**
+It is enough to show `action_checks` has a blind spot and ⛔ **not a figure to quote.**
+
 ⛔ **The loop does not try to fix everything, and the filter is mechanical.** A gate can only be
-written against something that was **written down**: retail's `policy.md` (136 lines, `tau2-bench`
-1.0.1) and the tool contracts the environment already enforces. A failure that maps to a stated
+written against something that was **written down**: retail's `policy.md` (136 lines, `tau2-bench` at commit
+`a2c024725189` — [DEF-055](../DEFECTS.md)) and the tool contracts the environment already enforces. A failure that maps to a stated
 rule — a refund outside the stated window, a mutation without authentication, a restriction the
 agent was told and stepped over — is mineable. A failure that is only *the agent was not good
 enough* has no rule to point at and nothing to translate. **Record it and move on.** Trying to
@@ -230,7 +270,7 @@ gate capability is exactly how a suite fills with cases that punish correct beha
 #### The iteration, and where it stops
 
 ```
-   failing session (DB == 0)
+   anomalous session (D-080 §C — ⛔ not `DB == 0` alone)
              │
              ▼
      ┌──▶ 1. TRANSLATE ─── model reads the trace and policy.md, names the stated
@@ -242,7 +282,7 @@ gate capability is exactly how a suite fills with cases that punish correct beha
      │                       fires on the target session?       must be YES
      │                       fires on any always-pass session?  must be NO
      │           │
-     │           ├──▶ both hold ──▶ 3. ADMIT ──▶ regression suite, status `open`
+     │           ├──▶ both hold ──▶ 3. ADMIT ──▶ regression suite (🔴 no status — D-080)
      │           │                  the five admission gates below still apply
      │           │
      │           └──▶ either fails ──▶ hand back the COUNTEREXAMPLE: the passing
@@ -262,20 +302,25 @@ defence against the obvious cheat: a predicate that merely quotes the failing se
 (`task_id == 47`) satisfies the first half and fails the second the moment it meets a session
 that passes.
 
-⚠️ **The always-pass set is the control, so it has to be earned rather than picked** — the
-sessions the v1 baseline passed on **every one of `k`** attempts, not a convenient handful.
+⚠️ **The always-pass set is the control, so it has to be earned rather than picked** — 🆕 with
+P1.7 superseded it is the **878 corpus traces that are clean on all three signals**
+([D-080](../DECISIONS.md#d-080)), not the sessions our v1 passed on every one of `k`. ⛔ **Clean
+means clean on the selector, which is a stronger bar than `DB == 1`** — that is the whole of §C.
 
 ⚠️ **And silent-on-the-passing-set is a claim about the sessions that were run, never about the
 domain.** Same shape as `pass^k` in [docs/05](05-scoring.md): a predicate can be quiet on all of
 them and still be wrong about a task nobody has run. That is why an admitted case arrives `open`
 and cannot gate until it has been quiet under an accepted version — `open → locked` above is the
-second, slower control, and it exists precisely because this one is not sufficient.
+second, slower control, and it exists precisely because this one is not sufficient. 🔴 **And
+[D-080](../DECISIONS.md#d-080) deleted that second control.** ⛔ **Say this out loud with every
+admitted case**: the slower check that this section calls necessary is **not running**, so an
+admitted predicate rests entirely on the corpus it was tested against.
 
 #### Which failure goes in — clustering picks the trace
 
 A case that failed carries a trace showing *how*. The mine stage clusters failures by the
 **way** the session failed. For τ²-bench retail that taxonomy is not invented here — it is the ten
-`TerminationReason` values (`data_model/simulation.py:1254` in [tau2-bench](https://github.com/sierra-research/tau2-bench) **1.0.1**, MIT) crossed with **whether the mechanical `DB` component came back zero** (D-069), and it proposes cases that isolate that confusion.
+`TerminationReason` values (`data_model/simulation.py:1254` in [tau2-bench](https://github.com/sierra-research/tau2-bench) at commit **`a2c024725189`**, MIT) crossed with **whether the mechanical `DB` component came back zero** (D-069), and it proposes cases that isolate that confusion.
 
 ⛔ **Cluster on `reward_breakdown["DB"]`, never on the composite reward.** Retail declares `reward_basis = ["DB", "NL_ASSERTION"]` on 112 of its 114 tasks, so the composite has a judge in it and cannot gate — D-069. The `DB` key is written separately by `evaluator_env.py:153` and is mechanical. *(An earlier pass here said the two live components were `DB` and `COMMUNICATE`; that was measured off 1,824 leaderboard simulations run against the superseded task set — `DEFECTS.md` DEF-036.)*
 
@@ -290,20 +335,20 @@ point of the swap.
 
 ```mermaid
 flowchart TB
-  SCORE["score — candidate C"] --> FAIL["failures + traces"]
-  FAIL --> PICK["cluster · pick one failing session · DB == 0"]
+  SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> FAIL["select · 834 anomalous<br/>DB==0 ∪ failed action_check ∪ unconfirmed WRITE"]
+  FAIL --> PICK["cluster · pick one anomalous session"]
   PICK --> RULE{"does it break a STATED rule?<br/>policy.md · tool contracts"}
   RULE -->|no| SKIP["recorded as capability · not mined<br/>there is nothing to translate"]
   RULE -->|yes| TRANS["1. TRANSLATE — model writes a candidate predicate<br/>D-064 · candidate, never verdict"]
-  TRANS --> TEST{"2. TEST — mechanical, no model<br/>fires on the target · silent on the always-pass set"}
+  TRANS --> TEST{"2. TEST — mechanical, no model<br/>fires on the target · silent on the 878 clean"}
   TEST -->|"either fails · attempt < n"| TRANS
   TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   TEST -->|both hold| CHECK["mechanical pre-checks<br/>dedupe by signature · signal present · seed determinism"]
   CHECK --> PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> ADMIT{"⛔ admission gates — all five, mechanical<br/>reproducible · not flaky · not a void · distinct · justified"}
   ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
-  ADMIT -->|all five hold| REG["regression suite · status: open<br/>✅ no baseline reset"]
-  REG -->|"first pass^k under an accepted version"| LOCK["status: locked · gates from here"]
+  ADMIT -->|all five hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
+  REG -.->|"🔴 DEFERRED with P2.4 — no version is ever accepted"| LOCK["status: locked · gates from here"]
   ADMIT -->|"lift into the benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
 ```
 
@@ -353,6 +398,11 @@ D-040.
 
 **A suite you cannot read the history of is a suite you will eventually stop trusting.** So
 every case carries its own record, in its `manifest.json` entry:
+
+⚠️ **This example is a *future* entry and shows the fields as they will be once P2.4 ships.** Under
+[D-080](../DECISIONS.md#d-080) an entry written today has **no `status`, no `locked_at`, and no
+`mined_from.version`** — there are no versions. ⛔ **Every other field ships**, and `why` /
+`admitted_by` / `history` are the ones that carry the weight.
 
 ```json
 {

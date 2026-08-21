@@ -385,9 +385,10 @@ the part a file cannot carry.
 **What the file says that is not obvious from reading it:**
 
 - ⛔ **`langchain-mcp-adapters~=0.3.2`, not `~=2.0` and not `~=0.3`** — D-031.
-- ⛔ **`tau2==1.0.1`, pinned twice on purpose** — the version *and* a `[tool.uv.sources]` git
-  entry, because `tau2` on PyPI is a different project (DEF-050). **The code ships; the data
-  does not** — set `TAU2_DATA_DIR` (DEF-051).
+- ⛔ **`tau2` is pinned to commit `a2c024725189`, and the commit is the identity** — the
+  `[tool.uv.sources]` entry is not decoration: `tau2` on PyPI is a different project (DEF-050),
+  and `1.0.1` is a stale version string on `main`, **not** the tag `v1.0.1`, which is a different
+  tree (DEF-055). **The code ships; the data does not** — set `TAU2_DATA_DIR` (DEF-051).
 - **`dev` holds `mypy~=1.19`.** Typing is total and there is no tests exemption — D-054.
 
 ⛔ **Commit `uv.lock`.** The version table is a comparison across time; an unpinned tree makes
