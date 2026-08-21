@@ -472,7 +472,8 @@ src/touchstone/
                        roles, because there is one chokepoint — `llm_utils.py:355`
                                                                                   [P1.1]
   telemetry.py         span tree, required attributes, exporter setup — docs/04    [P1.5]
-                       ⛔ console + file exporters only; the Phoenix container is P2.8.
+                       ⛔ console + file exporters only; the tracking server is P2.6.
+                       🔴 D-074: MLflow, not Phoenix — and the slot was misquoted as P2.8.
                        Moved out of phase 2 by D-037 — a phase that emits no span
                        ends with a scorer that has never read one.
   api.py               fastapi; the four endpoints in docs/06 §2 — ⚠️ its reason is open (D-040)
@@ -511,7 +512,7 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
   p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
 .github/workflows/
   touchstone.yml       CI — ⛔ calls no model (D-014). Named in ROADMAP P2.7
-docker-compose.yml     phase 0 topology — docs/06 §3
+~~docker-compose.yml~~   🔴 gone — D-040 cut the API, D-074 cut the backend, nothing left
 ```
 
 ### ⛔ Archived by D-062 — kept here because the guard reads this section
@@ -569,9 +570,10 @@ is the ordering that keeps the scorer independent of the agent's shape.
 | `ANTHROPIC_API_KEY` | **nowhere** | — | ⛔ **Asserted absent by `touchstone doctor`.** If set, runs bill an API account instead of the subscription and nothing else notices (D-001) |
 | `CEREBRAS_API_KEY` | `.env`, local only | ⛔ **`touchstone doctor` diagnostic only.** This row said *"the judge (D-016)"*; there is no non-Anthropic model anywhere in the loop, and that judge is now `JUDGE_MODEL` = `claude-haiku-4-5-20251001` (D-067). ⚠️ It said `claude-opus-5` until 2026-08-20 — the correction that moved the judge back on-quota did not reach this row, and *"the judged dimension"* was ambiguous between two different pins, so the constant is named here instead of the role | Never in CI — CI calls no model (D-014) |
 | `OLLAMA_HOST` | shell, optional | ⛔ Same — a `doctor` reachability check, **never a model source** | Never in a scored run |
-| `TOUCHSTONE_TRACE` | shell | `console` prints the span tree; unset exports OTLP | — |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | compose | Phoenix, `http://phoenix:6006` | The one variable the backend swap changes — docs/04 §4 |
-| `PHOENIX_SQL_DATABASE_URL` *or* `PHOENIX_WORKING_DIR` | compose | ⚠️ **Without one, traces die with the container** and every past row loses its evidence | — |
+| `TOUCHSTONE_TRACE` | shell | `console` prints the span tree; unset writes to the tracking store | — |
+| `MLFLOW_TRACKING_URI` | shell, optional | Where traces land. Defaults to a local directory — **no service** | The one variable the store swap changes — docs/04 §4, **and read its narrowing before calling it vendor-neutral** |
+| ~~`OTEL_EXPORTER_OTLP_ENDPOINT`~~ | ~~compose~~ | ~~Phoenix, `http://phoenix:6006`~~ | 🔴 **Gone with D-074** |
+| ~~`PHOENIX_SQL_DATABASE_URL`~~ *or* ~~`PHOENIX_WORKING_DIR`~~ | ~~compose~~ | 🔴 **Gone with D-074.** ⚠️ **The lesson outlived the variable**: without one of them the traces died with the container and every past row silently lost its evidence. A local directory cannot fail that way, which is most of why it won | — |
 | `TOUCHSTONE_SUITE_DIR` | tests | Points the runner at a fixture suite | Never set in a scored run |
 | `ERASER_API_KEY` | shell, optional | Diagram authoring only | ⛔ Never in `pyproject.toml` — not a dependency (D-021) |
 

@@ -22,9 +22,21 @@ entitled to answer it. **Everything below is retained as the specification of a 
 not be built** — a cut is a claim, and a reader who asks *"is there an HTTP surface?"* deserves
 the answer plus the reason, not silence.
 
-⛔ **`docker-compose.yml` and the Phoenix service are NOT cut** and P2.8 still requires them. They
-appeared in the same roadmap row and the same diagram label as `api.py`, which is the only reason
-they ever looked like one decision.
+~~⛔ **`docker-compose.yml` and the Phoenix service are NOT cut** and P2.8 still requires them.~~
+🔴 **Struck 2026-08-21 by D-074, and the strike is the interesting half.** This line existed to stop
+D-040 from over-reaching — the compose file and `api.py` shared a roadmap row and a diagram label,
+so cutting one looked like cutting both. The correction was right at the time and is now **empty**:
+D-074 removed Phoenix, which was the *only* service left with a reason. `touchstone` served the API
+that D-040 cut, `mcp` served `touchstone`.
+
+⛔ **So the compose file has no remaining service and does not exist on disk** (verified
+2026-08-21: `ls docker-compose.yml` → no such file). ⚠️ **Two independent decisions each cut part
+of a file and neither noticed it had emptied it** — the failure is that a fact defended in writing
+outlives the thing it was defending. The roadmap row was also misquoted: Phoenix was **P2.6**
+(ROADMAP:284), never P2.8.
+
+**Everything below this line is retained verbatim as the specification of a thing that will not be
+built.** It is not maintained against D-074; read it as a dated design, not as the current stack.
 
 ⚠️ **The checkpointer is a separate question and is not cut by D-040.** `.touchstone/` also
 carries run state for a process that dies mid-run; whether anything still needs that is a phase-1
@@ -192,7 +204,7 @@ evening starts with docker and the fast route is not fast.
 | **Does the CLI reach the tools over MCP, or import them?** | ⭢ **Over MCP, on stdio**, spawning the server as a subprocess. `langchain-mcp-adapters` returns LangChain tools either way, so binding MCP tools costs about what binding local functions costs — and it means **the numbers in the version table actually traversed the protocol.** ⛔ The alternative, importing in the CLI and serving MCP only from the API, would leave the MCP path exercised by nothing that gets measured |
 | **Does the CLI share the checkpoint volume?** | ⭢ **No.** The CLI keeps `.touchstone/checkpoints.db` on the host; the container keeps its own on the volume. Sharing one SQLite file across a host process and a container is a locking problem bought for nothing. ⚠️ **The answer survives D-040; its reason does not.** It was *"the durability claim lives on the HTTP path"* — there is no durability claim now. What still holds is the locking argument, which never depended on the interrupt |
 | **Is `ollama` in the compose file?** | ⭢ **No — cut.** It was an orphan node here, with no arrow to anything, which is the diagram saying what the prose would not. 🔴 **The original reason given was *"the judge runs on Cerebras and ollama was a third fallback"*, and that reason is retired** — D-067 makes every role Anthropic and both a `doctor` diagnostic. The verdict is unchanged and the argument is now *stronger*: **a compose service nothing connects to is maintenance bought for nothing**, and nothing connects to it because nothing may |
-| **One Phoenix project or two?** | ⭢ **One**, `touchstone`. A run span carries `version`, `tier` and `benchmark_hash`, and its simulation spans carry `task_id`, so the scorer selects on those; a stray `POST /triage` demo simply matches no manifest entry. **Two project ids would mean the scorer had to know which surface produced a run**, which is exactly the coupling [docs/04](04-observability.md) §1 exists to avoid |
+| **One trace project or two?** *(asked as "one Phoenix project or two"; D-074 changed the vendor, not the question)* | ⭢ **One**, `touchstone`. A run span carries `version`, `tier` and `benchmark_hash`, and its simulation spans carry `task_id`, so the scorer selects on those; a stray `POST /triage` demo simply matches no manifest entry. **Two project ids would mean the scorer had to know which surface produced a run**, which is exactly the coupling [docs/04](04-observability.md) §1 exists to avoid |
 
 ⛔ **There is no arrow from any container to `suite/`.** The tools read the environment handed to
 them; a container that could reach `suite/benchmark/truth.json` is the leakage path that produces
@@ -211,7 +223,7 @@ silently switches quota to invoice (D-001).
 | Not built | Why |
 |---|---|
 | Auth | Nothing served here is worth protecting, and a login screen would only look like production |
-| A web UI | The Phoenix UI shows traces; a bespoke dashboard is a week for nothing |
+| A web UI | 🔴 **The reason changed with D-074, the verdict did not.** It was *"the Phoenix UI shows traces"*; there is no bundled UI now. A bespoke dashboard is still a week for nothing — [docs/04](04-observability.md) §"the monitoring row" is the argument, and it never depended on a UI existing elsewhere |
 | Multi-tenancy | One user |
 | A real order-management backend, or a live customer channel | ⛔ **It would make the suite unfreezable**, which breaks the version comparison — the point of the project |
 | Kubernetes | Compose is the honest scope |

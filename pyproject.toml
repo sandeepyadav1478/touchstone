@@ -8,22 +8,33 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "arize-phoenix-client~=3.2",
-    "arize-phoenix-otel~=0.17",
     "claude-agent-sdk~=0.2",
     "httpx~=0.28",
     "langchain-core~=1.6",
-    "langgraph~=1.2",
-    "openinference-instrumentation-langchain~=0.1",
-    "openinference-semantic-conventions~=0.1",
-    "opentelemetry-api~=1.44",
-    "opentelemetry-exporter-otlp~=1.44",
-    "opentelemetry-sdk~=1.44",
+    # D-075: capped at MLflow's tested autolog ceiling, not the latest release.
+    # mlflow/ml_package_versions.py declares langgraph autolog 0.6.2..1.2.9.
+    "langgraph==1.2.9",
+    "mlflow-skinny~=3.15",
     "pydantic~=2.13",
-    "rich~=15.0",
+    # Ceiling is deliberate, not latest-wins: deepeval requires rich<15.0.0 and is
+    # the chosen diagnostic library (D-076). We use exactly one symbol from rich
+    # (`Console`, doctor.py), stable since 1.x, so the ceiling costs nothing and
+    # keeps D-076 a one-line add instead of a dependency renegotiation.
+    "rich>=13.8,<15",
     "tau2==1.0.1",
     "typer~=0.27",
 ]
+
+# D-076 -- DeepEval is the diagnostic metric library BEHIND the gate, reached
+# through MLflow's first-party adapter (mlflow/genai/scorers/deepeval).
+#
+# It is an optional extra, and the split is the point: MLflow's own registry
+# marks 28 of its 30 metrics `is_deterministic=False` -- ToolCorrectness,
+# StepEfficiency and PlanAdherence included. Those are LLM-judged, so they are
+# excellent DIAGNOSTICS and disqualified as GATES. Gates run `@scorer`
+# predicates we write. Nothing that gates may import this extra.
+[project.optional-dependencies]
+diagnostics = ["deepeval~=4.1"]
 
 [project.scripts]
 touchstone = "touchstone.cli:app"
@@ -92,8 +103,8 @@ convention = "google"
 python_version = "3.12"
 strict = true
 warn_unreachable = true
-# The agent SDK and the openinference instrumentors ship no stubs. Untyped
-# THIRD-PARTY code is tolerated; untyped code in `src/` is not.
+# The agent SDK, tau2 and mlflow ship no stubs. Untyped THIRD-PARTY code is
+# tolerated; untyped code in `src/` is not.
 ignore_missing_imports = true
 disallow_untyped_defs = true
 

@@ -128,7 +128,7 @@ is real.
                            ▼
               ┌─── our adapter ───▶ Claude Agent SDK ───┐
               └───────────────────┬─────────────────────┘
-                                  │ OpenTelemetry spans
+                                  │ traces (mlflow.start_span)
                                   ▼
    run ──▶ attempt ──┬─▶ void · incomplete · parse_failure ──▶ counts toward NOTHING
                      │      a run that never produced a comparable number.
@@ -244,9 +244,6 @@ The rest of the interface is specified in [docs/06](docs/06-api.md) and **not ye
 implemented**. It is listed here because the spec is fixed, not because it runs:
 
 ```bash
-docker compose up -d phoenix            # ⬜ traces. ⚠️ that is all the loop needs — the five
-                                        #    tools run over MCP stdio, in-process, no container
-
 touchstone suite freeze --domain retail  # ⬜ pin the task ids and hash them
 touchstone run v1 --k 3                 # ⬜ the frozen subset × 3 attempts
 touchstone score v1                     # ⬜ → results/v1.json

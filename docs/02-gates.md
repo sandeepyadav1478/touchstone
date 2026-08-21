@@ -166,7 +166,7 @@ a control set before it has anything to work on.
 ### 1. `run`
 
 Executes candidate C against **every case in both tiers** — the frozen benchmark and the whole
-regression suite — **k times each**, emitting OpenTelemetry spans. Writes nothing but traces.
+regression suite — **k times each**, emitting spans. Writes nothing but traces.
 Idempotent per `(version, case, attempt)` so an interrupted run resumes.
 
 ⚠️ **The regression tier is what makes a run get slower over time**, and that is the cost the

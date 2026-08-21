@@ -12,7 +12,9 @@ memory. Nothing here is aspirational.
 
 **Two filters, applied in order.** First: does the ecosystem actually converge on a tool for
 this job, or is it a capability everyone describes and nobody has standardised? Where a
-standard exists — OTLP for transport, MCP for tool exposure — take it. Where one does not,
+standard exists — MCP for tool exposure — take it. ⚠️ **This clause named OTLP first until
+D-074**, and dropping it is the honest edit: the filter is still right, but *this* stack no longer
+spends it on transport. Where one does not,
 **the gap is the interesting part**, and the right response is to build the thing and measure
 it rather than adopt whichever vendor is loudest. Agent memory is the clearest case, and D-022
 makes it an experiment instead of a dependency.
@@ -27,8 +29,9 @@ same day rather than from memory. That filter removed more candidates than the f
 | Are OTel's **GenAI semantic conventions** stable? | ⛔ No. Development status, no 1.0. On 2026-06-12 (semconv v1.42.0) they were deprecated out of the main repo into `semantic-conventions-genai`, which has no tagged release | OTel semconv repo |
 | Is OTel itself mature? | ✅ Yes — `opentelemetry-sdk` 1.44.0, stable protocol. The protocol and the conventions are two different questions, and only one of them is unstable | PyPI |
 | Is MCP ready to depend on? | ✅ Yes. Spec 2026-07-28: stateless core, formal extensions, a 12-month deprecation policy. `mcp` 2.0.0 shipped the same day — ⚠️ **but this project pins 1.x**, because the LangChain bridge does not support 2.0 at any published version (D-031) | modelcontextprotocol.io |
-| Is Phoenix real or a demo? | ✅ `arize-phoenix` **20.2.0**, 682 releases, self-hosts in one container, Apache-2.0, no account | PyPI + Arize docs |
-| Is DeepEval maintained? | ✅ Yes — 516 releases, the last 2 days before this was written. **It was cut on fit, not on health** (D-020) | PyPI |
+| ~~Is Phoenix real or a demo?~~ | 🔴 **Question retired by D-074, 2026-08-21 — it was the wrong question.** Phoenix is real; it was dropped because **nothing needed collecting**. ⚠️ And the answer above was wrong on a fact it did not need: `arize-phoenix` is **Elastic-2.0, not Apache-2.0** (its `-client`/`-otel` siblings are Apache-2.0). *Maturity was never the deciding axis, which is why the error survived* | PyPI + Arize docs |
+| Is MLflow real, and who ships it? | ✅ `mlflow-skinny` **3.15.1**, Apache-2.0, maintainer `Databricks <mlflow-oss-maintainers@googlegroups.com>`, org created 2018-06-05, `mlflow/mlflow` ★27598. ⚠️ Its PEP 740 attestation names `mlflow/releases` — **a repository that 404s to the public**, so the build is signed but not auditable. Signed-but-private beats unsigned; it is not the same as inspectable | PyPI + GitHub |
+| Is DeepEval maintained? | ✅ Yes — 516 releases, the last 2 days before this was written. **It was cut on fit, not on health** (D-020) — and 🆕 **the fit changed**: D-076 admits it as a *diagnostic*, never a gate. ⚠️ It also **phones home by default** (PostHog + Confident AI); `DEEPEVAL_TELEMETRY_OPT_OUT` is set in `config.py` | PyPI |
 | Anything dead in the candidate set? | ⛔ `agentops` — last release **350 days** ago. ⚠️ `ragas` — 213 days. ⛔ `promptfoo` on PyPI is a 5-release stub; the real one is JavaScript | PyPI |
 
 ---
@@ -214,14 +217,15 @@ asserted rather than inferred: `touchstone doctor` requires `ANTHROPIC_API_KEY` 
 ## 4. The dependency manifest
 
 **Resolved against PyPI 2026-08-14. All of them exist; nothing below is a guess.** Pin the minor,
-let the patch float. ⚠️ **`arize-phoenix` itself is not declared — it runs as a container** and
-the Python side only talks to it.
+let the patch float. 🆕 **There is no container any more** — D-074 deleted
+the only one, so every package on this page is a declared dependency.
 
-*(Cross-foot, 2026-08-20: `pyproject.toml` declares **28** — 20 runtime, 3 in the `fallback`
-extra, 5 dev — plus the container, so **29** packages are named on this page. This line read
-*"27 of the 28 are declared"* and was off by one in the direction that hides a package. ⚠️ **A
-manifest that states its own size has to recount when it changes**, and nothing here does that
-automatically.)*
+*(Cross-foot, **recounted 2026-08-21 from `pyproject.toml` itself, not stepped by hand**:
+**14** declared — **9** runtime, **1** in the `diagnostics` extra, **4** dev — and **no container**.
+Was 29 including the container on 2026-08-20; D-074 removed 7 packages
+and the container, D-076 added 1. ⚠️ **A manifest that states its own
+size has to recount when it changes**, and nothing here does that automatically — this is the
+second recount, and the previous one was off by one in the direction that hides a package.)*
 
 🔴 **Existence is not the property that matters, and checking it was the wrong check.** Every
 package below resolved on PyPI and two of them still cannot do the job the table gives them —
@@ -242,16 +246,37 @@ duplicates a judge τ² already ships. **Ask what fires, not what installs.**
 
 ### Observability — phase 2
 
+🔴 **Rewritten 2026-08-21 by D-074. Eight packages became one.**
+
 | Package | Version | Job |
 |---|---|---|
-| `opentelemetry-api` / `-sdk` | `1.44.0` | The spans that are the score (`docs/04`). ✅ Transport and SDK, both stable |
-| `opentelemetry-exporter-otlp` | `1.44.0` | → Phoenix's OTLP endpoint. ⚠️ **The only line that names a backend** |
-| `openinference-instrumentation-langchain` | `0.1.70` | Auto-instruments LangGraph nodes into OTel spans. **Without it every span is hand-written** |
-| ~~`openinference-instrumentation-anthropic`~~ | `1.1.2` | 🔴 **CANNOT FIRE — delete it.** Its declared dependency is `anthropic >= 0.84.0`, and **we never install `anthropic`**: `claude-agent-sdk` ships a single transport, `_internal/transport/subprocess_cli.py`, which **shells out to the Claude Code CLI**. There is no in-process client object for an instrumentor to wrap, in any configuration. ⛔ **And `instrument()` returns normally**, logging `DependencyConflict` and patching nothing — a silent no-op, which is the failure mode this repo has now hit three times. **Model-call spans at the seam are hand-written or they do not exist** (measured 2026-08-20) |
-| `openinference-semantic-conventions` | `0.1.32` | The attribute names, as a dependency rather than as strings in our code |
-| `arize-phoenix` | `20.2.0` | The trace backend — ⚠️ a container, not an import. Self-hosted, Apache-2.0, no account and no API key, 682 releases |
-| `arize-phoenix-otel` | `0.17.1` | Three lines of exporter setup instead of thirty |
-| `arize-phoenix-client` | `3.1.0` | **`get_spans_dataframe()` — how the scorer reads spans back.** This is the load-bearing one |
+| `mlflow-skinny` | `~=3.15` | **Traces, runs, metrics, Prompt Registry, and the `@scorer` gate predicates.** Autologs LangGraph **in-process**, writing to `mlruns/` on disk |
+| `langgraph` | `==1.2.9` | ⚠️ Pinned to MLflow's *tested autolog ceiling*, not to latest — D-075. `ml_package_versions.py` declares `0.6.2`–`1.2.9` |
+
+**Deleted (7):** `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-exporter-otlp`,
+`openinference-instrumentation-langchain`, `openinference-semantic-conventions`,
+`arize-phoenix-otel`, `arize-phoenix-client`. `arize-phoenix` itself was a container, never a
+dependency, and it is gone too. `PHOENIX_URL` is out of `config.py`; `doctor` no longer probes a
+trace server (D-077).
+
+🎯 **The reason is one measured fact, and it invalidated an assumption nobody had checked:** the
+chain *"OpenInference instrumentation → therefore an OTLP collector → therefore Phoenix"* was
+assumed from the first draft onward. MLflow autologs LangGraph natively, so **there was nothing
+for a collector to collect.** The container, its port, its `docker compose` row and its `doctor`
+check all existed to serve a need that was never established.
+
+⚠️ **What this changes about D-073, which is otherwise intact.** D-073's
+decision stands — **the model span at the seam is written by hand, because no instrumentor can
+see a subprocess transport.** What changes is the API it is written *with*: `mlflow.start_span()`,
+not the OTel SDK, which is no longer installed. **The span still exists, is still explicit, and is
+still the same span in v1 and in v5.**
+
+⚠️ **The OpenInference attribute *names* still stay** (`llm.model_name`,
+`llm.token_count.prompt`, `llm.token_count.completion`, `llm.prompt_template.template`) — now as
+MLflow span attributes. ⛔ **But the justification changed and the old one must not be quoted.**
+D-073 defended them partly as *"Phoenix reads them"*; Phoenix does not read anything any more.
+They stay because one stable, versioned, published vocabulary beats a bespoke one — and the
+argument against `gen_ai.*` below is untouched and is the real reason.
 
 ⛔ **Do not claim `gen_ai.*` compliance.** OpenTelemetry's GenAI semantic conventions are
 **Development status with no 1.0**, and on **2026-06-12** they were deprecated out of the main
@@ -262,7 +287,7 @@ all**. `OTEL_SEMCONV_STABILITY_OPT_IN` exists precisely because the names are st
 
 | Layer | Status | What we say |
 |---|---|---|
-| OTLP + the OTel SDK | **Stable**, 1.44.0 | "Traces are OTLP — point them at any backend" ✅ |
+| ~~OTLP + the OTel SDK~~ | ~~**Stable**, 1.44.0~~ | 🔴 **Not ours to say any more — D-074.** The SDK is gone; the portable-backend claim now runs through `mlflow.tracing.get_bridged_tracer_provider()` and is **unrun**, so [docs/04](04-observability.md) §4 narrows it to *"the store is swappable"* |
 | `gen_ai.*` attribute names | **Development, no release** | *nothing* ⛔ |
 | **OpenInference** attributes | Apache-2.0, shipping since 2023, versioned | "Instrumented with OpenInference conventions" ✅ |
 | `touchstone.*` attributes | Ours, defined in `docs/04` | "Our scoring fields, namespaced so they can't collide" ✅ |
@@ -270,11 +295,17 @@ all**. `OTEL_SEMCONV_STABILITY_OPT_IN` exists precisely because the names are st
 **So the answer to *"is OpenTelemetry mature enough for AI work?"* is neither yes nor no:** the
 protocol is, the AI-specific vocabulary is not, and OpenInference is what fills the gap today.
 
+⚠️ **Kept because the question keeps getting asked, not because this project answers it.** After
+D-074 the only row above that is still a claim we make is the OpenInference one — and even that is
+now *"a vocabulary we write"* rather than *"a protocol something reads"*. **A survey that outlives
+the decision it justified reads as the current design to anyone who skims it.**
+
 ### Evals — phase 2
 
 | Package | Version | Job | ⛔ Not for |
 |---|---|---|---|
 | ~~`arize-phoenix-evals`~~ | `3.4.0` | 🔴 **No job left — delete it.** The judged dimension is **τ²'s** `NL_ASSERTION`, computed by `evaluator_nl_assertions.py:121` through `generate()` — **our seam**, so it is already scored from the same substrate. ⚠️ **The row was written when the judged dimension was ours to build**; D-062 handed it to the benchmark and this outlived the reason | ⛔ **never a gating metric** — unchanged, and now enforced by there being no second judge to turn on |
+| 🆕 `deepeval` | `~=4.1` | **Optional `diagnostics` extra** (D-076), reached through `mlflow/genai/scorers/deepeval`. 45 agent-trajectory metric modules — the widest of any candidate | ⛔ **Never a gate.** MLflow's registry marks **28 of 30** `is_deterministic=False`, including `ToolCorrectness` and `PlanAdherence`. ⛔ Nothing that gates may import this extra |
 | `pytest` / `pytest-asyncio` | `9.1.1` / `1.4.0` | Invariants and the eval suite | — |
 
 ### MCP — phase 2, **not** deferred
@@ -326,19 +357,17 @@ itself against.
 
 `ruff` `0.16.3` · `uv` (the installer, not a dependency)
 
-### The backend, as a container rather than a dependency
+### 🔴 The backend, as a container — DELETED 2026-08-21
 
-```yaml
-# docker-compose.yml
-phoenix:
-  image: arizephoenix/phoenix:latest
-  ports: ["6006:6006", "4317:4317"]      # 6006 = UI + OTLP/HTTP · 4317 = OTLP/gRPC
-  environment:
-    PHOENIX_SQL_DATABASE_URL: postgresql://…   # or PHOENIX_WORKING_DIR + a volume
-```
+**D-074 removed the `docker-compose.yml` Phoenix service, its ports
+(6006 UI/OTLP-HTTP, 4317 OTLP-gRPC) and its persistence settings.** MLflow writes to `mlruns/` on
+disk in-process, so this project has **no service to start** and `docker compose` is not part of
+running it.
 
-⚠️ **Without one of those two persistence settings, traces live in the container and die with
-it** — which would silently destroy the evidence behind every past row of the version table.
+⚠️ **The warning this section carried was correct and is worth keeping as a lesson:** without a
+persistence setting, traces would have lived in the container and died with it — *silently
+destroying the evidence behind every past row of the version table*. **A local directory has that
+property by default, which is a reason to prefer it and not merely a convenience.**
 
 ---
 
@@ -377,8 +406,17 @@ one. What changed: the `model` line reads `claude-sonnet-4-6`, and the pin is no
 `claude-sonnet-5` (D-067). The two ⚠ lines about `CEREBRAS_API_KEY` and `ollama` describe them
 as *unavailable paths* — under D-067 both are diagnostics and **absent is the correct state**,
 so `doctor` now reports the Cerebras key as a **pass** when it is missing. And the `uv.lock`
-line says **27 direct deps** where the formula in `_lockfile()` now yields **28**. **Re-run the
-command to refresh this block; do not hand-edit it.**
+line says **27 direct deps** where `doctor` now prints **14** — recounted from `pyproject.toml`
+2026-08-21, after D-074 removed seven packages and the container and D-076 added one. **Re-run
+the command to refresh this block; do not hand-edit it.**
+
+🔴 **That instruction was disregarded on 2026-08-21 and the block was hand-edited to today's
+values, then reverted.** The tell was this annotation: a record that carries its own list of
+overtaken lines makes the edit look like maintenance. ⚠️ **It also could not have been done
+honestly** — the run available was `--no-probe`, so `model` and `setting_sources` had no live
+values and would have been carried over from 2026-08-14 into a block relabelled as a fresh run.
+**A composite of two runs presented as one is a fabricated measurement**, and that is the reason
+for the rule, not tidiness.
 
 ⚠️ **That fourth line was found by recomputing it, not by reading it** — the annotation above
 said *three* for a day while sitting directly on top of a fourth. A count pasted inside a record
@@ -393,7 +431,6 @@ touchstone doctor
   ✓ setting_sources    [] — 0 memory files, 0 agents, 0 MCP tools (11382 ctx tokens)
   ⚠ CEREBRAS_API_KEY   absent   — path B unavailable, the judge has no fallback
   ⚠ ollama             http://localhost:11434/api/tags unreachable   — path C unavailable
-  ⚠ phoenix            http://localhost:6006 unreachable   — `docker compose up -d phoenix`
   ✓ uv.lock            present, 27 direct deps
 ```
 
@@ -422,13 +459,14 @@ filled, from the machine rather than from memory.
 | **A local model as the default** | An earlier draft chose it, and it answers the wrong question. The comparison this project exists to make is between *versions of the agent*; a weak default model compresses every version difference toward noise, so the instrument stops resolving what it was built to resolve. ⚠️ **The original line ended *"kept as path C, where a local model is a fallback rather than the baseline"* — and path C is gone (D-067).** The rejection stands and its reasoning is untouched; only the consolation prize was withdrawn |
 | **LiteLLM as a universal router** | One config for three providers, and ⚠️ **it drops `think: False` on ollama and returns empty content** — measured here before. Three thin adapters beat one leaky abstraction |
 | **The SDK's own subagents instead of LangGraph** | The SDK can orchestrate. Then the graph is Claude Code's, not yours, and there is nothing versionable to put in the table. **LangGraph owns orchestration; the SDK is transport** |
-| 🔴 **MLflow** | Its job here was *comparing versions*, which is **exactly what `results/*.json` and the README table already do** — from committed artifacts, in git, readable in a diff. **Two stores answering one question, and the one being cut is the one nobody can read in a diff.** ⚠️ Not a judgement on MLflow; a judgement on a second store for already-versioned data |
-| 🔴 **DeepEval** | Chosen for pytest-native gating — and the judge here never gates (`docs/05`), so the one thing it is best at is the one thing this project forbids. ✅ Actively maintained; health was never the problem |
+| 🔴 ~~**MLflow**~~ **— REVERSED ON SCOPE by D-074, 2026-08-21** | ⚠️ **The reason below is untouched and still binding.** MLflow is admitted for a *different job*: **in-process trace autologging**, which is what let Phoenix and its container be deleted. ⛔ **It is NOT admitted as the version-comparison store** — `results/*.json` and the README table remain that, for exactly the reason given here. A reversal that quietly widened to the original job would re-create the two-stores problem. *Original reason:* its job here was *comparing versions*, which is **exactly what `results/*.json` and the README table already do** — from committed artifacts, in git, readable in a diff. **Two stores answering one question, and the one being cut is the one nobody can read in a diff.** ⚠️ Not a judgement on MLflow; a judgement on a second store for already-versioned data |
+| 🔴 ~~**DeepEval**~~ **— REVERSED ON SCOPE by D-076, 2026-08-21** | ⚠️ **The reason below is untouched and still binding**, and is now enforced mechanically: MLflow's own registry marks **28 of 30** DeepEval metrics `is_deterministic=False`, `ToolCorrectness` and `PlanAdherence` among them. Admitted as an optional `diagnostics` extra reached through `mlflow/genai/scorers/deepeval` — **a diagnostic that explains a failure after the gate has ruled**. ⛔ Nothing that gates may import it. *Original reason:* chosen for pytest-native gating — and the judge here never gates (`docs/05`), so the one thing it is best at is the one thing this project forbids. ✅ Actively maintained; health was never the problem |
 | **Raw `gen_ai.*` semantic conventions** | Development status, no 1.0, and moved out of the main semconv repo on 2026-06-12 into a repo with no tags. Instrumenting to a moving vocabulary means re-labelling spans mid-project, which would break the scorer against its own history. OpenInference instead, plus `touchstone.*` for our fields |
 | **LangSmith as the backend** | Genuinely good, and hosted, account-required, and LangChain-shaped. ✅ Kept as a proof instead of a dependency: the exporter is one env var, so `docs/04` ships a swap-the-backend check. Demonstrating vendor-neutrality is worth more than picking a vendor |
-| **Langfuse** | Same reasoning, and also OTLP-compatible — the same one-line swap. **The point is that the choice is reversible, not that it was hard** |
+| **Langfuse** | Same reasoning. ⚠️ **The second half of this row said *"also OTLP-compatible — the same one-line swap"* and D-074 removed the swap it referred to.** The rejection stands on the hosted-account argument alone, which is the half that was ever load-bearing. **The point is that the choice is reversible, not that it was hard** — and reversibility is now a documented seam rather than an exercised one |
 | ⛔ **mem0 / Zep / Letta as agent memory** | Rejected as infrastructure, admitted as a candidate. Persistent memory across attempts makes `all_k` measure recall; across cases it leaks the frozen benchmark; across versions it makes v4's score depend on v1–v3 — and the version comparison is the product. What v5 became instead (D-023) is a frozen corpus of past resolved incidents carried by the *environment*, plus planted false precedents. ⛔ That needs no memory library: a read-only corpus needs retrieval, which `search_runbooks` already does at the same scale, while extraction and consolidation only exist on a write path. And the write path does not want one either (D-027) — mem0's ADD/UPDATE/DELETE is *an LLM deciding whether a new fact contradicts an old one*, a second inference step that fails silently and in the direction of confidence. The promotion rule already refuses a memory that breaks a passing case, which is a gate rather than a guess, and the store is `langgraph.store.BaseStore` — already pinned, zero new dependencies. [docs/08](08-memory.md) §9 |
 | **Eraser MCP as a runtime dependency** | ⛔ Never in `pyproject.toml`. An authoring tool used before code, not a package the agent imports. Its free-tier limits are unpublished, so a build that needed it could stall on somebody else's quota. The gate in [`docs/07`](07-diagrams.md) requires an approved diagram, not an Eraser one — Mermaid in the repo is the always-available fallback |
+| 🆕 **Phoenix as the trace backend** | ⛔ **Rejected 2026-08-21 (D-074) after being the chosen backend**, and not on install difficulty. MLflow **autologs LangGraph in-process to `mlruns/` on disk**, so there was never anything for a collector to collect — the container was answering a need that did not exist. It also fails this project's standing rule that **a gate must read a file, not query a service**; a verdict that can fail because a container is down is a flaky test. ⚠️ Separately and *not* the reason: `arize-phoenix` 20.3.0 is **Elastic-2.0, not OSI**. Langfuse and Opik fall to the identical collector argument |
 | **A dashboard on top of all this** | Nobody watches it. See `docs/04` §6 |
 
 ---
@@ -465,9 +503,9 @@ tool-call budget from the spans (D-032).
 |---|---|---|
 | Claude via `claude-agent-sdk` | The installed SDK + this machine's credential state | D-013 |
 | OpenInference, not `gen_ai.*` | OTel semconv v1.42.0 deprecation, 2026-06-12 | D-017 |
-| Phoenix, not MLflow | `get_spans_dataframe()`; duplication with `results/` | D-018 |
+| ~~Phoenix, not MLflow~~ **→ reversed** | 🔴 **D-074, 2026-08-21.** The duplication argument was right and still binds — `results/*.json` remains the version record. What was wrong was the premise that a collector was needed at all | D-018 → **D-074** |
 | MCP into phase 2 | The tools already carry schemas — a thin adapter, not a rewrite | D-019 |
-| `arize-phoenix-evals`, not DeepEval | Annotations land on the judged span; the judge never gates | D-020 |
+| ~~`arize-phoenix-evals`, not DeepEval~~ **→ reversed** | 🔴 **D-076, 2026-08-21.** *"The judge never gates"* still binds and is now mechanical: 28 of 30 DeepEval metrics are non-deterministic. DeepEval is admitted as a diagnostic; `arize-phoenix-evals` had no job left either way | D-020 → **D-076** |
 | Diagram approved before any code | A process gate, not a tool choice | D-021 |
 | Memory as candidate v5, not as infrastructure | Measurement independence | D-022 |
 | History as a second frozen corpus + planted false friends | The cost side of memory is the unmeasured half, and the per-case gate already catches it | D-023 |

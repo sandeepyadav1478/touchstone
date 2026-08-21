@@ -70,11 +70,11 @@ Four kinds, and the change decides which. Most changes need one; a phase usually
 | **Graph / flowchart** | The agent graph, any node or edge change, the scoring pipeline | `flowchart-diagram` |
 | **Sequence** | Anything crossing a boundary — a suite run, the MCP round trip, the adapter's hand-off at `llm_utils.py:355` | `sequence-diagram` |
 | **Entity / schema** | The two suite manifests, the span attributes, the results file, `Verdict` | `entity-relationship-diagram` |
-| **Infrastructure** | The compose topology, the CI job, where Phoenix and the MCP server live | `cloud-architecture-diagram` |
+| **Infrastructure** | The CI job and the MCP server. 🔴 **The compose topology is gone** — D-040 cut the API, D-074 cut the trace backend, and between them the file has no service left (docs/06 §top) | `cloud-architecture-diagram` |
 
 ⚠️ **The sequence diagram is the one that earns its keep.** The graph picture is easy and
-usually already right in your head; the *ordering* across the SDK, LangGraph, the checkpointer,
-the span exporter and Phoenix is where a design turns out to be wrong. **When only one diagram
+usually already right in your head; the *ordering* across the SDK, LangGraph, the checkpointer
+and the span writer is where a design turns out to be wrong. **When only one diagram
 is drawn, draw that one.**
 
 ---
@@ -205,7 +205,7 @@ the precondition for the phase existing.
 |---|---|---|
 | **0 — foundation** | Repo and compose topology: what runs where, what talks to what, which processes exist. ✅ Drawn: [docs/06](06-api.md) §3 — and it earned its keep, since **the checkpointer volume and the absent `suite/` arrow are both visible only in the picture** | infra |
 | **1 — the loop closes** | The v1/v2 graph *and* the run→span→score sequence. Two, and the sequence is the important one. ✅ **Sequence drawn**, and **re-drawn 2026-08-17 as [`diagrams/sequence.eraser`](../diagrams/sequence.eraser)** — the load-bearing element is still an arrow that is *not* there, and the replacement adds the two boundaries the Mermaid version had no participants for: `agent/models.py` → the `claude` subprocess → the network. [docs/04](04-observability.md) §4a keeps the argument and points at the file. ⚠️ **The port dropped the `tools/` lifeline and every guard passed** (DEF-021); it was caught by reading the old drawing against the new one, line by line, which is the only check that finds a participant nobody typed. ✅ **Graph drawn, and this row is CLEARED** by [`diagrams/touchstone.eraser`](../diagrams/touchstone.eraser) §2, §3 and §6 — the failure paths [docs/03](03-agent-and-tools.md) §1 said were missing are section 6's four terminal statuses, the state read/write edges are section 3's five, and **D-025 and D-026 are cited on the elements that carry them** rather than named in a caption — D-025 on the `findings → supervisor` edge, D-026 on the supervisor node itself. ⚠️ **This cell said "the two edges" until 2026-08-16**, and D-026 was never on an edge; the wording came from the shape the sentence wanted rather than from the file. It is the same error the citation checker exists to catch, in the one place the checker does not read. ⚠️ **Cleared 2026-08-15, after reading as cleared for a day while this cell still said no** — DEF-007. 🆕 **A third drawing joined this row on 2026-08-19**: [`diagrams/phase1.mmd`](../diagrams/phase1.mmd), the attachment diagram for the τ²-bench specimen (D-062). It exists because the two load-bearing attachment points — the adapter seam at `llm_utils.py:355` and the enforcement point at `Environment.make_tool_call()` — live **outside** this repo, and a box that cannot be named is a box that hides the only structure the diagram is for. It is Mermaid, **local**, and it is the reason D-068 had to widen the approved-repo set. | graph + sequence + attachment |
-| **2 — measurement** | The MCP round trip and the Phoenix span path, end to end | sequence |
+| **2 — measurement** | The MCP round trip and the span path, end to end. 🔴 **Said "the Phoenix span path" until D-074** — the vendor left, the diagram's subject did not | sequence |
 | **3 — the gates** | The CI gate: what runs, what it reads, what makes it block. ⚠️ *Was "the promotion gate" — renamed with the vocabulary, D-064* | flowchart |
 | **3 — the mine loop (D-024)** | `score → mine → proposed → review → regression → locked`, showing which edges reset the baseline and which do not. ✅ Drawn: [docs/02](02-gates.md) §5 | flowchart |
 | **4 — the one option** | Whichever option is chosen — and for v5-memory it must show the reset boundary explicitly (D-022). ✅ Drawn: [docs/08](08-memory.md) §5 | graph |

@@ -144,5 +144,13 @@ REVIEW_MODEL = "claude-opus-5"
 # ~11k model turns) therefore needs checkpoint-and-resume across windows, and the cheap pins
 # above are that constraint's doing, not a quality judgement.
 
-PHOENIX_URL = os.environ.get("PHOENIX_URL", "http://localhost:6006")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+
+# D-076: DeepEval phones home BY DEFAULT. Measured 2026-08-21 in the installed 4.1.9:
+# PostHog (`us.i.posthog.com`) plus Confident AI (`api.` / `app.` / `otel.confident-ai.com`,
+# and `au.`/`eu.` regional variants). `deepeval/telemetry/client.py:30` gates all of it on
+# one setting, and `DEEPEVAL_TELEMETRY_OPT_OUT` was verified to flip it (True set / False
+# unset). Set here rather than in the diagnostics module because config is imported first by
+# construction, so there is no import order to get wrong later. `setdefault`, not assignment:
+# default-deny, overridable out loud.
+os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")

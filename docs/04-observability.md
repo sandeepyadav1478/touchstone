@@ -69,7 +69,7 @@ emits it.** Three separate paths were assumed and all three are dead:
 | Assumed emitter | Why it never fires |
 |---|---|
 | `openinference-instrumentation-anthropic` | There is no in-process `anthropic` client to patch — `claude-agent-sdk` ships one transport and it **shells out to the Claude Code CLI**. `instrument()` returns normally and patches nothing (D-072, [docs/00](00-stack.md) §4) |
-| `openinference-instrumentation-langchain` | Real, but it sees **LangGraph nodes** — and τ²'s agent never touches LangChain. It covers **v5 only** |
+| `openinference-instrumentation-langchain` | Real, but it sees **LangGraph nodes** — and τ²'s agent never touches LangChain. It covers **v5 only**. 🔴 **Gone with D-074** — `mlflow.langchain.autolog()` (verified present, `mlflow` 3.15.1) is the v5 path now, and it has the same v1–v4 blind spot |
 | litellm's own OTel callback | D-063 assumed it. `P1.1` displaces litellm at `llm_utils.py:15`, and the callback leaves with it |
 
 🎯 **So the `cost` column would have been empty for v1, v2, v3 and v4 — and the failure is
@@ -110,7 +110,7 @@ same test.** A contract enforced for one reader and hoped for by the other is on
 | `touchstone.run` | `version`, `tier`, `benchmark_hash` | ours | scorer | Grouping, and the comparability guard |
 | `touchstone.simulation` | `task_id`, `attempt` | ours | scorer | Per-case grouping. ⚠️ **`task_id` is τ²'s word**; `case_id` was the archived specimen's |
 | `touchstone.tool.*` | `tool.name`, `tool.result_size`, `tool.truncated` | ours | scorer | Tool-call count, truncation rate |
-| `touchstone.llm` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference names, written by us** | scorer | Cost, and the model on record. ⚠️ **We keep OpenInference's attribute names while emitting the span ourselves** — Phoenix reads them, and v5's instrumentor-emitted span lands in the same shape |
+| `touchstone.llm` | `llm.model_name`, `llm.token_count.prompt`, `llm.token_count.completion` | **OpenInference names, written by us** | scorer | Cost, and the model on record. ⚠️ **We keep OpenInference's attribute names while emitting the span ourselves** — 🔴 **the reason changed with D-074.** It was *"Phoenix reads them"*; Phoenix is gone and nothing reads them natively any more. They stay because they are a **stable, versioned vocabulary** for `llm.*` that we would otherwise have to invent, and because v5's autologged span lands in the same shape |
 | `touchstone.llm` | `llm.prompt_template.template` — **the rendered prompt** | **OpenInference names, written by us** | 🆕 **human** | ⚠️ **Declared, not inherited** — and as of 2026-08-20 there is no instrumentor left to inherit it *from*. This row already said *"a default is not a contract"*. **The default was not weak; it was absent.** |
 | `touchstone.reward` | `reward_breakdown` (per `RewardType`), `reward` (composite), `reward_basis`, `termination_reason` | ours, read off τ²'s `RewardInfo` | scorer | **`reward_breakdown["DB"]` is the gate and the only gating number** (D-069). ⚠️ The composite is on the span **beside** it, unmodified, because it is what the public leaderboard compares — a span that carried only our number would make the two indistinguishable later |
 | `touchstone.turn.*` | turn index on every model call, plus the span's own start and end times | ours + OTel intrinsics | scorer | ⚠️ **This row replaced the node/specialist row with D-062, and D-071 put the nodes back** — invariants 13 and 14 are un-retired ([docs/01](01-spec.md) §6) and the overlap assertion is live again, **for v5**. The turn index still earns its place: it is the only ordering v1–v4 have, having no node spans to order |
@@ -127,7 +127,7 @@ OTel intrinsics, so the assertion was *"no specialist span starts before another
 is already recorded — **but only if the JSONL committed for CI keeps the timestamps.** A trace
 export that drops them scores identically and silently makes the invariant unrunnable, which is
 the shape of every quiet failure in this project. ⛔ **Assert the timestamps are present in the
-committed file**, not just in Phoenix.
+committed file**, not just in the tracking store.
 
 **`tier` is `benchmark` or `regression`** (D-024), and it is on the span rather than looked up
 at score time on purpose: **the scorer applies a different rule to each** — a per-case average
@@ -151,12 +151,17 @@ So the split is deliberate, and it is worth being able to say out loud:
 
 | Layer | Choice | Stability |
 |---|---|---|
-| Transport | **OTLP**, `opentelemetry-sdk` 1.44.0 | ✅ stable — this is the part that is mature |
-| LLM/tool attributes | **OpenInference** (Apache-2.0, since 2023) | ✅ versioned, and what Phoenix speaks natively |
+| Span writer | **`mlflow.start_span()`**, `mlflow-skinny` 3.15.1 | ✅ stable. 🔴 **Was OTLP + `opentelemetry-sdk` 1.44.0 until D-074** — the SDK left with the seven packages, and `mlflow.tracing.get_bridged_tracer_provider()` is the seam back to OTel if a second backend ever needs one |
+| LLM/tool attributes | **OpenInference** (Apache-2.0, since 2023) | ✅ versioned. ⚠️ **A vocabulary we write, not a protocol anything speaks here** — see the `touchstone.llm` row in §1 |
 | Scoring fields | **`touchstone.*`**, defined in the table above | ours, namespaced so it cannot collide |
 
 ⚠️ **"OpenTelemetry is mature" and "OpenTelemetry's AI conventions are mature" are two
 different claims.** The first is true, the second is not, and this project only makes the first.
+
+⚠️ **And after D-074 it makes neither out loud.** Dropping the OTel SDK removed the *transport*
+claim from the surface; what remains is the naming argument above, which was always the load-bearing
+half. **Do not restate the maturity line as a reason for the current stack** — it is a reason for a
+stack this project no longer has.
 
 ---
 
@@ -165,9 +170,11 @@ different claims.** The first is true, the second is not, and this project only 
 Order matters and getting it wrong produces traces that look right and are missing the LLM
 spans.
 
-1. `phoenix.otel.register()` — `TracerProvider` + OTLP exporter, **before importing anything
-   that instruments**
-2. `LangChainInstrumentor().instrument()` — LangGraph nodes become spans. ⚠️ **v5 only**;
+1. `mlflow.set_tracking_uri()` + `mlflow.set_experiment()` — **before importing anything
+   that autologs.** 🔴 **Was `phoenix.otel.register()` until D-074.** The order requirement did
+   not go away with the backend: an autologger that binds at import time binds to whatever is
+   configured then
+2. `mlflow.langchain.autolog()` — LangGraph nodes become spans. ⚠️ **v5 only**;
    there is nothing for it to see in v1–v4
 3. Application code — and `adapter.py` opens `touchstone.llm` itself
 
@@ -186,10 +193,12 @@ on a dependency upgrade.
 
 ## 4. Exporters, and the swap that proves the point
 
-- **OTLP → Phoenix** by default. `docker compose up` brings it; UI and OTLP/HTTP on `6006`,
-  gRPC on `4317`. ⚠️ Set `PHOENIX_SQL_DATABASE_URL` or `PHOENIX_WORKING_DIR` + a volume, or
-  **the traces die with the container** and every past row of the version table loses its
-  evidence.
+- **MLflow local tracking store** by default — a directory, no service, no container. 🔴 **Was
+  `OTLP → Phoenix` on `6006`/`4317` behind `docker compose up` until D-074.** ⚠️ **The
+  persistence warning outlived the backend and is the reason the row is worth reading:** the
+  Phoenix version needed `PHOENIX_SQL_DATABASE_URL` or `PHOENIX_WORKING_DIR` + a volume or
+  **the traces died with the container**, taking the evidence for every past row of the version
+  table. A directory on disk cannot fail that way, which is most of why it won.
 - **Console exporter** under `TOUCHSTONE_TRACE=console` for debugging.
 - **File exporter** in CI — spans land as JSONL artifacts so `score` runs on committed traces
   and **a scoring bug can be re-run against the original evidence** without re-running the
@@ -202,12 +211,19 @@ regenerates.
 ### The one-env-var backend swap — a check, not a feature
 
 ```bash
-OTEL_EXPORTER_OTLP_ENDPOINT=https://api.smith.langchain.com/otel touchstone run v1 --k 1
+MLFLOW_TRACKING_URI=<a second store> touchstone run v1 --k 1
 ```
 
-**A phase-2 acceptance check runs one case against a second OTLP backend and asserts the same
+**A phase-2 acceptance check runs one case against a second tracking store and asserts the same
 span count.** It costs a few minutes and it is the only thing that turns *"traces are
-vendor-neutral"* from a slogan into a demonstrated property.
+portable"* from a slogan into a demonstrated property.
+
+⚠️ **The claim got narrower with D-074, and the honest version says so.** It was
+`OTEL_EXPORTER_OTLP_ENDPOINT` pointed at *any* OTLP receiver — a genuine vendor-neutrality
+demonstration. `MLFLOW_TRACKING_URI` swaps the **store**, not the **vendor**. The wider claim is
+still reachable through `mlflow.tracing.get_bridged_tracer_provider()` (verified present), and
+🔴 **until that has actually been run, do not say "vendor-neutral" out loud** — say "the
+store is swappable, and there is a documented seam to OTel."
 
 ⛔ **And it is a check, not a dependency.** No hosted account is required to run this repo. The
 claim being made is *"the backend is replaceable"* — which is exactly the claim that goes stale
@@ -220,16 +236,24 @@ the moment it stops being tested.
 The scorer does not tail a log or scrape a UI:
 
 ```python
-from phoenix.client import Client
-df = Client().spans.get_spans_dataframe(project_identifier="touchstone")
+import mlflow
+df = mlflow.search_traces(locations=["touchstone"], return_type="pandas")
 ```
 
-⚠️ **`query_spans()` is deprecated** — the current call is `get_spans_dataframe()`, from
-`arize-phoenix-client`. ⛔ Do not reach for the deprecated one because an older tutorial uses it.
+🔴 **Was `phoenix.client.Client().spans.get_spans_dataframe()` until D-074.** Signature verified
+against the installed `mlflow` 3.15.1: `search_traces(experiment_ids, filter_string, max_results,
+order_by, extract_fields, run_id, return_type, model_id, sql_warehouse_id, include_spans,
+locations, …)`. ⚠️ **`experiment_ids` is deprecated in favour of `locations`** — the same trap the
+struck `query_spans()` note recorded for the old client, one library later.
 
-**This is the reason Phoenix and not a write-only backend.** A trace store the scorer cannot
-query programmatically would force the spans to be written twice — once for humans, once for
-scoring — and two copies of the truth is how the version table starts lying.
+**This is the reason a queryable store and not a write-only backend.** A trace store the scorer
+cannot query programmatically would force the spans to be written twice — once for humans, once
+for scoring — and two copies of the truth is how the version table starts lying.
+
+🎯 **And the CI path got shorter, which is the part worth noticing.** `mlflow.entities.Trace`
+has `to_json()` and `from_json()` (both verified present), so the committed-JSONL artefact D-014
+depends on is **a native round-trip rather than a custom file exporter**. The Phoenix design
+needed one written by hand.
 
 ### run → span → score — the phase 1 gate diagram (D-021)
 
@@ -242,7 +266,10 @@ and D-037 moved `telemetry.py` into phase 1 (it is `P1.2`; `P1.5` is `score.py`)
 emitter, the scorer, and a `results/v1.json` built from spans the agent actually produced.
 
 ⛔ **The phase-2 half is the *backend*, not the emission.** `P1.5` ships the console and file
-exporters; the Phoenix container arrives at `P2.8`. The scorer reads committed JSONL either way,
+exporters; the tracking **server** (as opposed to the local directory) arrives at `P2.6`
+(🔴 **this said `P2.8` and was simply wrong** — ROADMAP:284 is the backend row, ROADMAP:286 is
+`record.py`. Caught 2026-08-21 while sweeping for a different error, which is the usual way). 🔴 **That
+slot said "the Phoenix container" until D-074.** The scorer reads committed JSONL either way,
 which is the whole of D-014.
 
 *This paragraph recorded an open question until 2026-08-15 — ROADMAP's `P2.2` described re-pointing
@@ -267,11 +294,16 @@ above and below this paragraph is the original's; only the drawing moved.**
 - **The telemetry wiring is three numbered self-messages on `telemetry.py`.** §3 above is the
   authority for the order; the drawing now asserts it in the same shape the code will have.
 
-⚠️ **And one thing it deliberately narrows.** The Mermaid drew the scorer calling
-`get_spans_dataframe()` against Phoenix; the replacement draws it reading **committed JSONL**. Both
-are real — the code block at the top of this section is the local path, D-014 is the CI path — but
-**only the file path is load-bearing**, because it is the one that has to work with no credential.
-Drawing the Phoenix read as *the* way the scorer gets spans is what makes D-014 look optional.
+⚠️ **And one thing it deliberately narrows.** The Mermaid drew the scorer calling the store's
+query API; the replacement draws it reading **committed JSONL**. Both are real — the code block at
+the top of this section is the local path, D-014 is the CI path — but **only the file path is
+load-bearing**, because it is the one that has to work with no credential. Drawing the live query
+as *the* way the scorer gets spans is what makes D-014 look optional.
+
+🎯 **D-074 vindicated that narrowing rather than invalidating it.** The API named in this
+paragraph was `get_spans_dataframe()` against Phoenix and is now `mlflow.search_traces()`; the
+**diagram did not have to change**, because it never drew the vendor. That is the whole argument
+for drawing the file path, arrived at a year early by accident.
 
 ⛔ **`note over` is not available.** Eraser accepts it, round-trips it verbatim in the API response,
 and renders nothing at all — measured 2026-08-17. The Mermaid's four `Note over` lines therefore
@@ -333,7 +365,9 @@ an enterprise agentic system reasonably includes *realtime monitoring in product
 project has no production and no users** — a dashboard over 114 benchmark tasks is a directory
 that looks like a capability, which is the failure [docs/03](03-agent-and-tools.md) names by name.
 
-🎯 **The honest artifact is the substrate, not a dashboard:** the OTLP export *is* what such a
-monitor would run on, and the one-environment-variable backend swap (§4) is the demonstration that
+🎯 **The honest artifact is the substrate, not a dashboard:** the trace export *is* what such a
+monitor would run on, and the one-environment-variable store swap (§4) is the demonstration that
 it would. **That survives *"show me it running."*** A dashboard built for this corpus does not.
+⚠️ **Read §4's narrowing before repeating this** — after D-074 the demonstrated claim is
+*swappable store*, not *vendor-neutral transport*.
 D-043.

@@ -233,7 +233,10 @@ def run(probe: bool = True) -> int:
         _cerebras(),
         # ⛔ Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
         _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "a diagnostic — never a model source"),
-        _http(config.PHOENIX_URL, "phoenix", "`docker compose up -d phoenix`"),
+        # D-077: no trace-server check. MLflow autologs LangGraph in-process and
+        # writes to `mlruns/` on disk, so there is no service to be up or down.
+        # A tracking-store check belongs in the P1.0 doctor pass, designed, not
+        # bolted on here.
         _lockfile(),
     ]
 
