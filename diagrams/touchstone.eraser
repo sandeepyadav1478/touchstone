@@ -180,8 +180,6 @@ legend [position: top-left] {
   [connection: -->, label: "reads it — does not trigger it"]
 }
 
-Dev [shape: oval, color: blue, icon: user, label: "the developer changes exactly ONE thing\nNO auto-tuner — a human writes every candidate (D-044)"]
-
 // ── 1 · the specimen. External, pinned, and NOT OURS — which is the whole point of D-062.
 Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · tau2 1.0.1 · attachment surface hashed, not SHA-pinned\nnot written here, not vendored here — 114 tasks stay upstream"] {
   Orch [icon: repeat, label: "orchestrator.py:260 — Orchestrator.run\ndrives one simulation to its end"]
@@ -270,7 +268,6 @@ Bench > Orch: which tasks — the ids only
 // ── 7 · the driver and the scorer.
 CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.6 adds run · score · suite"]
 RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
-Dev > CliPy
 CliPy > Doctor: the P0 subcommand, and the only one that runs today
 CliPy > RunPy > Orch
 
@@ -301,7 +298,6 @@ Accepted [shape: oval, color: green, icon: check, label: "ACCEPT — vN is the c
 Refused [shape: oval, color: red, icon: x, label: "REJECT — the rejection IS the result\nNEVER fixed by weakening the baseline"]
 C5 > Accepted: all five hold
 Cmp > Refused: any ONE fails
-Refused --> Dev: informed by WHICH task broke
 
 // ── 8b · THE INNER LOOP (D-070). Every other stage on this page runs ONCE per
 //  candidate version. This one runs up to n times on a SINGLE failing trace, and it
@@ -352,18 +348,23 @@ Admit --> PosMem: an admitted rule IS the positive memory
 MGive --> NegMem: every UNMINEABLE lands here, with its counterexamples
 NegMem --> MScope: what has already been tried and failed on this shape
 
-// ── 8d · THE THIRD PART (D-079). The two loops are drawn above under docs/02's names, and
-//  this is the part that is deliberately NOT a loop. The forcing function is automated; the
-//  AUTHORING of the fix is not, and that is a decision rather than an unfinished edge.
-//  ⚠ Two reasons, and the second is the one that would survive review. (1) Against a
-//    five-hour window that REJECTS rather than bills, a loop whose iteration costs a full
-//    114-task run is not a loop you can turn. (2) No serious team lets an automated loop
-//    rewrite the prompt it is being graded on — and we own a prompt at v5 ONLY, so before
-//    P3.6 there is not even a prompt of ours for such a loop to rewrite.
-Human [shape: oval, color: purple, icon: user, label: "the HUMAN REMEDY — D-079 part 3 · a PART, never an absence\nthe loops find the failure and hold it; a person authors the fix"]
-MSkip > Human: a capability failure has no stated rule — it needs a person, not another attempt
-Refused --> Human: and so does a rejected candidate
-Human > Dev: which is the same person the first arrow on this page starts from
+// ── 8d · WITHDRAWN 2026-08-21, AND THE WITHDRAWAL IS THE ENTRY. A `Human` node stood here
+//  for one day carrying "D-079 part 3 · the HUMAN REMEDY", with edges from MSkip and Refused.
+//  ⛔ IT WAS NEVER DECIDED. On 2026-08-20 the instruction was "I have suggested to change only
+//     human in loop (discard it)", and on 2026-08-21 the follow-up was "I never said" about the
+//     gate-blocks-and-a-human-fixes-it framing being attributed back. The one supporting remark —
+//     "some human will definetly update the prompt/policy/rules" — was made inside a hypothesis
+//     prefaced "This is just an thought, we aren't planning to run retail agents."
+//  🔴 THE MECHANISM IS THE PART WORTH KEEPING. A correction arrived naming TWO things; one half
+//     was applied and the other half was not re-derived. That is rule 10 — a correction is the
+//     highest-error, lowest-re-reading edit in the file — and it produced a NODE, not a sentence.
+//  ⛔ A REMARK INSIDE A HYPOTHESIS THE SPEAKER HAS ALREADY DISCLAIMED IS NOT A DECISION.
+//     Grade it U, or do not draw it. An invented reason collapses on "what else did you consider?"
+//  ✅ WHAT SURVIVES D-079 is below, and it is the half nobody disputed: evals are the forcing
+//     function, and the STANDARD they measure against does not move. MSkip and MGive are plain
+//     terminals now — they RECORD, which is all the phase-3 exit gate ever asked of them.
+Immutable [shape: document, color: red, icon: lock, label: "THE STANDARD DOES NOT MOVE — D-079\nthe retail policy document is ground truth the gate derives from · the agent's prompt, rules and tools are the lever\na gate made green by editing the standard is 'the test failed so I changed the test'"]
+Immutable --> MScope
 
 // ── 9 · the three decisions, side by side. None of them may contain a model.
 Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {

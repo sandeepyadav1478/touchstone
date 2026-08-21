@@ -113,15 +113,15 @@ drawing. ⛔ **So `loop.png` was deliberately NOT replaced** — swapping 2.8 MB
 pixels is churn, and the honest record is that the picture did not move. The *hosted* copy was
 replaced, because that one had genuinely drifted.
 
-### The settled renders, measured 2026-08-18
+### The settled renders — `sequence.png` measured 2026-08-21, `loop.png` re-measured the same day after the Dev/Human deletion
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 6574 × 9769 — **64.2 MP** | 3032 × 3457 — **10.5 MP** |
-| On disk | 3.22 MB | 0.73 MB |
-| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 46 / 62 / 51 / **60** | 14 / 14 / 20 / 11 |
+| Frame | 5264 × 10283 — **54.1 MP** | 3032 × 3457 — **10.5 MP** |
+| On disk | 3.00 MB | 0.73 MB |
+| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 40 / 64 / 37 / **63** | 14 / 14 / 20 / 11 |
 | Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.5%** of the frame | **98.9%** |
-| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.40%** | **3.25%** |
+| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.64%** | **3.25%** |
 | ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs. ⛔ **AND THE SWEEP STOPPED ONE ROW SHORT — found 2026-08-18, on the pass that recreated the hosted flowchart.** The two rows above use a *third* comparator (`ImageChops.difference` against the corner pixel), not `< 200` and not the loose threshold, and neither said so. Measured at `< 200` the same padding reads **65 / 61 / 61 / 62** and **28 / 28 / 40 / 30**; at the loose threshold, **46 / 61 / 61 / 58** and **27 / 27 / 40 / 23**. Three comparators, three answers, one unlabelled row. The bottom cell also read **59** against a measured **58** — an off-by-one that no threshold explains and that survived because the row it sits in had no method to check it against |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 — ⚠️ **and quality 2's failure changed shape on 2026-08-21; see the row below.** The content-addressed URL is keyed on the render, so **a failed export poisons its own cache entry**: re-requesting quality 3 returned the same 0-byte object at the same `x-goog-generation`, and only a different quality produced a different key. ⛔ **Retrying an export is not retrying a render** | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.07%-ink blank**, finding 9 |
@@ -155,9 +155,12 @@ same defect as the one the row above records — so it is a description now, not
 | the gate audit | **+13 declarations, +2 groups, +6 edge lines** — §14's `DiagGate` and four exit gates, `Insuf`, the five admission gates broken out of a label | 7887 × 12420 → **7953 × 16738** | **+66** | **+4318** |
 | the completeness audit | **+8 nodes, +8 edges** — `BudgetFlag`, `DoctorPy`, `Log`, and §15's `Guards` with its four scripts (DEF-023, DEF-025) | 7953 × 16738 → **12864 × 19056** | **+4911** | **+2318** |
 | D-074 · Phoenix → `mlflow ui` | **one node renamed and relabelled, one edge retargeted** — no node added or removed | 4873 × 7633 → **4873 × 7633** | **0** | **0** |
-| D-071 · D-078 · D-079 — the nine decisions the picture was silent about | **+14 declarations**, two of them groups (§11b `AgentGraph`, §8c `Curator`) plus `Human`, `DeepEval`, `MCrit`; **+16 edge lines, −2** (`MT > MTest` and the four-rung ladder chain, both re-routed) | 4873 × 7633 → **6574 × 9769** | **+1701** | **+2136** |
+| D-071 · D-078 · D-079 — the nine decisions the picture was silent about | **+14 declarations**, two of them groups (§11b `AgentGraph`, §8c `Curator`) plus ~~`Human`~~ *(deleted one day later — row eleven)*, `DeepEval`, `MCrit`; **+16 edge lines, −2** (`MT > MTest` and the four-rung ladder chain, both re-routed) | 4873 × 7633 → **6574 × 9769** | **+1701** | **+2136** |
+| D-079 part 3 **WITHDRAWN** — `Dev` and `Human` deleted | **−2 declarations, +1** (`Immutable`); **−5 edge lines, +1** — the two person-shaped nodes and every edge into them | 6574 × 9769 → **5264 × 10283** | **−1310** | **+514** |
 
 ✅ **Row ten is measured against row nine at the same quality — both `imageQuality: 1` — so it is a live comparison, not a derived one.** It is also the largest single edit in the table by node count, and the frame grew on *both* axes, which only rows three, six, seven and eight did. ⚠️ **Ink fell from 5.53% to 4.02% while the frame grew 1.73× in area.** That is what a real content addition looks like here — the 0.03%-ink quality-2 blank of finding 7 is two orders of magnitude below it, which is the only reason the ink measurement separates the two cases at all.
+
+✅ **Row eleven is the case the ink measurement was introduced for: the canvas SHRANK 16% in area and the ink ROSE, 1.40% → 1.64% at the same `< 200` comparator.** That is the "diagram got tighter" reading named at the top of this section, and it is the first row in the table to show it — every earlier shrink came with falling ink. ⚠️ **It also shrank on one axis and grew on the other**, which is why removing three nodes and four net edges did not simply give back what row ten took: Eraser re-packed the columns, so a deletion bought width and spent it on height.
 
 ⛔ **Row nine's two zeros are real, and its *starting* frame has no row above it.** The frame went **12864 × 19056 → 4873 × 7633** somewhere between row eight and row nine — the D-068 redraw, which cut sections 1–4 with the specimen — **and that row was never written**. It is left missing rather than reconstructed: row eight's figure is derived at quality 2 and row nine's is measured at quality 1, and finding 3 says a quality mismatch invalidates the comparison. **A row assembled from two qualities would look like the eight real ones.**
 
@@ -210,7 +213,7 @@ re-measured the same way and that diagram is gone. ✅ **Row six is the one that
 only exists because the settled 7343 × 10742 above became a *before* the moment the next edit
 landed. The withdrawal is what made the next comparison possible.
 
-⛔ **Nine live rows, nine unrelated reflow shapes — so there is no stable-layout claim left to
+⛔ **Ten live rows, ten unrelated reflow shapes — so there is no stable-layout claim left to
 make.**
 ⚠️ **That count is `grep -c '^| ' ` on the table minus its header minus the one struck row — derive it,
 never step it.** It read *six* until 2026-08-21, three rows after it stopped being true.
