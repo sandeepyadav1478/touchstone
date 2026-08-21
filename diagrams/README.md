@@ -117,16 +117,18 @@ replaced, because that one had genuinely drifted.
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 6439 × 9505 — **61.2 MP** | 5069 × 6252 — **31.7 MP** |
-| On disk | 2.70 MB | 1.88 MB |
-| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 46 / 61 / 61 / **58** | 27 / 27 / 40 / 23 |
-| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.3%** of the frame | **98.7%** |
-| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.14%** | **4.50%** |
+| Frame | 6574 × 9769 — **64.2 MP** | 3032 × 3457 — **10.5 MP** |
+| On disk | 3.22 MB | 0.73 MB |
+| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 46 / 62 / 51 / **60** | 14 / 14 / 20 / 11 |
+| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.5%** of the frame | **98.9%** |
+| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.40%** | **3.25%** |
 | ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs. ⛔ **AND THE SWEEP STOPPED ONE ROW SHORT — found 2026-08-18, on the pass that recreated the hosted flowchart.** The two rows above use a *third* comparator (`ImageChops.difference` against the corner pixel), not `< 200` and not the loose threshold, and neither said so. Measured at `< 200` the same padding reads **65 / 61 / 61 / 62** and **28 / 28 / 40 / 30**; at the loose threshold, **46 / 61 / 61 / 58** and **27 / 27 / 40 / 23**. Three comparators, three answers, one unlabelled row. The bottom cell also read **59** against a measured **58** — an off-by-one that no threshold explains and that survived because the row it sits in had no method to check it against |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 — ⚠️ **and quality 2's failure changed shape on 2026-08-21; see the row below.** The content-addressed URL is keyed on the render, so **a failed export poisons its own cache entry**: re-requesting quality 3 returned the same 0-byte object at the same `x-goog-generation`, and only a different quality produced a different key. ⛔ **Retrying an export is not retrying a render** | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.07%-ink blank**, finding 9 |
 | ⚠️ The quality that works | **1** — re-confirmed 2026-08-21 at 5.46% ink, four edges clear. ⚠️ **But its two failure modes both got QUIETER on that date.** Quality **2** no longer returns `{"note":"Error rendering diagram"}`; it returns a **0.03%-ink blank** — 2.9 MB, correct dimensions, every pixel of content in the top-left corner (bottom padding 14563 of 15266). Quality **3** returns a **0-byte object under HTTP 200**, `md5=1B2M2Y8AsgTpgAmY7PhCfg==`, which is the hash of the empty string. ⛔ **Both would have committed as a healthy PNG.** An error string is a gift; a 2.9 MB blank is what this table exists to catch | **2**, and 1 is a silent blank |
 | Hosted | ⛔ **one diagram per Eraser file** — they shared a file until 2026-08-17 and **rendered on top of each other** (DEF-022, finding 6). `no-link-access`. The workspace and file IDs are deliberately not printed here — they name objects in a private account, and a reader can check nothing with them | ⬑ |
+
+🔴 **Every cell in the two columns above was re-measured 2026-08-21 and every one of them had gone stale — including `sequence.png`, which nothing in this session touched.** The `loop.png` column described a 6439 × 9505 render; the file on disk was 4873 × 7633 before this edit and is 6574 × 9769 after it. The `sequence.png` column described 5069 × 6252 / 1.88 MB against a file that is 3032 × 3457 / 0.73 MB. **This is rule 22 — nothing sweeps backwards from a re-export to the table that measured it** — and the giveaway is that the *stale* column belongs to a diagram no edit in this session went near. ⚠️ A metrics table with no owner goes stale on somebody else's commit.
 
 ⛔ **`background: true` is not cosmetic, and omitting it produces a failure that reads as a
 different failure.** The default is a transparent canvas. `PIL`'s `.convert("RGB")` turns every
@@ -137,8 +139,10 @@ now checks the alpha channel first and says `nobg`, because *a guard that fails 
 reason costs more than one that does not fire.*
 
 ⚠️ **Every row above is superseded, not corrected**, and the history is kept because *the reflow
-is the finding*. All five figures were taken at the same `imageQuality` — see finding 3, which is
-the only reason they are comparable at all.
+is the finding*. Every figure below was taken at the same `imageQuality` — see finding 3, which is
+the only reason they are comparable at all. *(This sentence said "all five figures" until 2026-08-21,
+when the table had nine live rows. A count in prose beside a table it does not derive from is the
+same defect as the one the row above records — so it is a description now, not a tally.)*
 
 | render | edit that produced it | frame | Δ width | Δ height |
 |---|---|---|---|---|
@@ -151,6 +155,9 @@ the only reason they are comparable at all.
 | the gate audit | **+13 declarations, +2 groups, +6 edge lines** — §14's `DiagGate` and four exit gates, `Insuf`, the five admission gates broken out of a label | 7887 × 12420 → **7953 × 16738** | **+66** | **+4318** |
 | the completeness audit | **+8 nodes, +8 edges** — `BudgetFlag`, `DoctorPy`, `Log`, and §15's `Guards` with its four scripts (DEF-023, DEF-025) | 7953 × 16738 → **12864 × 19056** | **+4911** | **+2318** |
 | D-074 · Phoenix → `mlflow ui` | **one node renamed and relabelled, one edge retargeted** — no node added or removed | 4873 × 7633 → **4873 × 7633** | **0** | **0** |
+| D-071 · D-078 · D-079 — the nine decisions the picture was silent about | **+14 declarations**, two of them groups (§11b `AgentGraph`, §8c `Curator`) plus `Human`, `DeepEval`, `MCrit`; **+16 edge lines, −2** (`MT > MTest` and the four-rung ladder chain, both re-routed) | 4873 × 7633 → **6574 × 9769** | **+1701** | **+2136** |
+
+✅ **Row ten is measured against row nine at the same quality — both `imageQuality: 1` — so it is a live comparison, not a derived one.** It is also the largest single edit in the table by node count, and the frame grew on *both* axes, which only rows three, six, seven and eight did. ⚠️ **Ink fell from 5.53% to 4.02% while the frame grew 1.73× in area.** That is what a real content addition looks like here — the 0.03%-ink quality-2 blank of finding 7 is two orders of magnitude below it, which is the only reason the ink measurement separates the two cases at all.
 
 ⛔ **Row nine's two zeros are real, and its *starting* frame has no row above it.** The frame went **12864 × 19056 → 4873 × 7633** somewhere between row eight and row nine — the D-068 redraw, which cut sections 1–4 with the specimen — **and that row was never written**. It is left missing rather than reconstructed: row eight's figure is derived at quality 2 and row nine's is measured at quality 1, and finding 3 says a quality mismatch invalidates the comparison. **A row assembled from two qualities would look like the eight real ones.**
 
@@ -203,8 +210,10 @@ re-measured the same way and that diagram is gone. ✅ **Row six is the one that
 only exists because the settled 7343 × 10742 above became a *before* the moment the next edit
 landed. The withdrawal is what made the next comparison possible.
 
-⛔ **Six live rows, six unrelated reflow shapes — so there is no stable-layout claim left to
+⛔ **Nine live rows, nine unrelated reflow shapes — so there is no stable-layout claim left to
 make.**
+⚠️ **That count is `grep -c '^| ' ` on the table minus its header minus the one struck row — derive it,
+never step it.** It read *six* until 2026-08-21, three rows after it stopped being true.
 The paragraph this replaced said the layout was stable on the strength of the first row alone.
 **One stable re-export is one sample.** ⚠️ **Rows three and four are the ones that should change how
 you read the first two.** Row three added no node and moved no edge, yet moved the height **ten
