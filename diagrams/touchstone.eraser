@@ -65,6 +65,19 @@ title touchstone — the loop that has to get better
 //    merely out of date still argues for something; one that is silent about
 //    the last six decisions argues for nothing.
 //
+//  🔴 AND IT HAPPENED AGAIN, ON THIS FILE, WITHIN TWO DAYS. On 2026-08-21 D-071
+//    through D-079 — NINE decisions — appeared in zero labels and zero comments
+//    here, while scripts/check-diagram.py returned PASS at 228 citations. The
+//    warning three paragraphs above was written about the LAST redraw and did
+//    not prevent the next one, because a paragraph is not an instrument.
+//    Milestone 10 is now that instrument: it reads DECISIONS.md, takes every
+//    decision at or above a hand-set watermark (D-068, the redraw that produced
+//    this picture) and fails on any that is drawn nowhere. Two are exempt as
+//    non-structural and each carries its reason in the script. Both failure
+//    branches were negative-tested before the milestone was believed.
+//    ⛔ RAISING THE WATERMARK IS A CLAIM THAT A REDRAW READ EVERYTHING BELOW IT.
+//       It is not a way to make the milestone quiet.
+//
 // ═══════════════════════════════════════════════════════════════════════════════
 //  THE ONE STRUCTURAL FIND, AND IT IS WHY PHASE 1 IS SMALL.
 //
@@ -208,7 +221,7 @@ Gen --> LiteLLM: what it used to call
 Adapter > Sdk > Anthropic
 Cfg > Adapter: which pin, per role
 NoOther --> Cfg
-Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · probes the AGENT pin by live call"]
+Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · probes the AGENT pin by live call\nP1.0 adds the τ² data check · it checks NO trace server, because there is not one (D-077)"]
 Doctor > Cfg
 
 // ── 3 · the gates. Shadow earns enforce; nothing here carries a model in its verdict.
@@ -240,7 +253,7 @@ BudgetFlag [shape: document, color: red, icon: dollar-sign, label: "budget_excee
 Orch > BudgetFlag: orthogonal to where the attempt lands
 
 // ── 5 · telemetry. This is the edge D-063 got wrong, and the picture says so.
-TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2\ntouchstone.* — NEVER gen_ai.* (D-017)\n🆕 EMITTED BY US: litellm's callback is gone with litellm"]
+TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2\ntouchstone.* — NEVER gen_ai.* (D-017)\n🆕 the span is opened by adapter.py ITSELF (D-073) — no instrumentor can emit it"]
 D063 [shape: document, color: purple, icon: help-circle, label: "D-063 assumed litellm's OTel callback\nP1.1 kills that assumption — this is a CHANGE to a recorded decision"]
 D063 --> TelemetryPy
 Adapter > TelemetryPy: one span per model call, all four roles
@@ -270,6 +283,8 @@ Spans > ScorePy
 Reward > ScorePy: the answer key, and it is τ²'s, not ours
 ScorePy > Diag: the OTHER output — and it stops here
 Judge > Diag: writes the rubric fields — and reaches NOTHING else
+DeepEval [color: grey, icon: bar-chart-2, label: "deepeval — an OPTIONAL extra, `diagnostics` · D-076\nnothing that gates may import it · telemetry opted out at import"]
+DeepEval > Diag: trajectory diagnostics — and, like the judge, reaches NOTHING else
 Shadow --> Diag: the shadow scores land here until a gate earns enforcement
 
 // ── 8 · decision 2. Five conditions, all mechanical.
@@ -299,23 +314,56 @@ Refused --> Dev: informed by WHICH task broke
 //  to translate, and a loop pointed at one will keep inventing rules until one
 //  sticks. That is why MSkip exists and why the phase-3 exit gate requires at least
 //  one recorded UNMINEABLE.
-Mine [color: pink, icon: refresh-cw, label: "8b · mine — THE INNER LOOP · up to n = 5 attempts on ONE failing trace\nthe outer loop REPORTS a number; this loop makes the number COVER MORE"] {
-  M0 [color: pink, icon: alert-circle, label: "in · one failing session — the mechanical DB component came back zero\nD-069 · labelled by τ²'s own evaluator, before we looked at it"]
-  MScope [shape: diamond, color: pink, icon: help-circle, label: "does it break a rule someone WROTE DOWN?\nthe retail policy document · the tool contracts"]
+Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nthe outer loop REPORTS a number; this loop makes the number COVER MORE"] {
+  M0 [color: pink, icon: alert-circle, label: "analyst · one failing session — the mechanical DB component came back zero\nD-069 · labelled by τ²'s own evaluator, before we looked at it"]
+  MScope [shape: diamond, color: pink, icon: help-circle, label: "rule-finder — does it break a rule someone WROTE DOWN?\nthe retail policy document · the tool contracts"]
   MSkip [shape: oval, color: grey, icon: minus-circle, label: "capability failure — RECORDED, NOT MINED\nno stated rule means nothing to translate, and nothing to gate"]
-  MT [color: orange, icon: cpu, label: "1 · TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
-  MTest [shape: diamond, color: orange, icon: check-square, label: "2 · TEST — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY always-pass session? must be NO"]
+  MT [color: orange, icon: cpu, label: "1 · author — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
+  MCrit [color: orange, icon: eye, label: "2 · critic — reads the candidate BEFORE it is run · D-071\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
+  MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY always-pass session? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MScope
 MScope > MSkip: no
 MScope > MT: yes
-MT > MTest
+MT > MCrit > MTest
 MTest > MT: either fails — hand back the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
 MTest > MGive: attempt n
 Cmp --> M0: the sessions that failed
 Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — which is why an admitted case arrives `open`\nand cannot gate until it has been quiet under an ACCEPTED version"]
 Overfit --> MTest
+
+// ── 8c · THE CURATOR'S TWO MEMORIES (D-078), and the first thing to say is which memory
+//  this is NOT. It is not the agent's. The agent's memory is FROZEN and reset per attempt,
+//  because it is the thing being measured; this one GROWS, because it is loop plumbing.
+//  ⛔ NEITHER IS A MEMORY LIBRARY, A VECTOR STORE, OR CONVERSATION HISTORY. D-022 and D-027
+//     are unchanged and this decision does not reopen them.
+//  ⚠ THE ASYMMETRY IS THE DESIGN. Positive memory is EXACT because a predicate either fires
+//    or it does not — you query it by running it, so it cannot drift from what it claims.
+//    Negative memory is a HEURISTIC view and says so: Igor (CCS'21) measured stack-hash
+//    bucketing over-counting distinct crashes by 1–2 orders of magnitude and under-counting
+//    coverage by 2–3. A negative signature is the same shape of guess, so it is DERIVED and
+//    never stored — a `sig_version` bump rebuilds every bucket rather than migrating it.
+Curator [color: pink, icon: database, label: "8c · the curator's TWO memories — P3.4 · D-078\nNOT the agent's memory — that one is FROZEN and reset per attempt, because it is what is measured"] {
+  PosMem [color: green, icon: check-square, label: "positive — THE ACTIVE RULE SET, queried by RUNNING it\nexact, because a predicate either fires or it does not"]
+  NegMem [color: grey, icon: x-square, label: "negative — a RECOMPUTABLE VIEW over retained failing traces\nheuristic, derived-never-stored · a sig_version bump rebuilds it, never migrates it"]
+}
+Admit --> PosMem: an admitted rule IS the positive memory
+MGive --> NegMem: every UNMINEABLE lands here, with its counterexamples
+NegMem --> MScope: what has already been tried and failed on this shape
+
+// ── 8d · THE THIRD PART (D-079). The two loops are drawn above under docs/02's names, and
+//  this is the part that is deliberately NOT a loop. The forcing function is automated; the
+//  AUTHORING of the fix is not, and that is a decision rather than an unfinished edge.
+//  ⚠ Two reasons, and the second is the one that would survive review. (1) Against a
+//    five-hour window that REJECTS rather than bills, a loop whose iteration costs a full
+//    114-task run is not a loop you can turn. (2) No serious team lets an automated loop
+//    rewrite the prompt it is being graded on — and we own a prompt at v5 ONLY, so before
+//    P3.6 there is not even a prompt of ours for such a loop to rewrite.
+Human [shape: oval, color: purple, icon: user, label: "the HUMAN REMEDY — D-079 part 3 · a PART, never an absence\nthe loops find the failure and hold it; a person authors the fix"]
+MSkip > Human: a capability failure has no stated rule — it needs a person, not another attempt
+Refused --> Human: and so does a rejected candidate
+Human > Dev: which is the same person the first arrow on this page starts from
 
 // ── 9 · the three decisions, side by side. None of them may contain a model.
 Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {
@@ -340,22 +388,49 @@ A5 > D3
 MTest --> Admit: both hold — the predicate goes to the five gates
 Admit --> C5: the ONLY thing condition 5 would read
 
-// ── 11 · the ladder. Four versions, and each one names what changed.
+// ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with
+//  D-071 on 2026-08-20 and this section said "Four" until 2026-08-21 — see the header.
 Ladder [icon: bar-chart, label: "11 · the ladder — ONE thing changes per rung"] {
   V1 [color: blue, label: "v1 — P1.7 · the BASELINE, no gate anywhere"]
   V2 [color: orange, label: "v2 — P2.9 · + the gates, in SHADOW"]
   V3 [color: pink, label: "v3 — P3.2 · + tier-1 ENFORCEMENT"]
   V4 [color: pink, label: "v4 — P3.3 · + tier-2 ENFORCEMENT · ⚠ expected to be able to LOSE"]
+  V5 [color: pink, label: "v5 — P3.6 · + OUR AGENT, a LangGraph graph (D-071)\nthe FIRST rung where we own a prompt — v1..v4 all run τ²'s stock LLMAgent"]
 }
-V1 > V2 > V3 > V4
+V1 > V2 > V3 > V4 > V5
 Gates3 --> Ladder: what changes between versions — and ONLY this
 NoInherit [shape: document, color: red, icon: alert-triangle, label: "v1 IS MEASURED HERE, NEVER INHERITED\nτ²'s four shipped baselines all ran a gpt-4.1 simulator — context, not a reference line"]
 NoInherit --> V1
 
+// ── 11b · THE AGENT GRAPH (D-071 part A). Four nodes, and the whole design is one
+//  constraint: EVERY MUTATION IS CONFINED TO ONE NODE. That is not tidiness — it is what
+//  gives gate/enforce.py exactly one caller to attribute a refusal to. With writes fanned
+//  across three specialists a refusal is attributable to no node, and the P3 exit gate
+//  ("a REFUSED tool call is in a committed trace") stops meaning anything.
+//  ⚠ `policy` having no τ² tool at all is the second half: a node with no domain tool is a
+//  reasoning node BY CONSTRUCTION, not by instruction. It cannot quietly become an actor.
+//  ⛔ THIS IS v5 AND ONLY v5. v1 through v4 run τ²'s stock LLMAgent — we own no prompt
+//     before P3.6, which is exactly why the gates are measured against someone else's agent.
+AgentGraph [color: pink, icon: git-branch, label: "11b · agent/ — OUR retail agent — P3.6 · v5 · D-071\na LangGraph graph, NOT the SDK's subagents — the SDK's graph is not versionable"] {
+  Sup [color: pink, icon: repeat, label: "supervisor — routes, and routes only"]
+  NIdent [icon: user, label: "identity — who is this, what did they buy?\nfour READ tools"]
+  NCat [icon: package, label: "catalogue — what is this item, what could replace it?\nfour READ tools"]
+  NPol [color: orange, icon: book, label: "policy — what does the policy permit HERE?\nno τ² tool at all — reads the policy doc over our MCP server"]
+  NSyn [color: red, icon: edit-3, label: "synthesizer — commit it\nTHE ONLY NODE THAT MAY CALL A WRITE TOOL · the 7 WRITEs + transfer_to_human_agents"]
+}
+Sup > NIdent
+Sup > NCat
+Sup > NPol
+Sup > NSyn
+NSyn > EnvCall: every mutation in v5 leaves through here, and only here
+V5 --> AgentGraph: the rung this graph IS
+OneWriter [shape: document, color: red, icon: alert-octagon, label: "ONE WRITING NODE IS THE LOAD-BEARING PART\nit gives the enforcement point exactly ONE caller to attribute a refusal to"]
+OneWriter --> NSyn
+
 // ── 12 · the surfaces.
 Later [color: orange, icon: server, label: "12 · the surfaces — phase 2"] {
   RecordPy [icon: grid, label: "loop/record.py — P2.8\nthe README table, GENERATED"]
-  MLflowUI [icon: eye, label: "mlflow ui — P2.6 · a VIEWER over the tracking store\nNEVER a dependency of scoring — and no service to start"]
+  MLflowUI [icon: eye, label: "mlflow ui — P2.6 · a VIEWER over the tracking store · D-074\nNEVER a dependency of scoring — and no service to start"]
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
   NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.5 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
 }
@@ -380,10 +455,10 @@ Enforce --> P3Gate: a refusal that was SEEN, not one that was wired
 MGive --> P3Gate: the loop is only tested when it has been seen to GIVE UP
 
 // ── 14 · the guards.
-Guards [color: grey, icon: shield, label: "14 · scripts/ — the tooling that checks the WORK\nCOMMITTED and NAMED BY NO PHASE"] {
-  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, NINE milestones\nthe only check that reads the RENDER, not the source"]
-  CheckNodes [color: red, icon: crosshair, label: "check-diagram-nodes.sh — D-068 · every path-and-line node resolves\nAMBIGUITY FAILS — tau2 has six files of one name"]
-  CheckLinks [icon: link, label: "check-links.py — every markdown link resolves\n⚠ against GIT, never the working tree"]
+Guards [color: grey, icon: shield, label: "14 · scripts/ — the tooling that checks the WORK · NAMED BY NO PHASE\n⚠ TWO OF THE THREE ARE DELIBERATELY UNTRACKED — this label said COMMITTED until 2026-08-21"] {
+  CheckDiag [color: red, icon: image, label: "check-diagram.py — the D-021 guard, TEN milestones · local, not tracked\nit reads DECISIONS.md and DEFECTS.md, which are gitignored — published it would resolve nothing\nthe only check that reads the RENDER, not the source"]
+  CheckNodes [color: red, icon: crosshair, label: "check-diagram-nodes.sh — D-068 · local, not tracked\nevery path-and-line node resolves\nAMBIGUITY FAILS — tau2 has six files of one name"]
+  CheckLinks [icon: link, label: "check-links.py — the ONE that is committed\nevery markdown link resolves\n⚠ against GIT, never the working tree"]
 }
 CheckDiag > DiagGate: the evidence D-021 asks for
 CheckNodes > DiagGate: and the evidence that each name points somewhere real
