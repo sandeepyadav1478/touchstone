@@ -144,7 +144,19 @@ REVIEW_MODEL = "claude-opus-5"
 # ~11k model turns) therefore needs checkpoint-and-resume across windows, and the cheap pins
 # above are that constraint's doing, not a quality judgement.
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+# Namespaced, and the prefix is the point. This read `OLLAMA_URL` until 2026-08-21, which is
+# nobody's convention: ollama's own variable is `OLLAMA_HOST`, so the old name neither matched
+# the vendor nor announced itself as ours. A bare name in the environment is a name some other
+# tool on this machine may already own — there is a system-wide litellm under systemd here — and
+# a config value silently supplied by a neighbour is the failure that has no symptom.
+#
+# ⛔ The two UNnamespaced names in this project are deliberate and must stay bare:
+# `ANTHROPIC_API_KEY` and `CEREBRAS_API_KEY`. `doctor` asserts they are ABSENT, and that
+# assertion only means anything under the exact name the vendor's SDK reads. Namespacing a
+# variable you are checking for the absence of turns the check into a tautology.
+# `tests/unit/test_env_namespace.py` holds that line — verified 2026-08-21 by injecting a bare
+# `LITELLM_BASE` read, which it caught by name.
+OLLAMA_URL = os.environ.get("TOUCHSTONE_OLLAMA_URL", "http://localhost:11434")
 
 # D-076: DeepEval phones home BY DEFAULT. Measured 2026-08-21 in the installed 4.1.9:
 # PostHog (`us.i.posthog.com`) plus Confident AI (`api.` / `app.` / `otel.confident-ai.com`,

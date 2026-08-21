@@ -347,3 +347,107 @@ and never gets bolted onto `v0.2.0` as a stretch goal.**
   a number to quote.
 - ⛔ **Never say the agent "remembers".** It queries a frozen corpus that is identical on every
   attempt. The design's whole validity rests on that distinction.
+
+---
+
+## 11. The curator's registry — a second memory, and it is not the one above
+
+⚠️ **Everything before this section is the *agent's* memory: the thing under test, frozen,
+reset per attempt, and the subject of the validity argument in §5.** This section is a
+different object with the same word attached, and conflating them is the failure the section
+exists to prevent. **They differ on every axis that matters:**
+
+| | The agent's memory (§1–§10) | **The curator's registry** (this section) |
+|---|---|---|
+| Who reads it | the agent under test | the **inner loop** ([docs/02](02-gates.md) §2) |
+| Lifetime | **frozen**; identical on every attempt | **grows** across traces, within a version |
+| Reset boundary | per attempt — §5 is the whole argument | per `context_hash` (below) |
+| If it is wrong | the measurement is invalid | the loop wastes a turn |
+| Is it a variable under test? | ✅ **yes, it is the experiment** | ⛔ **no** — it is loop plumbing |
+
+🎯 **The registry answers exactly one question: _has this already been dealt with?_** Without
+it the inner loop re-derives the same rule from the fiftieth instance of one failure, and `n`
+iterations buy one rule instead of `n`.
+
+### 11.1 Two memories, and only one of them can be exact
+
+| | **Positive** — rules already admitted | **Negative** — traces already refused |
+|---|---|---|
+| Key | the admitted rule's own identity | a **signature** over the failure |
+| Match | **exact** — it is a set membership test | **heuristic**, and known to be |
+| Cost of a false positive | a duplicate rule, caught by the admit gate | ⚠️ **a real failure silently skipped** |
+| Cost of a false negative | — | a wasted iteration |
+
+⛔ **Do not let the negative side pretend to be exact.** A signature over a failure is a
+bucketing heuristic and every published system that shipped one under-counted or over-counted
+by orders of magnitude. Igor (CCS'21) measures stack-hash-style deduplication at **1–2 orders
+of magnitude** of over-count and coverage-based bucketing at **2–3**. A design that hides that
+behind an equality operator is claiming a precision nobody has achieved.
+
+### 11.2 The four mechanisms, and the reason each is there
+
+1. **Minimize, then fingerprint — never fingerprint the raw trace.** The signature is taken
+   over a **backward dynamic slice from the violating write**, not over the trace that
+   contained it. This is ClusterFuzz's ordering and it is load-bearing: two traces that differ
+   in fifty irrelevant turns and agree on the three that caused the write must land in the same
+   bucket, and no hash over the unminimized artifact does that. ⛔ **The naive
+   "hash the failing state" design is the one Igor measures as 1–2 OOM wrong.**
+
+2. **Two phases, each declaring its direction.** WER (SOSP'09) separates **labeling** —
+   expanding, one bucket per distinguishable cause — from **classifying** — condensing,
+   merging buckets that share a cause. **A heuristic must say which it is**, because the two
+   have opposite failure modes and a single "dedup" step that does both is unauditable.
+   Phase 1 expands and may over-split; phase 2 condenses and may over-merge. Recorded
+   separately, so a bad merge is visible as a bad merge.
+
+3. **Derived, never stored.** The signature is recomputed at read time from a versioned
+   function, and `sig_version` is stored beside the trace. **Re-bucketing is therefore a
+   version bump, not a migration** — WER's `!analyze` re-bucketed a corpus of 300M reports
+   this way. ⛔ **A stored hash freezes a heuristic you already know is wrong**, and the
+   registry's whole value is that it can be improved after it has been used.
+
+4. **Prevalence ranking, which is what makes the errors cheap.** Buckets are worked in order
+   of how many traces fall in them. This is why WER's over-splitting was survivable and it is
+   the mechanism, not a hope: an over-split bucket is small, so it sinks; an under-split bucket
+   is large, so it surfaces and gets looked at. ⚠️ **Without ranking, neither error self-drains
+   and the registry degrades silently.** *(This was asserted as "errors are cheap in both
+   directions" before the mechanism was named — a hedge with no stated mechanism is worse than
+   no hedge.)*
+
+### 11.3 Scope, and why it is not a TTL
+
+```
+context_hash = sha(policy.md, prompt_version, tau2_version)
+```
+
+**A registry entry is valid for the context that produced it and no other.** Change the policy
+and every "already refused" verdict is stale — not old, *wrong*, because the thing that refused
+it is gone. ⛔ **A TTL is the wrong instrument**: it expires correct entries on a timer and
+keeps incorrect ones until the timer fires. The registry is **bi-temporal** — an entry records
+both when it was written and which context it was written under — so an old verdict stays
+readable as history without being consulted as fact.
+
+### 11.4 Two health metrics, reported or the registry is unaudited
+
+| Metric | What it catches | Direction |
+|---|---|---|
+| **Singleton rate** — buckets of size 1 | over-splitting; the registry is doing nothing | rising = worse |
+| **Max bucket size** | over-merging; distinct failures fused into one | rising = worse |
+
+⚠️ **Both, or neither.** Each metric is trivially gamed by the error the other one catches — a
+signature that buckets everything together scores perfectly on singleton rate. **They are the
+cross-foot.** *(WER's "one-hit wonders" are the singleton case, named as a known and accepted
+cost rather than a defect.)*
+
+### 11.5 Ceilings
+
+- ⛔ **Not built.** The inner loop is `P3.4`/`P3.5`, specified and unbuilt ([docs/02](02-gates.md) §2).
+  This section is a design, and a design doc is authoritative for what was *considered*, never
+  for what was *done*.
+- ⚠️ **The prior art is from crash triage, not agent traces.** WER, Igor and ClusterFuzz bucket
+  crashes; the analogy to a policy violation is argued, not measured. **The mechanisms transfer;
+  the published error magnitudes do not** — quoting Igor's 1–2 OOM as *this* system's error rate
+  would be borrowing a number from a different population.
+- ⛔ **Never call this "the agent learning".** It is the *harness* remembering what it has
+  already looked at. The agent is unchanged between iterations by construction — [docs/02](02-gates.md) §2:
+  *"the suite grows automatically; the agent does not."*

@@ -22,13 +22,13 @@ flowchart TB
     SDK["ClaudeSDKClient<br/>claude_agent_sdk"]
     CFG["config.py<br/>MODEL · USER_MODEL<br/>JUDGE_MODEL · REVIEW_MODEL"]
     GATE["gate · shadow then enforce<br/>D-064 · D-065"]
-    TEL["telemetry<br/>OTel spans"]
+    TEL["telemetry.py<br/>mlflow.start_span"]
     SUITE["suite<br/>benchmark frozen · regression grows"]
     ADMIT["5 admission gates<br/>reproducible · not flaky<br/>not a void · distinct · justified"]
     DOC["doctor.py<br/>asserts the pins"]
   end
 
-  PHX["Phoenix<br/>PHOENIX_URL"]
+  MLF["mlflow.search_traces<br/>MLFLOW_TRACKING_URI · no service"]
   ANTH["Anthropic<br/>subscription auth · 5h window"]
 
   RUN --> AGENT
@@ -52,7 +52,7 @@ flowchart TB
 
   ADP --> TEL
   ENVC --> TEL
-  TEL --> PHX
+  TEL --> MLF
 
   REW --> D2
   ADMIT --> D3

@@ -163,6 +163,19 @@ inner loop is what makes the number cover more. ⚠️ **`mine` and `admit` are 
 (P3.4 / P3.5); everything above them ships first, because the inner loop needs a failing trace and
 a control set before it has anything to work on.
 
+⚠️ **One naming rule, because two words were drifting apart in this file.** `mine` is a **stage**
+— a verb, a step of the inner loop, the module `mine.py`. **The curator** is the **component** that
+runs it and, unlike the stage, **holds state across traces**: the rule registry, what has already
+been admitted, what has already been tried and refused. 🎯 **The distinction is not cosmetic — it is
+the whole reason the component needed a name of its own.** A stage is stateless by construction and
+can be described entirely by its inputs and outputs; the thing that stops the loop re-deriving the
+same rule from the fiftieth instance of one failure cannot. **The registry and its two phases are
+specified in [docs/08](08-memory.md).**
+
+⛔ **Do not rename `mine`, `mine.py` or "mining" to match.** They are the stage and they were never
+wrong. This paragraph exists because the file said *"a bug in the miner"* exactly once, which read
+as a synonym for the stage and is not one.
+
 ### 1. `run`
 
 Executes candidate C against **every case in both tiers** — the frozen benchmark and the whole
@@ -239,7 +252,7 @@ gate capability is exactly how a suite fills with cases that punish correct beha
    after n attempts (n = 5) ──▶ UNMINEABLE — every attempt and its counterexample
                                 recorded. ⚠️ NOT an error and NOT retried forever:
                                 a trace nobody can write a rule for is a finding
-                                about the policy, not a bug in the miner.
+                                about the policy, not a bug in the curator.
 ```
 
 **Why the stopping rule is that and not a score.** *Fires on the failure, silent on what passes*

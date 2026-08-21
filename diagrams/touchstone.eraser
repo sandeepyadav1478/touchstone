@@ -355,13 +355,13 @@ NoInherit --> V1
 // ── 12 · the surfaces.
 Later [color: orange, icon: server, label: "12 · the surfaces — phase 2"] {
   RecordPy [icon: grid, label: "loop/record.py — P2.8\nthe README table, GENERATED"]
-  Phoenix [icon: eye, label: "Phoenix — P2.6 · a VIEWER, in docker-compose.yml\nNEVER a dependency of scoring"]
+  MLflowUI [icon: eye, label: "mlflow ui — P2.6 · a VIEWER over the tracking store\nNEVER a dependency of scoring — and no service to start"]
   CI [icon: github, label: "touchstone.yml — P2.7 · scores COMMITTED spans\nNO model call, no credential (D-014)"]
   NegControl [shape: document, color: red, icon: alert-octagon, label: "negative-control.md — P2.5 · break it ON PURPOSE\na gate never SEEN to block is a claim"]
 }
 Accepted > RecordPy
 Cmp --> NegControl
-Spans --> Phoenix
+Spans --> MLflowUI
 Spans --> CI
 
 // ── 13 · the gate on the gates.
