@@ -19,7 +19,7 @@ interesting one.
 |---|---|---|---|---|
 | **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
 | **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | 🔴 **DEFERRED — `D-080`** |
-| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the five admission gates in §5 | **P3.5** |
+| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the three admission gates in §5 ([D-084](../DECISIONS.md#d-084)) | **P3.5** |
 
 🔴 **Decision 2 is specified here and not built.** `D-080` deferred it: it
 compares a candidate against an incumbent, and until a second version exists it has **no second
@@ -296,7 +296,7 @@ computes, which would make it a route on an existing label rather than a judge.
      │                       fires on any always-pass session?  must be NO
      │           │
      │           ├──▶ both hold ──▶ 3. ADMIT ──▶ regression suite (🔴 no status — D-080)
-     │           │                  the five admission gates below still apply
+     │           │                  the three admission gates below still apply
      │           │
      │           └──▶ either fails ──▶ hand back the COUNTEREXAMPLE: the passing
      └───────────────── session it wrongly fired on, or the fact that it missed
@@ -354,11 +354,10 @@ flowchart TB
   TRANS --> TEST{"2. TEST — mechanical, no model<br/>fires on the target · silent on the 878 clean"}
   TEST -->|"either fails · attempt < n"| TRANS
   TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
-  TEST -->|both hold| CHECK["mechanical pre-checks<br/>dedupe by signature · signal present · seed determinism"]
-  CHECK --> PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
-  PROP --> ADMIT{"⛔ admission gates — all five, mechanical<br/>reproducible · not flaky · not a void · distinct · justified"}
+  TEST -->|both hold| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
+  PROP --> ADMIT{"⛔ admission gates — all three, mechanical<br/>reproducible · distinct · justified"}
   ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
-  ADMIT -->|all five hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
+  ADMIT -->|all three hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
   REG -.->|"🔴 DEFERRED with P2.4 — no version is ever accepted"| LOCK["status: locked · gates from here"]
   ADMIT -->|"lift into the benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
 ```
@@ -383,10 +382,10 @@ pipeline already produces:
 
 | Admission gate | The check | Where it comes from |
 |---|---|---|
-| **Reproducible** | fails on **every** one of k attempts, not some | `pass^k` — [docs/05](05-scoring.md) §2 |
-| **Not flaky** | re-run reproduces the failure. ⚠️ **No seed to hold** — the user simulator is a model, so this is *k out of k* rather than byte-identical replay, and it is a weaker guarantee than the archived specimen's. Stated, not hedged | §4's flaky-case row |
-| **Not a void** | no quota rejection, no `infrastructure_error`, no `unexpected_error` — the attempt actually happened | the four attempt statuses, [docs/09](09-schemas.md) §6 |
-| **Distinct** | no two cases share a `task_id`. ⛔ **Weaker than it looks and weaker than it was**: the 114 are upstream and fixed, so *distinct* can only mean *not the same task twice*, never *not the same failure twice* | [docs/01](01-spec.md) §6 |
+| **Reproducible** | fails on **every** one of k trials, not some — `all(reward_breakdown["DB"] == 0)` over k=4, and ⚠️ **the 4 trials carry 4 distinct seeds** (456 of 456 (file,task) pairs). ⛔ **Replay identity is unverified** — a seed exists, whether it reproduces byte-identically does not follow, because model sampling may not be seeded. **Admits 34 of 456** on the shipped retail set | `pass^k` — [docs/05](05-scoring.md) §2, [D-084](../DECISIONS.md#d-084) |
+| ~~**Not flaky**~~ | 🔴 **MERGED into Reproducible — [D-084](../DECISIONS.md#d-084).** *"Re-run reproduces the failure"* **is** *"fails 4/4 across 4 seeds"*: there is no second run, the outer loop is deferred and the agent is never called. Two names, one predicate | — |
+| ~~**Not a void**~~ | 🔴 **DROPPED — [D-084](../DECISIONS.md#d-084).** `termination_reason` is `user_stop` on **1,824 of 1,824** shipped retail simulations. One value, zero variance, nothing to refuse. ⛔ **A gate that cannot fail reads exactly like a gate that passes.** Returns with P2.4, when a run of *ours* can produce a void at all | the four attempt statuses, [docs/09](09-schemas.md) §6 |
+| **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check ([D-078](../DECISIONS.md#d-078) §11.2, same function, `sig_version`) which ✅ **admits and records** `duplicate_of` rather than refusing ([D-083](../DECISIONS.md#d-083)). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, [D-083](../DECISIONS.md#d-083) |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was
@@ -399,7 +398,7 @@ looked, and the first draft of this section kept the prose above while the JSON 
 said `"reviewed_by": "sandeep"` — the rename is what stops that recurring. It is **free**: the
 provenance fields are outside `benchmark_hash` by construction ([docs/09](09-schemas.md) §5).
 
-⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all five is now
+⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all three is now
 admitted with nobody having looked at it. The recovery path is the regression tier itself: if
 it ever refuses a candidate on a case that inspection shows should not have been admitted,
 review comes back as an **offline batch that quarantines** — never as a step a run waits on.
@@ -425,13 +424,13 @@ every case carries its own record, in its `manifest.json` entry:
   "added": "2026-09-02",
   "added_in": "regression v7",
   "origin": "mined",
-  "why": "v6 zeroed reward_breakdown[DB] on 4 of 5 attempts for task 47 — it cancelled the wrong order line after the user corrected itself mid-conversation. termination_reason was agent_stop every time, so it finished confidently.",
+  "why": "v6 zeroed reward_breakdown[DB] on 4 of 4 trials for task 47 — it cancelled the wrong order line after the user corrected itself mid-conversation. termination_reason was user_stop every time, so it finished confidently.",
   "mined_from": {
     "version": "v6", "case": "inc-009",
     "confusion": ["cache_stampede", "db_pool_exhausted"],
     "trace_id": "4bf92f35…"
   },
-  "admitted_by": ["reproducible", "not_flaky", "not_a_void", "distinct", "justified"],
+  "admitted_by": ["reproducible", "distinct", "justified"],
   "admitted": "2026-09-02",
   "locked_at": "v7",
   "supersedes": null, "superseded_by": null,

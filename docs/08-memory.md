@@ -297,7 +297,7 @@ already owns that machinery, so the write path is D-024's pipeline pointed at a 
 | | |
 |---|---|
 | **Who may write** | ⛔ Not the agent. A candidate memory is emitted **only from a run whose verdict scored correct against the answer key** — in production, from an incident a human closed with a confirmed cause |
-| **Where it lands** | `proposed`, never `resolved`. The same five mechanical admission gates promote it as promote a mined case ([docs/02](02-gates.md) §5) — ⛔ **no human step, and the `why` is still required**, written by whatever produced it |
+| **Where it lands** | `proposed`, never `resolved`. The same three mechanical admission gates ([D-084](../DECISIONS.md#d-084)) promote it as promote a mined case ([docs/02](02-gates.md) §5) — ⛔ **no human step, and the `why` is still required**, written by whatever produced it |
 | **What refuses it** | Promotion condition 2, unchanged. A memory that lifts average correctness while breaking one previously-passing case is exactly what a poisoned memory looks like, and the gate already rejects that candidate. No new rule |
 | **old vs new** | **Supersession, never deletion** — `superseded` is already a case status (D-024). A memory about a rewritten service is not wrong, it is *expired*, and the record has to keep the difference. `TTLConfig.default_ttl` ages out what nobody retrieves |
 | **Retractability** | Invariant 11's fields — `why`, `added`, `origin` — plus the `run_id` and trace. ⛔ **A memory you cannot trace is a memory you cannot retract** |
@@ -375,7 +375,7 @@ iterations buy one rule instead of `n`.
 |---|---|---|
 | Key | the admitted rule's own identity | a **signature** over the failure |
 | Match | **exact** — it is a set membership test | **heuristic**, and known to be |
-| Cost of a false positive | a duplicate rule, caught by the admit gate | ⚠️ **a real failure silently skipped** |
+| Cost of a false positive | a duplicate rule, caught by the admit gate — ⚠️ **only since [D-083](../DECISIONS.md#d-083)**; before it the gate deduplicated `task_id`, not failures, and this cell named a net that was not there | ⚠️ **a real failure silently skipped** |
 | Cost of a false negative | — | a wasted iteration |
 
 ⚠️ **"Silently skipped" names a DEPRIORITISED TRACE, not a rejected candidate — and after D-081

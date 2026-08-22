@@ -43,7 +43,7 @@ across that swap, and that is the claim the swap was for.** D-062, D-066.*
 
 ```bash
 touchstone mine  --from results/final     # one anomalous trace → a candidate predicate
-touchstone suite admit  r-018             # five mechanical gates → the regression suite
+touchstone suite admit  r-018             # three mechanical gates → the regression suite
 touchstone run   --enforce                # the predicate refuses the call before it executes
 ```
 
@@ -283,7 +283,7 @@ already knows which tools mutate state.
 ⛔ **No human is a step in that picture, and none is a state in the agent.** A person writes
 each candidate version (D-044) — 🔴 **the part that is deferred** — and that is *upstream* of the
 loop — inside it nothing pauses for
-approval: a gate is a predicate, and a mined case is admitted by five mechanical gates
+approval: a gate is a predicate, and a mined case is admitted by three mechanical gates
 ([docs/02](docs/02-gates.md) §5) rather than by somebody signing off on a batch. **People
 improve this system by rewriting it** — reading traces, changing prompts, adding cases — which
 is what everything below is instrumented for.
@@ -366,7 +366,7 @@ implemented**. It is listed here because the spec is fixed, not because it runs:
 ```bash
 touchstone suite freeze --domain retail   # ⬜ pin the task ids and hash them
 touchstone mine --from results/final      # ⬜ one anomalous trace → a candidate predicate
-touchstone suite admit r-018              # ⬜ five mechanical gates → the regression suite
+touchstone suite admit r-018              # ⬜ three mechanical gates → the regression suite
 touchstone run --enforce                  # ⬜ the predicate refuses the call before it runs
 ```
 
@@ -408,7 +408,7 @@ invoice, it **kills a run in flight.** That shapes the model pins more than pric
 | user simulator | `claude-haiku-4-5-20251001` — **frozen apparatus**, deliberately not the agent's model |
 | NL-assertion evaluator | `claude-opus-5` — runs, but **outside the gate** (D-069) |
 | reviewer / hallucination checker | `claude-opus-5` — opt-in, `--auto-review` |
-| touchstone's own rubric judge | `claude-haiku-4-5-20251001` — reported, **never gates** |
+| touchstone's three mining-loop agents | `claude-opus-5` (`LOOP_MODEL`) — router · curator · critic, **all propose, none gates** |
 
 **Every id comes from a live call rather than a config file** — `doctor` asks the running CLI
 what it actually answered as, because the id is part of a candidate's identity and a config file

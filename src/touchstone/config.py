@@ -104,7 +104,12 @@ USER_MODEL = "claude-haiku-4-5-20251001"
 # and the README line went. Grepped before closing: the sentence is not in README.md any more.
 # ⚠️ The comment outlived the conflict by a day and read as an open problem the whole time —
 # a pointer at another file's error is a claim with a shelf life, and nothing re-runs it.
-JUDGE_MODEL = "claude-haiku-4-5-20251001"
+# 🔴 RENAMED by D-082. Was JUDGE_MODEL, the rubric judge that reported and never gated.
+# The rubric moved to the ROUTER, and one pin now serves all three mining-loop agents:
+# router (rubric), curator (writes the predicate), critic (runs it, checks the work).
+# ⛔ NOT `MODEL` — sonnet-5 is the thing under test and must not also be the apparatus.
+# The count stays FIVE, so `doctor` is unchanged (D-067).
+LOOP_MODEL = "claude-opus-5"
 
 # τ²'s natural-language assertion evaluator — pinned defensively, because as configured it is
 # DORMANT and it must stay that way.

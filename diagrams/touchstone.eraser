@@ -211,7 +211,7 @@ Seam [color: blue, icon: git-merge, label: "2 · the seam — P1.1"] {
   Anthropic [shape: cylinder, color: orange, icon: cloud, label: "Anthropic — subscription auth, NOT an API key\nfive-hour window · the cap REJECTS, it does not bill"]
 }
 
-Cfg [color: green, icon: settings, label: "config.py — P0 ✅ shipped · FIVE model pins (D-067)\nMODEL · USER_MODEL · JUDGE_MODEL · NL_ASSERTION_MODEL · REVIEW_MODEL"]
+Cfg [color: green, icon: settings, label: "config.py — P0 ✅ shipped · FIVE model pins (D-067, D-082)\nMODEL · USER_MODEL · LOOP_MODEL · NL_ASSERTION_MODEL · REVIEW_MODEL"]
 NoOther [shape: document, color: red, icon: alert-octagon, label: "ANTHROPIC ONLY — ollama and Cerebras are `doctor` diagnostics\nNEVER model sources · the quota REJECTS, so a wrong pin kills a run (D-067)"]
 
 Gen > Adapter: REPLACED at the seam
@@ -274,7 +274,7 @@ CliPy > RunPy > Orch
 Scoring [color: blue, icon: bar-chart-2, label: "7 · scoring — P1.5"] {
   ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — NO model call (D-007)\nspans + reward_breakdown → results/(version).json\npass^k is the HEADLINE · pass@1 beside it — BOTH, especially when they differ"]
   Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\ncompare.py NEVER reads inside it — ONE TEST proves it (D-045)\nNO OUTGOING EDGE, ON PURPOSE"]
-  Judge [color: orange, icon: award, label: "the rubric judge — JUDGE_MODEL, cheapest tier on purpose\nit CANNOT GATE — that is why it is allowed to exist at all"]
+  Judge [color: orange, icon: award, label: "the ROUTER rubric — LOOP_MODEL (D-082)\nit SELECTS which traces enter the loop and CANNOT GATE\ncriterion_1_agreement over all 1,712 is its MEASURED error rate"]
 }
 Spans > ScorePy
 Reward > ScorePy: the answer key, and it is τ²'s, not ours
@@ -336,16 +336,18 @@ SelNotGate --> Select
 //  one — five attempts and five counterexamples, not a bare assertion that no rule
 //  existed.
 Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nONE decision point, and it holds no model — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
-  M0 [color: pink, icon: alert-circle, label: "analyst · one ANOMALOUS session, drawn from the 834 — D-080\nevery signal computed by τ²'s own evaluator, before we looked at it"]
-  MT [color: orange, icon: cpu, label: "1 · author — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
-  MCrit [color: orange, icon: eye, label: "2 · critic — reads the candidate BEFORE it is run · D-071\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
+  M0 [color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 · one ANOMALOUS session, drawn from the 834 — D-080\nevery signal computed by τ²'s own evaluator, before we looked at it"]
+  MT [color: orange, icon: cpu, label: "2 · CURATOR — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
+  MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — reads the candidate, then RUNS it · D-071, D-082\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: straight to the author — there is no pre-check, and never was one that worked
-MT > MCrit > MTest
-MTest > MT: either fails — hand back the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
-MTest > MGive: attempt n
+MT > MCrit: the candidate goes to QA
+MCrit > MT: hand-back ONE — the ARGUMENT, before anything runs. ONE bounce per attempt (D-082)
+MCrit > MTest: QA invokes the mechanical check
+MTest > MT: hand-back TWO — the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
+MTest > MGive: attempt n — and every UNMINEABLE has >=1 run_predicate result behind it (D-082)
 Anom > M0: one anomalous trace at a time
 Clean > MTest: the silence set — the NO half of the verdict
 Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so an admitted predicate rests ENTIRELY on this corpus"]
@@ -400,16 +402,14 @@ Cmp > D2
 Invariant [shape: document, color: red, icon: alert-octagon, label: "ANYTHING THAT GATES IS MECHANICAL\nANYTHING WITH A MODEL IN IT CANNOT GATE\nD-064 puts the model in TRANSLATION, never in the VERDICT"]
 Invariant --> Decisions
 
-Admit [color: green, icon: filter, label: "10 · the five admission gates — P3.5, all mechanical, no human is a step"] {
-  A1 [icon: repeat, label: "1 · reproducible"]
-  A2 [icon: activity, label: "2 · not_flaky"]
-  A3 [icon: slash, label: "3 · not_a_void"]
-  A4 [icon: git-branch, label: "4 · distinct"]
-  A5 [icon: edit, label: "5 · justified — a `why` is REQUIRED"]
+Admit [color: green, icon: filter, label: "10 · the three admission gates — P3.5, all mechanical, no human is a step. D-084 dropped not_a_void and merged not_flaky"] {
+  A1 [icon: repeat, label: "1 · reproducible — all k trials, k distinct seeds"]
+  A4 [icon: git-branch, label: "2 · distinct — task_id. signature half DEFERRED, D-083"]
+  A5 [icon: edit, label: "3 · justified — a `why` is REQUIRED"]
 }
-A1 > A2 > A3 > A4 > A5
+A1 > A4 > A5
 A5 > D3
-MTest --> Admit: both hold — the predicate goes to the five gates
+MTest --> Admit: both hold — the predicate goes to the three gates
 Admit --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with

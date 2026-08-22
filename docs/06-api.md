@@ -69,7 +69,7 @@ touchstone record                                  # → regenerates the README 
 # touchstone suite log                             # every suite version: what entered, why, when
 # touchstone suite show r-018                      # one case: origin, why, the mining trace, history
 # touchstone suite diff v6..v7                     # what changed between two suite versions
-# touchstone suite admit                           # runs the five admission gates: proposed/ → regression/
+# touchstone suite admit                           # runs the three admission gates: proposed/ → regression/
 # touchstone suite quarantine r-031 --why "…"      # stops it gating; --why is required
 
 # single case
@@ -77,7 +77,7 @@ touchstone run retail_1 --version v4               # one simulation, prints the 
 ```
 
 ⛔ **There is no `touchstone approve`, and there is no `suite review`.** No run ever pauses, so
-there is nothing to resume; `suite admit` applies the five mechanical gates in
+there is nothing to resume; `suite admit` applies the three mechanical gates in
 [docs/02](02-gates.md) §5 and records which one rejected a case. **A human improves this
 system by rewriting it — reading traces, changing prompts, adding cases — never by standing
 inside a run** (D-040).
