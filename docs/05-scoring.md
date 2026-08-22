@@ -288,7 +288,7 @@ that mistake is worth more than the metric was.**
   "k": 3,
   "domain": "retail",                                   // ⛔ τ² task ids are bare integers and
                                                         //    are NOT unique across domains
-  "tau2_version": "1.0.1",                        // the scorer is upstream's; pin it
+  "tau2_commit": "a2c024725189",                        // the scorer is upstream's; pin it
                                                         // ⛔ the COMMIT, not the version — the
                                                         // string "1.0.1" names two trees (DEF-055)
   "model": "⟨the model_usage key, from the run — D-033⟩",

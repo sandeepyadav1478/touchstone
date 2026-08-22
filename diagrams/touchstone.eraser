@@ -24,7 +24,7 @@ title touchstone — the loop that has to get better
 //         argument, and arguments live down here, where they cost no pixels.
 //
 //  3 · EVERY NODE NAMING A file.py:LINE MUST RESOLVE, IN EXACTLY ONE FILE, IN AN
-//      APPROVED REPO — touchstone, or tau2-bench — tau2 1.0.1 from pyproject.toml (MIT). D-068.
+//      APPROVED REPO — touchstone, or tau2-bench — tau2 at commit a2c024725189 (MIT). D-068.
 //      ⛔ AMBIGUITY IS A FAILURE, NOT A NEAR MISS. tau2 has SIX files called
 //         environment.py; the first draft of this diagram named the BARE file with
 //         the line number, and the guard resolved it to retail's 54-line domain file
@@ -181,7 +181,7 @@ legend [position: top-left] {
 }
 
 // ── 1 · the specimen. External, pinned, and NOT OURS — which is the whole point of D-062.
-Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · tau2 1.0.1 · 257 of 257 blobs verified against upstream\nnot written here, not vendored here — 114 tasks stay upstream · the string 1.0.1 names TWO trees (DEF-055)"] {
+Tau2 [color: grey, icon: package, label: "1 · τ²-bench retail — EXTERNAL · MIT · commit a2c024725189 · 257 of 257 blobs verified against upstream\nnot written here, not vendored here — 114 tasks stay upstream · the string 1.0.1 names TWO trees (DEF-055)"] {
   Orch [icon: repeat, label: "orchestrator.py:260 — Orchestrator.run\ndrives one simulation to its end"]
   AgentTurn [color: orange, icon: cpu, label: "llm_agent.py:128 — the agent under test\nTHE THING BEING MEASURED"]
   UserSim [color: orange, icon: user, label: "user_simulator.py:235 — the customer\nFROZEN APPARATUS (D-067)"]

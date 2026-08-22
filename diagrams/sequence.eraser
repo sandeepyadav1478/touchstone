@@ -73,7 +73,7 @@ title touchstone — one simulation, and every boundary it crosses
 
 CLI [icon: terminal, color: blue, label: "cli.py — P0 shipped `doctor`\nP1.6 adds run, score and suite"]
 Run [icon: play, color: blue, label: "loop/run.py — the k-attempt driver"]
-Orch [icon: repeat, color: grey, label: "τ² Orchestrator.run — orchestrator.py:260\nEXTERNAL, MIT, tau2 1.0.1 (pyproject.toml)"]
+Orch [icon: repeat, color: grey, label: "τ² Orchestrator.run — orchestrator.py:260\nEXTERNAL, MIT, tau2 at commit a2c024725189"]
 Agent [icon: cpu, color: orange, label: "τ² agent — llm_agent.py:128\nTHE THING BEING MEASURED"]
 User [icon: user, color: orange, label: "τ² user simulator — user_simulator.py:235\nfrozen apparatus, deliberately NOT the agent's model"]
 Gen [icon: git-merge, color: red, label: "generate() — llm_utils.py:355\nthe SINGLE seam: all roles call this one function"]
