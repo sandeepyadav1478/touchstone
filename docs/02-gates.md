@@ -19,7 +19,7 @@ interesting one.
 |---|---|---|---|---|
 | **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
 | **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | 🔴 **DEFERRED — `D-080`** |
-| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the three admission gates in §5 ([D-084](../DECISIONS.md#d-084)) | **P3.5** |
+| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the three admission gates in §5 (`D-084`) | **P3.5** |
 
 🔴 **Decision 2 is specified here and not built.** `D-080` deferred it: it
 compares a candidate against an incumbent, and until a second version exists it has **no second
@@ -382,10 +382,10 @@ pipeline already produces:
 
 | Admission gate | The check | Where it comes from |
 |---|---|---|
-| **Reproducible** | fails on **every** one of k trials, not some — `all(reward_breakdown["DB"] == 0)` over k=4, and ⚠️ **the 4 trials carry 4 distinct seeds** (456 of 456 (file,task) pairs). ⛔ **Replay identity is unverified** — a seed exists, whether it reproduces byte-identically does not follow, because model sampling may not be seeded. **Admits 34 of 456** on the shipped retail set | `pass^k` — [docs/05](05-scoring.md) §2, [D-084](../DECISIONS.md#d-084) |
-| ~~**Not flaky**~~ | 🔴 **MERGED into Reproducible — [D-084](../DECISIONS.md#d-084).** *"Re-run reproduces the failure"* **is** *"fails 4/4 across 4 seeds"*: there is no second run, the outer loop is deferred and the agent is never called. Two names, one predicate | — |
-| ~~**Not a void**~~ | 🔴 **DROPPED — [D-084](../DECISIONS.md#d-084).** `termination_reason` is `user_stop` on **1,824 of 1,824** shipped retail simulations. One value, zero variance, nothing to refuse. ⛔ **A gate that cannot fail reads exactly like a gate that passes.** Returns with P2.4, when a run of *ours* can produce a void at all | the four attempt statuses, [docs/09](09-schemas.md) §6 |
-| **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check ([D-078](../DECISIONS.md#d-078) §11.2, same function, `sig_version`) which ✅ **admits and records** `duplicate_of` rather than refusing ([D-083](../DECISIONS.md#d-083)). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, [D-083](../DECISIONS.md#d-083) |
+| **Reproducible** | fails on **every** one of k trials, not some — `all(reward_breakdown["DB"] == 0)` over k=4, and ⚠️ **the 4 trials carry 4 distinct seeds** (456 of 456 (file,task) pairs). ⛔ **Replay identity is unverified** — a seed exists, whether it reproduces byte-identically does not follow, because model sampling may not be seeded. **Admits 34 of 456** on the shipped retail set | `pass^k` — [docs/05](05-scoring.md) §2, `D-084` |
+| ~~**Not flaky**~~ | 🔴 **MERGED into Reproducible — `D-084`.** *"Re-run reproduces the failure"* **is** *"fails 4/4 across 4 seeds"*: there is no second run, the outer loop is deferred and the agent is never called. Two names, one predicate | — |
+| ~~**Not a void**~~ | 🔴 **DROPPED — `D-084`.** `termination_reason` is `user_stop` on **1,824 of 1,824** shipped retail simulations. One value, zero variance, nothing to refuse. ⛔ **A gate that cannot fail reads exactly like a gate that passes.** Returns with P2.4, when a run of *ours* can produce a void at all | the four attempt statuses, [docs/09](09-schemas.md) §6 |
+| **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check (`D-078` §11.2, same function, `sig_version`) which ✅ **admits and records** `duplicate_of` rather than refusing (`D-083`). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, `D-083` |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was

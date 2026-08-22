@@ -51,7 +51,7 @@ authority if the two ever disagree.**
 |---|---|---|
 | `MODEL` | `claude-sonnet-5` | **The agent under test** — the thing being measured |
 | `USER_MODEL` | `claude-haiku-4-5-20251001` | The τ² user simulator — **frozen apparatus**, changing it changes the instrument |
-| `LOOP_MODEL` | `claude-opus-5` | **All three mining-loop agents** — router, curator, critic ([D-082](../DECISIONS.md#d-082)). ⛔ Not `MODEL`: sonnet-5 is under test and must not also be apparatus. *(Was `JUDGE_MODEL`, haiku, the rubric judge that reported and never gated.)* |
+| `LOOP_MODEL` | `claude-opus-5` | **All three mining-loop agents** — router, curator, critic (`D-082`). ⛔ Not `MODEL`: sonnet-5 is under test and must not also be apparatus. *(Was `JUDGE_MODEL`, haiku, the rubric judge that reported and never gated.)* |
 | `NL_ASSERTION_MODEL` | `claude-opus-5` | τ²'s NL-assertion evaluator |
 | `REVIEW_MODEL` | `claude-opus-5` | The opt-in hallucination reviewer — validates the *simulator*, not the agent |
 
@@ -107,7 +107,7 @@ D-030 lowered to 3. Both factors were stale and the product was quoted as ≈250
 (D-015) and CI scoring committed spans instead of calling a model (D-014). Both are in
 `DECISIONS.md`. **They are not workarounds; they are the honest consequences of a quota.**
 ⛔ **A third once sat here — D-016, "the judge lives on Cerebras" — and it is retired.** The
-judge is now the **router's rubric** under `LOOP_MODEL`, Anthropic ([D-082](../DECISIONS.md#d-082));
+judge is now the **router's rubric** under `LOOP_MODEL`, Anthropic (`D-082`);
 what makes it affordable is that it runs on a completed session, and what makes it safe is that
 it selects and never gates.
 

@@ -12,9 +12,10 @@ not. The PNG is committed alongside so the file renders for a reader who will no
 | file | shows | gates |
 |---|---|---|
 | [`touchstone.eraser`](touchstone.eraser) | **The whole system, in numbered sections, on one canvas** — the upstream corpus · the adapter at the seam · the three gate tiers · the process boundaries · how a simulation ends · telemetry · the scorer · **the acceptance conditions** · the case lifecycle, `open → locked` one-way · the version ladder · **the phase exit gates, and the diagram gate that blocks every phase's start** | phase 1, and phase 2 |
-| [`loop.png`](loop.png) | The render of the above. **A convenience, never the record** — rebuilt **2026-08-21**, twice: once for the nine silent decisions, once for the `Dev`/`Human` withdrawal. ⚠️ *This cell read 2026-08-20 through both of them* — the row that names a render is the row nothing sweeps backwards to | — |
+| [`loop.png`](loop.png) | The render of the above. **A convenience, never the record** — rebuilt **2026-08-23**, because the revert at `c1dd762` restored `a2c024725189` in the DSL and the committed render still read `tau2 1.0.1`, the one string DEF-055 exists to warn against. 🔴 **This cell has now gone stale three times** — it read 2026-08-20 through two 08-21 rebuilds, then 08-21 through this one. **A source file and its render are two artifacts; correcting one is not correcting the other.** The row that names a render is the row nothing sweeps backwards to, and saying so in the row has not once been enough | — |
 | [`sequence.eraser`](sequence.eraser) | **One simulation, and every boundary it crosses** — lifelines ordered by distance from the developer's process. It draws the three things a flowchart structurally cannot: the **order** of the telemetry wiring steps, the checkpoint landing after every step, and the scorer running later, in another process, from a file. **Its load-bearing element is a message that is not there** | phase 1 |
-| [`sequence.png`](sequence.png) | The render of that. Same status, rebuilt in the same pass | — |
+| [`sequence.png`](sequence.png) | The render of that. Same status. ⚠️ **Deliberately NOT rebuilt on 2026-08-23** — `git diff 6509bae HEAD -- diagrams/sequence.eraser` is empty, so its source has not moved since the render was built and a new export would be churn. *(The revert touched this file and restored it byte-for-byte, which is why a bare `git log` makes it look newer than its PNG.)* **Check the diff, not the log** | — |
+| [`agents.mmd`](agents.mmd) | 🆕 **The mining loop's three agents — D-082.** router (rubric) → curator (writes the predicate) ⇄ qa/critic (runs it, checks the work), then the three mechanical admission gates. **All three agents propose; none of them gates** — the one green node is the only thing that decides, which is the invariant drawn at its smallest. Mermaid, local, no hosted copy | phase 3 |
 | [`phase1.mmd`](phase1.mmd) | 🆕 **The attachment diagram** — where touchstone joins τ²-bench: the adapter seam at `llm_utils.py:355` and the enforcement point at `Environment.make_tool_call()`. **Mermaid, and local by choice** — it names symbols in another repo, and drawing them as unnamed boxes would hide the only structure it exists to show. It is why D-068 had to widen the approved-repo set | phase 1 |
 
 ## ✅ Both PNGs were rebuilt on 2026-08-20 — and what the rebuild found
@@ -114,15 +115,25 @@ drawing. ⛔ **So `loop.png` was deliberately NOT replaced** — swapping 2.8 MB
 pixels is churn, and the honest record is that the picture did not move. The *hosted* copy was
 replaced, because that one had genuinely drifted.
 
-### The settled renders — both re-measured 2026-08-22, after D-081 deleted the scope filter
+🔴 **And on 2026-08-23 the same reasoning ran the other way, which is the point of keeping both
+cases here.** The revert at `c1dd762` changed two *rendered* label lines — the τ² box read
+`tau2 1.0.1` where the DSL now reads `commit a2c024725189` — so the render had genuinely moved and
+`loop.png` **was** replaced. ⚠️ **The 08-18 case and this one look identical from the commit log and
+are opposite decisions.** What separates them is not how many bytes changed but *whether any of them
+reach a label*: a comment-only edit needs no export, a label edit needs one. `git diff` on the
+`.eraser` answers it in one command, and it is the only thing that does — the file mtime, the commit
+count and the byte delta all say "changed" for both.
+
+### The settled renders — `loop.png` rebuilt and re-measured **2026-08-23**, `sequence.png` re-measured unchanged
 
 | | `loop.png` | `sequence.png` |
 |---|---|---|
-| Frame | 5870 × 10703 — **62.8 MP** | 3032 × 3492 — **10.6 MP** |
-| On disk | 3.47 MB | 0.77 MB |
-| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 43 / 68 / 40 / **64** | 14 / 14 / 20 / 11 |
-| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.6%** of the frame | **98.9%** |
-| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.49%** | **3.48%** |
+| Frame | 5608 × 10345 — **58.0 MP** *(was 5870 × 10703, 62.8 MP)* | 3032 × 3492 — **10.6 MP**, unchanged |
+| On disk | 3.44 MB *(was 3.47 MB)* | 0.77 MB |
+| Padding, L / T / R / B — **background-difference bbox, the guard's own comparator** | 42 / 65 / 38 / **63** *(was 43 / 68 / 40 / 64)* | 14 / 14 / 20 / 11 |
+| Content fills — `min(bboxW/w, bboxH/h)`, same comparator, milestone 7 | **98.6%** of the frame, unchanged | **98.9%** |
+| Ink — pixels with `convert("L") < 200`, as a share of the frame | **1.63%** *(was 1.49%)* | **3.48%** |
+| ⚠️ The frame shrank while the ink rose | 4.8 MP smaller, ink up 0.14 pt, on a DSL that grew by **6 characters**. Per the rule two sections up — *a shrinking canvas with rising ink is a diagram that got tighter* — it was looked at, and `check-diagram.py` milestone 7 confirms four clear edges at 98.6% fill. ⛔ **The shrink is not a content change; it is finding 1.** The replaced diagram had accumulated edits and carried their canvas with it; a freshly created one is laid out tight. **Extent is only comparable between two diagrams of the same age**, which is a strange sentence and a true one | ⬑ the control: nothing touched this file, and every figure reproduced exactly, which is what makes the column beside it believable |
 | ⚠️ Ink needs its method stated | The first pass of these two numbers read **2.95%** and **13.76%** — a *looser threshold*, not a different image. Two measurements of the same PNG disagreed by 3×, and the figure is meaningless without the comparator. **Extent was unaffected**, which is why it is the check the guard runs. ⛔ **AND THE SWEEP STOPPED ONE ROW SHORT — found 2026-08-18, on the pass that recreated the hosted flowchart.** The two rows above use a *third* comparator (`ImageChops.difference` against the corner pixel), not `< 200` and not the loose threshold, and neither said so. Measured at `< 200` the same padding reads **65 / 61 / 61 / 62** and **28 / 28 / 40 / 30**; at the loose threshold, **46 / 61 / 61 / 58** and **27 / 27 / 40 / 23**. Three comparators, three answers, one unlabelled row. The bottom cell also read **59** against a measured **58** — an off-by-one that no threshold explains and that survived because the row it sits in had no method to check it against |
 | Method | ⛔ **delete the hosted diagram** → `manually_create_diagram` from the committed file → export twice → **keep the new one**, per finding 1. Then the four-edge check in finding 2a **and the extent check in finding 7** | same, and it ran twice — the first render was missing a message the DSL contained, finding 4 |
 | Export settings | ⛔ `background: true, theme: light, imageQuality: **1**` — quality 2 returns `{"note":"Error rendering diagram"}`, finding 7 — ⚠️ **and quality 2's failure changed shape on 2026-08-21; see the row below.** The content-addressed URL is keyed on the render, so **a failed export poisons its own cache entry**: re-requesting quality 3 returned the same 0-byte object at the same `x-goog-generation`, and only a different quality produced a different key. ⛔ **Retrying an export is not retrying a render** | ⛔ `background: true, theme: light, imageQuality: **2**` — quality 1 returns a **0.07%-ink blank**, finding 9 |
@@ -272,7 +283,8 @@ not, for one edit.** A pointer to a command that does not exist is worse than no
 it reads as though someone checked. Here it is:
 
 ```bash
-# 86 declarations · 15 groups · 57 edge lines · 39 of the 86 carry no colour
+# 106 declarations · 17 groups · 88 edge lines · 20 of the 106 carry no colour · 20,996 rendered chars
+# re-derived 2026-08-23. The line above read 86 · 15 · 57 · 39-of-86 and every figure was stale.
 body() { grep -vE '^\s*//' diagrams/touchstone.eraser; }
 body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -v '^legend' | wc -l   # declarations
 body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -v '^legend' | grep -c '{[[:space:]]*$'
@@ -280,6 +292,15 @@ body | grep -cE '^[A-Za-z][A-Za-z0-9_]* *(<>|-->|>)'                          # 
 body | grep -E '^\s*[A-Za-z][A-Za-z0-9_]*\s*\[' | grep -oE 'color: [a-z]+' | sort | uniq -c
 body | wc -m                                  # rendered chars — the re-export trigger
 ```
+
+🔴 **BOTH CENSUS LINES WERE STALE WHEN RE-RUN ON 2026-08-23, AND THAT IS THE FINDING.** The
+flowchart's read `86 · 15 · 57` against a measured `106 · 17 · 88` — the diagram grew sections 8a,
+8b, 8c and 11b and no one re-ran the command the comment exists to hold. ⛔ **A recorded command
+does not run itself.** The comment above it says *"re-derive it, never step it by hand"*, and the
+failure was neither: it was **not derived at all** on the four edits since. **Writing the command
+down solves the reproducibility problem and not the freshness problem** — those are two problems,
+and only the first one has been solved here. *(Cross-check: `check-diagram.py` milestone 8 prints
+`34 message labels scanned in sequence.eraser`, independently confirming the 26 was wrong.)*
 
 ⚠️ **`legend` is excluded and that is the whole reason this has to be written down.** It matches
 the declaration shape exactly, so counting it gives **87**, and 86 versus 87 is precisely the kind
@@ -289,7 +310,9 @@ that cannot be reproduced from a recorded query should be discarded rather than 
 And for `sequence.eraser`, where the same trap is waiting under a different name:
 
 ```bash
-# 11 participants · 26 messages · 6 of them self · 6 dashed returns · 4 blocks · 3,716 rendered chars
+# 13 participants · 34 messages · 6 of them self · 9 dashed returns · 4 blocks · 4,402 rendered chars
+# re-derived 2026-08-23. The line above read 11 · 26 · 6 · 6 · 4 · 3,716 — stale on a file no
+# commit since 6509bae has touched, which is the point: a census goes stale on ITS OWN history.
 body() { grep -vE '^\s*//' diagrams/sequence.eraser; }
 body | grep -E '^[A-Za-z][A-Za-z0-9_]* *\[' | grep -vE '^(loop|alt|else) ' | wc -l   # participants
 body | grep -cE '^\s*[A-Za-z][A-Za-z0-9_]* *(-->|>) *[A-Za-z]'                       # messages
@@ -635,10 +658,32 @@ command that produced it named in the same table.*
 settle rule confirms it and finding 7's extent check is the only thing that rejects it. The
 flowchart at least errors out loud; the sequence hands back a real PNG of nothing.
 
+🔴 **Third measurement, 2026-08-23, flowchart, and it inverted again.** Diagram
+`b_gZk32ZtUtP9GgrmqOt`, minutes old, `background: true`, no `theme` passed:
+
+| quality | result |
+|---|---|
+| **3** | 🔴 `{"note":"Error rendering diagram"}` — **twice, identically** |
+| **1** | ✅ 5608 × 10345, ink 1.63% at `< 200`, four edges clear |
+
+Two days earlier quality **3** rendered this same content at 11217 × 20662 and quality **1** was
+the mode that had failed before that. **Three measurements, three different verdicts, one
+flowchart.** ✅ The loud `{"note": ...}` string is back, which is the good failure mode — the
+2026-08-21 row above records the same setting failing *silently*, as a 2.9 MB blank.
+
+⛔ **So the table at the top of this finding is not a lookup — it is the evidence that there is
+nothing to look up.** Reading a quality out of it is the exact mistake finding 9 exists to
+document.
+
 **The rule: export at both qualities, measure ink and extent, keep the one that passes. Never
 carry a quality forward from another diagram, or from this diagram last week.** The flowchart's
 quality-2 error reproduced on a diagram ID created minutes earlier, so it is a property of the
 content, not of a long edit history — and that means it can change when the content does.
+
+⚠️ **And measure ink against the MODAL grey level, not a fixed threshold, if the theme can vary.**
+`< 200` reads a dark-theme export as 99.999% ink. `abs(p - mode) > 24` over a 4× downscale is
+correct on both themes. The `< 200` figures in this file are all light-theme exports and stay
+comparable to each other — ⛔ **do not compare them against a dark one.**
 
 ### 10. A sequence participant box is a fixed ~13-character column, and the font's `9` reads as `q`
 
