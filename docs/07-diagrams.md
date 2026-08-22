@@ -130,9 +130,12 @@ diagrams/
   sequence.eraser            # the run→span→gate sequence
   sequence.png               # its export
   phase1.mmd                 # the τ²-bench attachment diagram — Mermaid, local
+  agents.mmd                 # the mining loop's three agents — Mermaid, local
 ```
 
-⚠️ **Six files, and the count is the argument this section keeps losing.** The tree here once
+⚠️ **Seven files, and the count is the argument this section keeps losing.** ⛔ *It said six until
+2026-08-23, and the seventh had been committed for a day* — `git ls-files diagrams/ | wc -l` is the
+check, and a hand-written count beside a hand-written list has nothing to fail against. The tree here once
 listed `phase-1-graph.eraser`, `phase-2-mcp-sequence.eraser` and `v5-memory-graph.mmd` — one
 file per change, per rule 3 below. Then it said **one file draws both phases instead**, because
 a reviewer holding two pictures cannot see a contradiction that spans them, which is exactly how
@@ -144,6 +147,7 @@ anyway, and a third**, and each had a reason the one-file argument does not answ
 |---|---|
 | `sequence.eraser` | a sequence and a flowchart are **different renderers** in Eraser, not two sections of one canvas — a shared Eraser file is a shared canvas, and the two would fight over it |
 | `phase1.mmd` | it names symbols in **another repo**, so it is the one drawing whose node names D-068 had to widen the boundary to permit. Mermaid and local, because it never needed to go through the hosted service at all |
+| `agents.mmd` | it draws **one mechanism at one moment** — the three mining-loop agents of D-082 and the gate none of them may touch. Six nodes. As a section of the flowchart it would be a detail inside section 8b; standing alone it is the invariant at its smallest, which is the form worth showing someone. Mermaid and local for the same reason as above: nothing here needs the hosted renderer |
 
 ⛔ **The one-file argument was not wrong — it was scoped to one renderer, and nobody said so.**
 The real invariant is the weaker one that survives: **a contradiction that spans two files is

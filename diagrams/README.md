@@ -54,10 +54,17 @@ rather than nothing at all.
    another file's error is a claim with a shelf life**, and nothing in this repo sweeps backwards
    from a fix to the documents pointing at it.
 
-| render | extent | ink — `convert("L") < 200`, the comparator named below | vs. the render it replaced |
+🔴 **This table is a DATED RECORD of the 2026-08-22 rebuild, not the current state — see
+[the settled renders](#the-settled-renders--looppng-rebuilt-and-re-measured-2026-08-23-sequencepng-re-measured-unchanged)
+below for the live figures.** It is kept because the *comparison* is the finding; `loop.png` has
+since been rebuilt again and its row here is two rebuilds behind. ⛔ **Two tables measuring the
+same PNG is the shape that produced every stale figure in this file** — and this one only became
+safe once it was labelled as history rather than left to look current.
+
+| render — **as of 2026-08-22** | extent | ink — `convert("L") < 200`, the comparator named below | vs. the render it replaced |
 |---|---|---|---|
-| `loop.png` | 5870 × 10703 | 1.49% | was 5937 × 10728 at 1.51% — **D-081 deleted two nodes and an edge**, and the frame gave back 67 × 25 px |
-| `sequence.png` | 3032 × 3492 | 3.48% | was 3032 × 3457 at 3.25% — the D-080 redraw · **untouched by D-081**, so this row is here to stay measured, not because it moved |
+| `loop.png` | 5870 × 10703 | 1.49% | was 5937 × 10728 at 1.51% — **D-081 deleted two nodes and an edge**, and the frame gave back 67 × 25 px. ⚠️ **Superseded 2026-08-23: 5608 × 10345 at 1.63%** |
+| `sequence.png` | 3032 × 3492 | 3.48% | was 3032 × 3457 at 3.25% — the D-080 redraw · **untouched by D-081**, so this row is here to stay measured, not because it moved. ✅ **Still current** — re-measured 2026-08-23, identical |
 
 ⚠️ **Ink and extent are measured, not eyeballed** — a shrinking canvas with rising ink is a
 diagram that got tighter, and a shrinking canvas with falling ink is one to go and look at. Both
