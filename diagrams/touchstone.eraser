@@ -306,17 +306,43 @@ Cmp > Refused: any ONE fails
 //  reached: an agent that skips a required confirmation and still writes the correct row
 //  scores DB == 1. Feeding on DB == 0 alone left 371 such traces in the SILENCE SET, where
 //  a CORRECT predicate would have been rejected as a false positive.
+//
+//  🔴 D-082 §A DEMOTED THIS WHOLE SECTION AND THE PICTURE DID NOT FOLLOW FOR A DAY.
+//  The router REPLACED "the mechanical select" — D-082's own table says so in the row that
+//  retires `analyst` + `select` + the unbuilt rubric judge into one agent. But 8a went on
+//  drawing `select` as a DIAMOND feeding the loop, and 8b's router went on reading "drawn
+//  from the 834", so the two sections together said the mechanical selector still selects
+//  and the router runs after it. ⛔ NEITHER SECTION WAS WRONG ALONE, AND THE STALE TOPOLOGY
+//  SAT ON THE BOUNDARY BETWEEN THEM — which is the place no single section's review looks.
+//  a7fc003 rewired every edge INSIDE 8b (the critic got its own hand-back; the five admission
+//  gates collapsed to three) and touched not one edge INTO it: Corpus still fed the diamond,
+//  and the diamond still fed the router. ⚠ THE FIRST WRITE-UP OF THIS SAID a7fc003 "touched
+//  no EDGE", which is FALSE — `git show a7fc003 -- diagrams/touchstone.eraser` has TWELVE
+//  changed edge lines, five removed and seven added. Caught on the pass that wrote DEF-060,
+//  by re-reading the diff instead of the sentence about it. Rule 10, on a paragraph about
+//  rule 10 — and the corrected sentence's own number was wrong on its first draft too.
+//
+//  WHAT THE THREE SIGNALS ARE NOW: the ANSWER KEY. They are free — τ²'s own evaluator
+//  already computed them and they sit in the shipped result JSONs — so they cost nothing to
+//  keep, and D-082 §B spends them on `criterion_1_agreement`: the router's verdict scored
+//  against a population whose answer is already known. ⛔ NO RESULT IS REPORTABLE WITHOUT IT.
+//  ⚠ AND THE CLEAN 878 IS STILL THE SILENCE SET. That is D-080 and D-082 did not touch it.
+//  ⚠ THE SKIP EDGE IS THE EXPENSIVE HALF OF §A, AND IT IS DRAWN ON PURPOSE. A router `skip`
+//  lands in the control set, so a MODEL now helps define the population a gate must be silent
+//  on — "silent on the clean traces" degrades to "silent on the traces a model called clean",
+//  gate and population sharing one failure mode. D-082 §B is the price paid for it, which is
+//  why the Cal node hangs off the router and not off the corpus.
 Feed [color: pink, icon: filter, label: "8a · the feed — D-080 · τ²'s OWN shipped runs, never a run of ours"] {
   Corpus [color: grey, icon: archive, label: "1,712 simulations τ²-bench SHIPS — data/tau2/results/final/\n107 of 114 tasks — the 7 whose gold actions moved are EXCLUDED, not repaired"]
-  Select [shape: diamond, color: pink, icon: git-merge, label: "select — the UNION of THREE signals\n⚠ NOT reward_breakdown[DB] == 0 alone"]
+  Signals [shape: document, color: grey, icon: key, label: "τ²'s OWN signals — the UNION of THREE, and since D-082 §B the ANSWER KEY rather than the selector\n⚠ NOT reward_breakdown[DB] == 0 alone · free: already in the shipped result JSONs"]
   Anom [color: orange, icon: alert-circle, label: "834 ANOMALOUS\n407 the DB check failed · +371 DB PASSED and an action_check failed · +56 a WRITE nobody confirmed"]
-  Clean [color: green, icon: check-circle, label: "878 CLEAN — none of the three signals\nTHE SILENCE SET · a gate that fires here is a FALSE POSITIVE"]
+  Clean [color: green, icon: check-circle, label: "THE CONTROL SET — 878 clean by τ²'s three signals, PLUS every session the router SKIPPED (D-082 §A)\na gate that fires here is a FALSE POSITIVE · ⚠ the 878 is mechanical, the skips are not — which is what Cal exists to price"]
 }
-Corpus > Select
-Select > Anom
-Select > Clean
+Corpus > Signals
+Signals > Anom
+Signals > Clean
 SelNotGate [shape: document, color: red, icon: alert-triangle, label: "SELECTION IS NOT GATING — D-080\nDB stays the GATE's metric because it is mechanical, and it is a POOR SELECTOR for the same reason — it cannot see process\n⚠ the 56 is an UPPER BOUND from a regex over the last user message before each WRITE — enough to widen the selector, NOT a figure to quote"]
-SelNotGate --> Select
+SelNotGate --> Signals
 
 // ── 8b · THE INNER LOOP (D-070). Every other stage on this page runs ONCE per
 //  candidate version. This one runs up to n times on a SINGLE failing trace, and it
@@ -336,20 +362,25 @@ SelNotGate --> Select
 //  one — five attempts and five counterexamples, not a bare assertion that no rule
 //  existed.
 Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nONE decision point, and it holds no model — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
-  M0 [color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 · one ANOMALOUS session, drawn from the 834 — D-080\nevery signal computed by τ²'s own evaluator, before we looked at it"]
+  M0 [shape: diamond, color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 §A · reads ONE τ² session and returns ENHANCE or SKIP\nit is THE SELECTOR now — it replaced `analyst`, the mechanical `select` and the unbuilt rubric judge"]
   MT [color: orange, icon: cpu, label: "2 · CURATOR — TRANSLATE — a model turns that stated rule into a predicate\nD-064 · it proposes a CANDIDATE, it never decides"]
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — reads the candidate, then RUNS it · D-071, D-082\nit exists because D-040 admitted the hole: a rule can be reproducible,\ndistinct, non-void and still measure something uninteresting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "3 · run_predicate() — mechanical, no model, and this IS the whole verdict\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
-M0 > MT: straight to the author — there is no pre-check, and never was one that worked
+M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
+M0 > Clean: SKIP — a skipped session joins the CONTROL SET. D-082 §A
 MT > MCrit: the candidate goes to QA
 MCrit > MT: hand-back ONE — the ARGUMENT, before anything runs. ONE bounce per attempt (D-082)
 MCrit > MTest: QA invokes the mechanical check
 MTest > MT: hand-back TWO — the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
 MTest > MGive: attempt n — and every UNMINEABLE has >=1 run_predicate result behind it (D-082)
-Anom > M0: one anomalous trace at a time
+Corpus > M0: one session at a time — ALL 1,712, because the router is what selects now
 Clean > MTest: the silence set — the NO half of the verdict
+Cal [shape: document, color: red, icon: percent, label: "criterion_1_agreement — the router's verdict against τ²'s own signals, over all 1,712\nD-082 §B · NO RESULT IS REPORTABLE WITHOUT IT — a router verdict with no agreement figure is a population with no provenance\n⚠ if it comes back poor, §A REVERTS: the rubric becomes a diagnostic and selection goes back to mechanical"]
+Cal --> M0
+Anom --> Cal: the 834 the signals flagged
+Clean --> Cal: and the 878 they did not — together, the answer already known
 Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so an admitted predicate rests ENTIRELY on this corpus"]
 Overfit --> MTest
 

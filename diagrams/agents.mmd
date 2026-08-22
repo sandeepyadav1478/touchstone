@@ -1,31 +1,45 @@
+%% touchstone — the mining loop's three agents, and the one thing that decides. D-082.
+%% The chain is fixed by D-082 §D: router -> curator <-> critic -> run_predicate -> admission -> suite.
+%% Every green node is mechanical. No green node holds a model, and no other node decides anything.
 flowchart LR
 
   IN[("1,712 simulations<br/>τ²-bench already shipped")]
-  ROUTER{"router agent<br/>rubric"}
+  ROUTER{"router agent<br/>rubric — D-082 §A"}
 
-  subgraph LOOP["The Mining Loop"]
+  subgraph LOOP["The Mining Loop — n = 5 attempts on ONE trace"]
     direction LR
     CURATOR("curator agent<br/>writes the predicate")
-    CRITIC("qa / critic agent<br/>runs it, checks the work")
+    CRITIC("qa / critic agent<br/>reads it, argues once")
     CURATOR -- "candidate" --> CRITIC
-    CRITIC -- "feedback loop, 5 attempts" --> CURATOR
+    CRITIC -- "argument — ONE bounce per attempt" --> CURATOR
   end
 
-  ADMIT{{"three admission gates<br/>no model"}}
+  TEST{{"run_predicate()<br/>THE ONLY DECISION POINT<br/>no model — D-081"}}
+  ADMIT{{"three admission gates<br/>reproducible · distinct · justified<br/>no model — D-084"}}
   SUITE[("the regression suite")]
+  CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
+  UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
+  CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
   IN --> ROUTER
   ROUTER -- "enhance" --> CURATOR
-  CRITIC -- "holds" --> ADMIT
+  ROUTER -. "skip" .-> CONTROL
+  CRITIC -- "run whatever it has" --> TEST
+  TEST -- "counterexample — attempt i+1 sees what i got wrong" --> CURATOR
+  CONTROL -- "the NO half of the verdict" --> TEST
+  TEST -- "holds" --> ADMIT
+  TEST -. "attempt 5" .-> UNMINED
   ADMIT --> SUITE
-  ROUTER -. "skip" .-> ADMIT
+  ROUTER -.- CAL
 
   classDef agent fill:#3d2b0b,stroke:#ffb703,stroke-width:2px,color:#fff6e5
   classDef mech  fill:#0b3d2e,stroke:#3ddc97,stroke-width:2px,color:#eaffef
   classDef data  fill:#26262e,stroke:#8a8a99,color:#dcdce4
+  classDef note  fill:none,stroke:#8a8a99,stroke-dasharray:3 3,color:#9a9aa8
   classDef box   fill:none,stroke:#666,color:#9a9aa8
 
   class ROUTER,CURATOR,CRITIC agent
-  class ADMIT mech
-  class IN,SUITE data
+  class TEST,ADMIT mech
+  class IN,SUITE,CONTROL,UNMINED data
+  class CAL note
   class LOOP box

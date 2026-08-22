@@ -7,8 +7,10 @@ title touchstone — one simulation, and every boundary it crosses
 //  agent/models.py → the claude CLI. Every participant between run.py and the
 //  network was OUR agent, and D-062 replaced it with τ²-bench retail. D-066
 //  archived the old one whole to `incident-specimen` at 109c424. So five of the
-//  eleven participants below are new, and the three that vanished vanished
-//  because the files did.
+//  eleven participants that survived that redraw are new, and the three that
+//  vanished vanished because the files did. ⚠ THE COUNT IS 19 NOW, not eleven —
+//  D-082 added six mining-loop lifelines on 2026-08-23. Re-derive it from
+//  diagrams/README.md's census command; never step it by hand.
 //
 //  ⛔ THE RENDERER EATS THREE THINGS AND THE ONLY DEFENCE IS A STATIC GREP.
 //     · `note over` renders as NOTHING
@@ -41,6 +43,22 @@ title touchstone — one simulation, and every boundary it crosses
 //  no verdict into the flow at all. The `alt` block near the bottom is drawn with
 //  the shadow branch as the live one ON PURPOSE — a sequence diagram that shows
 //  enforcement working is a diagram of phase 3, and phase 3 has not happened.
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+//  🔴 D-080 AND D-082 MOVED THE CENTRE OF THIS PICTURE. READ THIS BEFORE THE DSL.
+//
+//  D-080 deferred the OUTER loop entire. τ² is not run by this project at scale any
+//  more — every number comes from replaying the 1,712 shipped simulations on disk.
+//  The run half below is still drawn because the SEAM is real and P1.0 runs one live
+//  simulation as a smoke test, but it is no longer where the results come from.
+//  ⛔ `Cmp` therefore has NOTHING TO COMPARE. It is specified in full and it does not
+//  run; the alt/else at the bottom is what it revives to, not what happens today.
+//
+//  D-082 replaced the mining loop's selector with a ROUTER AGENT and named the chain
+//  once and for all: router → curator ⇄ critic → run_predicate → admission → suite.
+//  That chain is the live half of the project, so it is now drawn here. Three agents
+//  propose; `run_predicate()` is the only thing that decides, and it holds no model.
+//  ⛔ Its companion picture is diagrams/agents.mmd — same chain, no boundaries.
 //
 // ═══════════════════════════════════════════════════════════════════════════════
 //  THE TELEMETRY EDGES ARE THE PART THAT CHANGED A DECISION.
@@ -83,7 +101,13 @@ Env [icon: shield, color: red, label: "make_tool_call() — environment/environm
 Tel [icon: activity, color: blue, label: "telemetry.py — P1.2\nOUR spans: litellm's callback died with litellm"]
 Spans [icon: file-text, color: red, label: "results/spans/(version).jsonl\nthe ONLY thing that crosses from the run to the score"]
 Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)"]
-Cmp [icon: filter, color: orange, label: "loop/compare.py — P2.4, decision 2"]
+Cmp [icon: filter, color: grey, label: "loop/compare.py — P2.4, decision 2\nDEFERRED ENTIRE, D-080 — no second operand exists to compare against"]
+Corpus [icon: database, color: grey, label: "tau2-bench results/final/ — 1,712 shipped simulations over 107 tasks\nD-080: the trace source. 834 anomalous, 878 clean, and the clean half is the CONTROL SET"]
+Router [icon: git-branch, color: orange, label: "router agent — D-082 §A\nrubric over ONE session: ENHANCE or SKIP. It replaced analyst, the mechanical select, and the unbuilt rubric judge"]
+Curator [icon: edit-3, color: orange, label: "curator agent — D-082\nwrites the predicate, and owns the two memories"]
+Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2\nattacks the candidate BEFORE anything runs. ONE bounce per attempt"]
+Pred [icon: check-square, color: green, label: "run_predicate() — THE ONLY DECISION POINT, D-081\nno model. It fires on the trace, and must be SILENT on the control set"]
+Admit [icon: shield, color: green, label: "three admission gates — D-084\nreproducible, distinct, justified. Five were specified; measuring them against 1,824 shipped simulations cut two"]
 
 CLI > Tel: init_telemetry() — ONCE, from cli.py
 Tel > Tel: register the exporter BEFORE importing anything that instruments
@@ -128,11 +152,30 @@ Score > Spans: read the committed JSONL — NO model call, NO credential (D-014)
 Spans --> Score: spans, with their timestamps and the reward joined on session_id
 Score > Score: pass^k is the headline, pass@1 beside it — BOTH, especially when they differ
 Score > Cmp: results/(version).json — the scored half only. diagnostics reaches nothing (D-045)
-Cmp > Cmp: five conditions against the incumbent — an AND, not five options
+Cmp > Cmp: five conditions against the incumbent — an AND, not five options. NOTHING HERE RUNS TODAY
 
-alt [label: "phase 2 — the gate runs in SHADOW and changes nothing"] {
+// ── the INNER loop, D-082. This is the half that is live, and it never runs τ². ──
+Corpus > Router: one shipped session at a time — ALL 1,712, because the router is what selects now
+Router > Curator: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
+Router --> Corpus: SKIP — the session joins the CONTROL SET, which is why the router costs a measured error rate
+Router > Router: criterion_1_agreement — the router verdict scored against τ²'s own three signals, over all 1,712. No result is reportable without it
+
+loop [label: "n = 5 attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
+  Curator > Critic: a candidate predicate, and the stated rule it claims to encode
+  Critic --> Curator: an ARGUMENT, before anything runs — ONE bounce per attempt, then it goes to test
+  Critic > Pred: run whatever it has
+  Pred > Corpus: fire it against the 878 clean sessions
+  Corpus --> Pred: the NO half of the verdict — a hit here is a FALSE POSITIVE
+  Pred --> Curator: a COUNTEREXAMPLE, so attempt i+1 sees what attempt i got wrong
+  Pred > Pred: record the attempt, the verdict and the counterexample. Giving up is recorded the same way
+}
+
+Pred > Admit: it holds on the trace and is silent on the control set
+Admit > CLI: admitted to the regression suite, or UNMINEABLE — which is a RESULT, not an error
+
+alt [label: "phase 2 — the gate runs in SHADOW and changes nothing. DEFERRED with compare, D-080"] {
   Cmp --> CLI: the gate's precision and recall, scored against sessions whose outcome is known
 }
-else [label: "phase 3 — the gate ENFORCES, and the refusal is in the trace"] {
+else [label: "phase 3 — the gate ENFORCES, and the refusal is in the trace. DEFERRED with compare, D-080"] {
   Cmp --> CLI: ACCEPT, or REJECT and WHICH task blocked it. The rejection IS the result
 }

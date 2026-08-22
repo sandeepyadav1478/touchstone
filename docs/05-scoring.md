@@ -247,9 +247,14 @@ single point of failure wearing a table**, and counting them separately is how a
 impressive without getting stronger.
 ---
 
-## 5a. ⛔ The router — cut by D-062, and its argument is the one to keep
+## 5a. ⛔ The *supervisor* router — cut by D-062, and its argument is the one to keep
 
-**There is no router.** The supervisor that picked the next specialist is archived with the graph
+⚠️ **Name collision, and it is worth reading twice.** `D-082` introduced a **router agent** in the
+mining loop — a rubric that decides which shipped τ² session is worth mining. **That is not this
+one.** This section is about the *supervisor* router of the archived agent graph, which picked the
+next specialist. The `D-082` router still exists and is live; the one below does not.
+
+**There is no supervisor router.** The supervisor that picked the next specialist is archived with the graph
 ([docs/03](03-agent-and-tools.md) §1), so `required_specialist`, the per-specialist precision and
 the `next` attribute are all gone. D-042 is retired.
 

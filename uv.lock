@@ -3116,7 +3116,7 @@ wheels = [
 [[package]]
 name = "tau2"
 version = "1.0.1"
-source = { git = "https://github.com/sierra-research/tau2-bench?rev=v1.0.1#fc0055dc4e0a316c3f83133267fbd6faaa770992" }
+source = { git = "https://github.com/sierra-research/tau2-bench?rev=a2c024725189#a2c024725189473d2d7cea3a5cfdbcc67478e41f" }
 dependencies = [
     { name = "addict" },
     { name = "deepdiff" },
@@ -3278,7 +3278,7 @@ requires-dist = [
     { name = "mlflow-skinny", specifier = "~=3.15" },
     { name = "pydantic", specifier = "~=2.13" },
     { name = "rich", specifier = ">=13.8,<15" },
-    { name = "tau2", git = "https://github.com/sierra-research/tau2-bench?rev=v1.0.1" },
+    { name = "tau2", git = "https://github.com/sierra-research/tau2-bench?rev=a2c024725189" },
     { name = "typer", specifier = "~=0.27" },
 ]
 provides-extras = ["diagnostics"]

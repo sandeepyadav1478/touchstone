@@ -80,14 +80,18 @@ fill it. Every cell comes from a committed artifact under `results/`, which is e
 |---|---|---|---|---|---|
 | ⟨…⟩ | ⟨policy.md line, or a tool contract⟩ | ⟨…⟩ / 834 | ⟨…⟩ / 878 | ⟨…⟩ / 5 | — |
 
-¹ The **834** anomalous traces selected out of τ²-bench's 1,712 shipped retail simulations — the
-union of *the DB check failed*, *an `action_check` failed*, and *a WRITE with no confirmation
-before it*. ⛔ **Not the 407 that merely fail the DB check**: 371 of the others **pass** it, because
-the DB check compares final state and cannot see how the state was reached.
+¹ The **834** anomalous traces out of τ²-bench's 1,712 shipped retail simulations — the union of
+*the DB check failed*, *an `action_check` failed*, and *a WRITE with no confirmation before it*.
+⛔ **Not the 407 that merely fail the DB check**: 371 of the others **pass** it, because the DB
+check compares final state and cannot see how the state was reached. ⚠️ **Since `D-082` §B these
+three signals are the ANSWER KEY, not the selector** — a **router agent** reads every one of the
+1,712 and answers *is this worth mining?*, and `criterion_1_agreement` is its verdict scored
+against this split. **No result is reportable without that figure.**
 
-² The **878** with none of those three signals. **A gate that fires here is a false positive**, and
-the second column is worth more than the third — a rule that catches everything catches the clean
-ones too.
+² The **878** with none of those three signals, **plus every session the router SKIPPED**. **A gate
+that fires here is a false positive**, and the second column is worth more than the third — a rule
+that catches everything catches the clean ones too. ⚠️ The 878 is mechanical and free; the skips
+are not, which is what `criterion_1_agreement` exists to price.
 
 ⚠️ **Both denominators come from the same 107 tasks** — the ones whose gold actions are unchanged
 between the shipped runs and the current task file. **107 of 114**, and the seven are excluded
@@ -192,52 +196,76 @@ our own, and there is none.
       ⛔ It does NOT come from the block above. That is why the inner loop survives
       the deferral: its input was the only thing the outer loop owed it.
 
-      1,712 ─▶ select ─┬─▶ 834 ANOMALOUS ─┐   the union of THREE signals, because one
-                       │                  │   of them is the gate's and cannot select:
-                       │                  │     407  the DB check failed
-                       │                  │   + 371  DB PASSED, action_check failed
-                       │                  │   +  56  a WRITE nobody confirmed, which
-                       │                  │          action_checks cannot see
-                       │                  │   🔴 The 371 are why. DB compares FINAL
-                       │                  │   STATE — an agent that skips a required
-                       │                  │   confirmation and writes the right row
-                       │                  │   scores a PASS. Feeding on DB==0 alone
-                       │                  │   left them in the silence set below,
-                       │                  │   where a CORRECT rule would have been
-                       │                  │   thrown out as a false positive (D-080).
-                       │                  │
-                       └─▶ 878 CLEAN ─────┼─▶ the silence set. A gate that fires here
-                           none of the    │   is a false positive, and this column is
-                           three signals  │   worth more than the other one.
+      1,712 ─▶ ROUTER ─┬─▶ ENHANCE ─▶ the curator, below. D-082 §A: a rubric reads
+       every one        │              ONE session and answers is this worth mining.
+                        │              It replaced `analyst`, the mechanical `select`
+                        │              and the unbuilt rubric judge — three components
+                        │              asking one question.
+                        │
+                        └─▶ SKIP ─────▶ joins the CONTROL SET. 🔴 This is the expensive
+                                        half: a model now helps define what counts as
+                                        clean, and the price is a measured error rate.
+
+      τ²'s OWN signals still split the corpus — 834 ANOMALOUS / 878 CLEAN — but since
+      D-082 §B they are the ANSWER KEY rather than the selector. `criterion_1_agreement`
+      scores the router's verdict against them over all 1,712, and ⛔ NO RESULT IS
+      REPORTABLE WITHOUT IT. If it comes back poor the rubric drops to a diagnostic and
+      selection reverts to being mechanical — the reasoning below is why it would work:
+
+        834 = 407  the DB check failed
+            + 371  DB PASSED, action_check failed
+            +  56  a WRITE nobody confirmed, which action_checks cannot see
+        878 = none of the three. THE SILENCE SET. A gate that fires here is a false
+              positive, and that column is worth more than the other one.
+
+      🔴 The 371 are why there are three signals and not one. DB compares FINAL STATE —
+      an agent that skips a required confirmation and writes the right row scores a
+      PASS. Feeding on DB==0 alone left those 371 in the silence set, where a CORRECT
+      rule would have been thrown out as a false positive (D-080).
                                           ▼
-   ══ THE INNER LOOP ══ up to n = 5 attempts on ONE anomalous trace · seconds ════════
+   ══ THE INNER LOOP ══ up to n = 5 attempts on ONE routed trace · seconds ═══════════
       it replays stored spans, and there is ZERO model call in its verdict. It is the
       only stage that runs more than once per input, and the only one that makes the
       measurement BIGGER instead of reporting it (P3.4).
 
-      mine ──┬─▶ translate ── a model reads the trace and the retail policy document
-       one     │     and turns a STATED rule into a predicate. A candidate, never a
-     anomalous │     verdict (D-064). There is NO pre-check in front of it: a scope
-       trace   │     filter stood here until D-081 and it named no mechanism.
+      ⛔ THREE AGENTS AND THREE MECHANICAL STEPS — D-082 §D fixes the chain:
+         router ─▶ curator ⇄ critic ─▶ run_predicate ─▶ admission ─▶ suite
+      All three agents PROPOSE. `run_predicate()` is the only thing that decides, and
+      it holds no model — a scope filter stood in front of it until D-081 and it named
+      no mechanism, so it was deleted rather than fixed.
+
+      mine ──┬─▶ curator ── reads the trace and the retail policy document, and turns
+       one     │     a STATED rule into a predicate. A candidate, never a verdict
+      routed   │     (D-064). It owns the two memories (D-078).
+      trace    │          │
+               │          ▼
+               │   critic ── attacks the candidate BEFORE anything runs: does it quote
+               │       a task_id? does it restate the trace instead of the rule? It
+               │       hands back an ARGUMENT, and there is ONE bounce per attempt —
+               │       then the loop runs whatever it has. ≤5 critic calls per trace.
                │          │
                │          ▼
-               │   test ── mechanical, and this IS the whole verdict — the only
-               │       decision the loop makes, and it holds no model:
-               │       fires on the anomalous trace?  YES
-               │       fires on one of the 878 clean?  NO
+               │   run_predicate ── mechanical, and this IS the whole verdict — the
+               │       only decision the loop makes, and it holds no model:
+               │       fires on the routed trace?         YES
+               │       fires on one of the control set?    NO
                │          │
                │          ├─▶ both ──▶ admission ──▶ regression
-               │          │            5 gates       suite
-               │          │            WHY: it caught a real
-               │          │            failure and nothing else
+               │          │            3 gates       suite
+               │          │            reproducible · distinct
+               │          │            · justified. FIVE were
+               │          │            specified; measuring them
+               │          │            against 1,824 shipped
+               │          │            simulations cut two (D-084)
                │          │
-               └──────────┘ else, hand back the counterexample and try again —
-                            attempt i+1 sees what i got wrong
+               └──────────┘ else, hand back the COUNTEREXAMPLE and try again —
+                            attempt i+1 sees what i got wrong. ≤5 predicate runs.
 
                   after n ──▶ UNMINEABLE. The ONE terminal, and *the agent was not
                     smart enough* arrives here too — a capability failure has no
-                    rule to translate, so nothing it proposes survives `test`.
-                    WHY NOT: every attempt and its counterexample, recorded.
+                    rule to translate, so nothing it proposes survives the predicate.
+                    WHY NOT: every attempt and its counterexample, recorded — and
+                    every UNMINEABLE has at least one run_predicate result behind it.
                     ⚠️ A RESULT, not an error.
                     🎯 The P3 exit gate REQUIRES at least one recorded unmineable —
                     a miner that has never given up has never been pointed at a

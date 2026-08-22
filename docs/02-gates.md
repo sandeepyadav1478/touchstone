@@ -160,13 +160,13 @@ actually resolve, and everything else is reported without being acted on.
    ⋮        ⋮          ⋮          ⋮           ⋮
    └────────┴──────────┴──────────┴───────────┘  none of this runs
                         │
-   1,712 shipped τ² simulations ──▶ select ──▶ 834 anomalous · 878 clean
-                        │            ⛔ NOT `DB == 0` alone — D-080 §C
-                        └──── mine ◀─┘
+   1,712 shipped τ² simulations ──▶ router ──▶ enhance · skip
+                        │            ⛔ a RUBRIC, not `DB == 0` — D-082 §A
+                        └──── mine ◀─┘  τ²'s own 834/878 split is the ANSWER KEY now
                                  │
                                  │  the INNER loop — up to n times per TRACE
-                                 └─▶ translate ⇄ test ─▶ admit ─▶ regression suite
-                                                    └─▶ unmineable
+                                 └─▶ curator ⇄ critic ─▶ run_predicate ─▶ admit ─▶ suite
+                                                                     └─▶ unmineable
 ```
 
 ⚠️ **`promote` was the fourth verb here and it is retired.** The stage still exists — a candidate
@@ -240,7 +240,7 @@ makes the thing that answers.
 
 | | |
 |---|---|
-| **In** | one **anomalous** τ² retail session, drawn from the **834** selected out of 1,712 shipped simulations — `D-080` §C |
+| **In** | one τ² retail session the **router** marked `ENHANCE` — it reads **all 1,712** shipped simulations, one at a time (`D-082` §A). ⚠️ **Not the 834**: that split is now the answer key, not the filter |
 | **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
 | **Or** | *unmineable* — the **one** terminal, after `n` attempts, with every attempt and its counterexample. A result, **not an error** (`D-081`) |
 
@@ -251,7 +251,10 @@ corpus: **407** traces fail DB, and a further **371** pass DB with a failed `act
 **56** with an unconfirmed WRITE that `action_checks` cannot see. ⛔ **Those 371 were sitting in
 the silence set** — the *is it quiet on what passes?* half of the test below — so a correct
 predicate catching a confirmation violation would have been **rejected as a false positive**. The
-selector is the **union** of the three signals: **834** in, **878** clean.
+union of the three signals is **834** in, **878** clean. ⚠️ **`D-082` §A retired it as the selector**
+— a **router agent** does that job now, and this split became the **answer key** it is scored
+against (`criterion_1_agreement`, `D-082` §B). ⛔ **No result is reportable without that figure**,
+and if it comes back poor selection reverts to exactly this union.
 
 ⚠️ **Selection is not gating, and one number cannot be both.** `reward_breakdown["DB"]` remains the
 **gate's** metric (`D-069`) precisely because it is mechanical; it is a poor
@@ -348,10 +351,13 @@ point of the swap.
 
 ```mermaid
 flowchart TB
-  SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> FAIL["select · 834 anomalous<br/>DB==0 ∪ failed action_check ∪ unconfirmed WRITE"]
-  FAIL --> PICK["cluster · pick one anomalous session"]
-  PICK --> TRANS["1. TRANSLATE — model writes a candidate predicate<br/>D-064 · candidate, never verdict<br/>🔴 no scope pre-check — D-081 deleted it"]
-  TRANS --> TEST{"2. TEST — mechanical, no model<br/>fires on the target · silent on the 878 clean"}
+  SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A<br/>reads ONE session, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
+  ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
+  KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
+  ROUTER -->|ENHANCE| TRANS["1. CURATOR — model writes a candidate predicate<br/>D-064 · candidate, never verdict<br/>🔴 no scope pre-check — D-081 deleted it"]
+  TRANS --> CRIT["1b. CRITIC — attacks it BEFORE anything runs<br/>ONE bounce per attempt, then the loop runs what it has<br/>D-082 §C2 · ≤5 critic calls"]
+  CRIT --> TEST{"2. run_predicate — mechanical, no model<br/>THE ONLY DECISION POINT · D-081<br/>fires on the target · silent on the control set"}
+  CLEAN --> TEST
   TEST -->|"either fails · attempt < n"| TRANS
   TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   TEST -->|both hold| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]

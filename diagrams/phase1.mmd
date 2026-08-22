@@ -12,7 +12,7 @@ flowchart TB
     LITE["litellm.completion<br/>llm_utils.py:15"]
     ENVC["Environment.make_tool_call<br/>environment/environment.py:158"]
     MUT["_is_mutating_tool<br/>environment/environment.py:130"]
-    EVAL["evaluate_simulation<br/>evaluator.py:88"]
+    EVAL["evaluate_simulation<br/>evaluator.py:88<br/>read back from the shipped JSONs — τ² is not run at scale here"]
     REW["reward_breakdown[DB] — gates<br/>composite reported, never gates"]
   end
 
@@ -30,6 +30,22 @@ flowchart TB
 
   MLF["mlflow.search_traces<br/>MLFLOW_TRACKING_URI · no service"]
   ANTH["Anthropic<br/>subscription auth · 5h window"]
+
+  subgraph MINE["the INNER loop — D-082 · reads the shipped corpus, not this run"]
+    direction LR
+    CORPUS[("1,712 shipped simulations<br/>τ² already ran them — D-080")]
+    ROUTER{"router agent<br/>rubric — D-082 §A"}
+    CURATOR("curator agent<br/>writes the predicate")
+    CRITIC("qa / critic agent<br/>argues once per attempt")
+    PRED{{"run_predicate()<br/>THE ONLY DECISION POINT<br/>no model — D-081"}}
+    CTRL[("control set<br/>878 clean + every SKIP")]
+    CORPUS --> ROUTER
+    ROUTER -- "enhance" --> CURATOR
+    ROUTER -. "skip" .-> CTRL
+    CURATOR --> CRITIC --> PRED
+    PRED -- "counterexample" --> CURATOR
+    CTRL --> PRED
+  end
 
   RUN --> AGENT
   RUN --> USER
@@ -57,20 +73,26 @@ flowchart TB
   REW --> D2
   ADMIT --> D3
   GATE --> D1
-  EVAL -. "mined failures" .-> ADMIT
+  PRED -- "holds" --> ADMIT
   ADMIT --> SUITE
   SUITE --> D2
 
   D1{{"DECISION 1<br/>refuse a tool call<br/>no model"}}
-  D2{{"DECISION 2<br/>reject a candidate version<br/>no model"}}
+  D2{{"DECISION 2<br/>reject a candidate version<br/>no model<br/>DEFERRED ENTIRE — D-080, no second operand"}}
   D3{{"DECISION 3<br/>admit a mined case<br/>no model"}}
 
   classDef nomodel fill:#0b3d2e,stroke:#3ddc97,color:#eaffef,stroke-width:2px
   classDef model fill:#3d2b0b,stroke:#ffb703,color:#fff6e5
   classDef seam fill:#3d0b2b,stroke:#ff5db1,color:#ffe9f5,stroke-width:3px
   classDef dead fill:#2a2a2a,stroke:#666,color:#999
+  classDef data fill:#26262e,stroke:#8a8a99,color:#dcdce4
+  classDef deferred fill:#1e2a26,stroke:#3ddc97,stroke-dasharray:4 3,color:#8fbfa8
 
   class D1,D2,D3,REW,ADMIT,MUT nomodel
   class AGENT,USER,REVIEW,SDK,ANTH model
   class GEN,ADP,ENVC seam
+  class CORPUS,CTRL data
+  class ROUTER,CURATOR,CRITIC model
+  class PRED nomodel
   class LITE dead
+  class D2 deferred
