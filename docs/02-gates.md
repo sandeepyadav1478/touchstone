@@ -261,7 +261,7 @@ It is enough to show `action_checks` has a blind spot and ⛔ **not a figure to 
 
 **The loop does not try to fix everything, and `run_predicate()` is what decides that** — not a
 pre-check. A gate can only be written against something that was **written down**: retail's
-`policy.md` (136 lines, `tau2-bench` at commit `a2c024725189` — `DEF-055`) and the
+`policy.md` (136 lines, `tau2-bench` at version `1.0.1` — `DEF-055`) and the
 tool contracts the environment already enforces. A failure that maps to a stated rule — a refund
 outside the stated window, a mutation without authentication, a restriction the agent was told and
 stepped over — is mineable. A failure that is only *the agent was not good enough* has no rule to

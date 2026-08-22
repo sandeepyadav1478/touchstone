@@ -428,7 +428,7 @@ behind an equality operator is claiming a precision nobody has achieved.
 ### 11.3 Scope, and why it is not a TTL
 
 ```
-context_hash = sha(policy.md, prompt_version, tau2_commit)   # a2c024725189 — DEF-055
+context_hash = sha(policy.md, prompt_version, tau2_version)  # 1.0.1 — DEF-055
 ```
 
 **A registry entry is valid for the context that produced it and no other.** Change the policy
