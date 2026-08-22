@@ -20,9 +20,9 @@ flowchart TB
     direction TB
     ADP["adapter<br/>replaces litellm at the seam"]
     SDK["ClaudeSDKClient<br/>claude_agent_sdk"]
-    CFG["config.py<br/>MODEL · USER_MODEL<br/>JUDGE_MODEL · REVIEW_MODEL"]
+    CFG["config.py — five pins<br/>MODEL · USER_MODEL · LOOP_MODEL<br/>NL_ASSERTION_MODEL · REVIEW_MODEL"]
     GATE["gate · shadow then enforce<br/>D-064 · D-065"]
-    TEL["telemetry.py<br/>mlflow.start_span"]
+    TEL["telemetry.py — provider + exporter<br/>the span is opened by the adapter (D-073)"]
     SUITE["suite<br/>benchmark frozen · regression grows"]
     ADMIT["3 admission gates<br/>reproducible<br/>distinct · justified"]
     DOC["doctor.py<br/>asserts the pins"]
