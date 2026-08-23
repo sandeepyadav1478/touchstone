@@ -80,8 +80,11 @@ flowchart LR
 
   subgraph ATTEMPT[" &nbsp; one attempt · up to 5 &nbsp; "]
     direction LR
-    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
-    CR --> RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"]
+    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce" .-> CR
+    subgraph QA[" &nbsp; QA &nbsp; "]
+      direction TB
+      CR["<b>critic</b><br/>attacks it first"] --> RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"]
+    end
     RP -. counterexample .-> CU
   end
 
@@ -96,12 +99,15 @@ flowchart LR
   class RP,AD d
   class T,S,U io
   style ATTEMPT fill:#94a3b810,stroke:#94a3b877,stroke-dasharray:4 3,color:#64748b
+  style QA fill:#3b82f60a,stroke:#2563eb66,stroke-width:1.2px,color:#2563eb
 ```
 
-**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The
-curator and the critic argue inside one attempt; **the critic is what hands the candidate out**,
-and it gets exactly one bounce per attempt, so the loop cannot burn all five arguing and reach
-`unmineable` having never run a predicate.
+**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and
+the critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
+reach `unmineable` having never run a predicate. **QA is one stage** — the critic is what enters it
+— but ⛔ **the seam inside it stays drawn**: the critic attacks the candidate, then invokes
+`run_predicate`, which is the only decision point in the loop (D-081). That is why a model may sit
+beside it and never inside it.
 
 ⛔ **Two hand-backs, not one, and they carry different things.** The critic returns an **argument**,
 *before* anything runs — does the candidate quote a `task_id`? does it restate the trace instead of
