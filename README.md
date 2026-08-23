@@ -74,30 +74,40 @@ putting them beside a number of ours would fuse two environments.
 **One routed trace, up to 5 attempts, seconds.** Three agents propose; one predicate decides.
 
 ```mermaid
-flowchart TD
-  T(["a failing trace"]) --> R["router<br/>worth mining?"]
-  R -- skip --> C[["control set"]]
-  R -- mine --> CU["curator<br/>stated rule → predicate"]
-  CU --> CR["critic<br/>attacks the candidate before anything runs"]
-  CR --> P["run_predicate<br/>fires on the trace? silent on the control set?"]
-  C -. "must stay silent here" .-> P
-  P -- "no · attempt &lt; 5" --> CU
-  P -- "no · exhausted" --> U[["unmineable"]]
-  P -- yes --> A["admission<br/>reproducible · distinct · justified"]
-  A -- "any gate fails" --> D[["discarded"]]
-  A -- "all three hold" --> S[["regression suite"]]
+flowchart LR
+  T(["a failing<br/>trace"]) --> R
 
-  classDef model fill:#fff7ed,stroke:#ea580c,color:#7c2d12
-  classDef mech fill:#eff6ff,stroke:#2563eb,color:#1e3a8a
-  class R,CU,CR model
-  class P,A mech
+  subgraph PROPOSE[" &nbsp; a model proposes — never decides &nbsp; "]
+    direction LR
+    R["<b>router</b><br/>worth mining?"] --> CU["<b>curator</b><br/>rule → predicate"] --> CR["<b>critic</b><br/>attacks it first"]
+  end
+
+  CR --> RP
+
+  subgraph DECIDE[" &nbsp; a predicate decides — no model &nbsp; "]
+    direction LR
+    RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"] --> AD["<b>admission</b><br/>reproducible · distinct<br/>justified"]
+  end
+
+  RP -. "retry ≤ 5" .-> CU
+  RP --> U(["unmineable"])
+  AD --> S(["regression<br/>suite"])
+
+  classDef m fill:#f9731622,stroke:#ea580c,stroke-width:1.5px,color:#ea580c
+  classDef d fill:#3b82f622,stroke:#2563eb,stroke-width:1.5px,color:#3b82f6
+  classDef io fill:#94a3b81a,stroke:#94a3b8,stroke-width:1.2px,color:#94a3b8
+  class R,CU,CR m
+  class RP,AD d
+  class T,S,U io
+  style PROPOSE fill:#f9731608,stroke:#fb923c88,stroke-dasharray:4 3,color:#ea580c
+  style DECIDE fill:#3b82f608,stroke:#60a5fa88,stroke-dasharray:4 3,color:#2563eb
 ```
 
-**Orange runs a model; blue runs a predicate.** ⛔ **No verdict leaves an orange box.**
-`run_predicate` is the whole decision — it must fire on the routed trace *and* stay silent on the
-control set — and admission is three more predicates behind it. `unmineable` is a **result, not an
-error**: *the agent was not smart enough* has no rule to translate, and a miner that has never
-given up has never been pointed at a failure it should refuse.
+⛔ **No verdict leaves the orange zone.** `run_predicate` is the whole decision — it must fire on
+the routed trace *and* stay silent on the control set — and admission is three more predicates
+behind it. `unmineable` is a **result, not an error**: *the agent was not smart enough* has no rule
+to translate, and a miner that has never given up has never been pointed at a failure it should
+refuse.
 
 🔴 **The router is the one place a model shapes the answer key**, and it is the expensive half of
 this design: what it skips becomes the control set a candidate must not fire on. Its verdicts are
