@@ -80,15 +80,12 @@ flowchart LR
 
   subgraph ATTEMPT[" &nbsp; one attempt · up to 5 &nbsp; "]
     direction LR
-    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce" .-> CR
-    subgraph QA[" &nbsp; QA &nbsp; "]
-      direction TB
-      CR["<b>critic</b><br/>attacks it first"] --> RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"]
-    end
+    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
+    CR --> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
     RP -. counterexample .-> CU
   end
 
-  RP --> AD["<b>admission</b><br/>reproducible · distinct<br/>justified"]
+  RP --> AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
   RP --> U(["unmineable"])
   AD --> S(["regression<br/>suite"])
 
@@ -99,15 +96,14 @@ flowchart LR
   class RP,AD d
   class T,S,U io
   style ATTEMPT fill:#94a3b810,stroke:#94a3b877,stroke-dasharray:4 3,color:#64748b
-  style QA fill:#3b82f60a,stroke:#2563eb66,stroke-width:1.2px,color:#2563eb
 ```
 
-**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and
-the critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
-reach `unmineable` having never run a predicate. **QA is one stage** — the critic is what enters it
-— but ⛔ **the seam inside it stays drawn**: the critic attacks the candidate, then invokes
-`run_predicate`, which is the only decision point in the loop (D-081). That is why a model may sit
-beside it and never inside it.
+**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and the
+critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
+reach `unmineable` having never run a predicate. The critic is what hands the candidate over, and
+⛔ **what it hands it to is a gate, not another opinion.** `run_predicate` is the only decision
+point in the loop (D-081), it is where the control set arrives, and every exit leaves from it —
+which is why it is drawn beside the agents and never inside them.
 
 ⛔ **Two hand-backs, not one, and they carry different things.** The critic returns an **argument**,
 *before* anything runs — does the candidate quote a `task_id`? does it restate the trace instead of
