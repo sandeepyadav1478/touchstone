@@ -75,21 +75,17 @@ putting them beside a number of ours would fuse two environments.
 
 ```mermaid
 flowchart LR
-  T(["a failing<br/>trace"]) --> R
+  T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
+  R --> CU
 
-  subgraph PROPOSE[" &nbsp; a model proposes — never decides &nbsp; "]
+  subgraph ATTEMPT[" &nbsp; one attempt · up to 5 &nbsp; "]
     direction LR
-    R["<b>router</b><br/>worth mining?"] --> CU["<b>curator</b><br/>rule → predicate"] --> CR["<b>critic</b><br/>attacks it first"]
+    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
+    CR --> RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"]
+    RP -. counterexample .-> CU
   end
 
-  CR --> RP
-
-  subgraph DECIDE[" &nbsp; a predicate decides — no model &nbsp; "]
-    direction LR
-    RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"] --> AD["<b>admission</b><br/>reproducible · distinct<br/>justified"]
-  end
-
-  RP -. "counterexample<br/>attempt ≤ 5" .-> CU
+  RP --> AD["<b>admission</b><br/>reproducible · distinct<br/>justified"]
   RP --> U(["unmineable"])
   AD --> S(["regression<br/>suite"])
 
@@ -99,18 +95,20 @@ flowchart LR
   class R,CU,CR m
   class RP,AD d
   class T,S,U io
-  style PROPOSE fill:#f9731608,stroke:#fb923c88,stroke-dasharray:4 3,color:#ea580c
-  style DECIDE fill:#3b82f608,stroke:#60a5fa88,stroke-dasharray:4 3,color:#2563eb
+  style ATTEMPT fill:#94a3b810,stroke:#94a3b877,stroke-dasharray:4 3,color:#64748b
 ```
 
-⛔ **No verdict leaves the orange zone.** `run_predicate` is the whole decision — it must fire on
-the routed trace *and* stay silent on the control set — and admission is three more predicates
-behind it, and ⛔ **its failure is the only thing that starts another attempt** — the dotted arrow
-hands the curator the **counterexample**: the clean session the predicate wrongly fired on, or the
-fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
-**result, not an error**: *the agent was not smart enough* has no rule
-to translate, and a miner that has never given up has never been pointed at a failure it should
-refuse.
+**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The
+curator and the critic argue inside one attempt; **the critic is what hands the candidate out**,
+and it gets exactly one bounce per attempt, so the loop cannot burn all five arguing and reach
+`unmineable` having never run a predicate.
+
+⛔ **Two hand-backs, not one, and they carry different things.** The critic returns an **argument**,
+*before* anything runs — does the candidate quote a `task_id`? does it restate the trace instead of
+the rule? `run_predicate` returns a **counterexample**: the clean session it wrongly fired on, or
+the fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
+**result, not an error** — *the agent was not smart enough* has no rule to translate, and a miner
+that has never given up has never been pointed at a failure it should refuse.
 
 🔴 **The router is the one place a model shapes the answer key**, and it is the expensive half of
 this design: what it skips becomes the control set a candidate must not fire on. Its verdicts are
