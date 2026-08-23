@@ -89,7 +89,7 @@ flowchart LR
     RP["<b>run_predicate</b><br/>fires on the trace,<br/>silent on the control set"] --> AD["<b>admission</b><br/>reproducible · distinct<br/>justified"]
   end
 
-  RP -. "retry ≤ 5" .-> CU
+  RP -. "counterexample<br/>attempt ≤ 5" .-> CU
   RP --> U(["unmineable"])
   AD --> S(["regression<br/>suite"])
 
@@ -105,7 +105,10 @@ flowchart LR
 
 ⛔ **No verdict leaves the orange zone.** `run_predicate` is the whole decision — it must fire on
 the routed trace *and* stay silent on the control set — and admission is three more predicates
-behind it. `unmineable` is a **result, not an error**: *the agent was not smart enough* has no rule
+behind it, and ⛔ **its failure is the only thing that starts another attempt** — the dotted arrow
+hands the curator the **counterexample**: the clean session the predicate wrongly fired on, or the
+fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
+**result, not an error**: *the agent was not smart enough* has no rule
 to translate, and a miner that has never given up has never been pointed at a failure it should
 refuse.
 
