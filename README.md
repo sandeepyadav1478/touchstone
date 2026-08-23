@@ -76,17 +76,12 @@ putting them beside a number of ours would fuse two environments.
 ```mermaid
 flowchart LR
   T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
-  R --> CU
-
-  subgraph ATTEMPT[" &nbsp; one attempt · up to 5 &nbsp; "]
-    direction LR
-    CU["<b>curator</b><br/>rule → predicate"] <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
-    CR --> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
-    RP -. counterexample .-> CU
-  end
-
-  RP --> AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
-  RP --> U(["unmineable"])
+  R --> CU["<b>curator</b><br/>rule → predicate"]
+  CU <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
+  CR --> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
+  RP -. "counterexample<br/>attempt &lt; 5" .-> CU
+  RP -->|"attempt 5"| U(["unmineable"])
+  RP -->|"both hold"| AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
   AD --> S(["regression<br/>suite"])
 
   classDef m fill:#f9731622,stroke:#ea580c,stroke-width:1.5px,color:#ea580c
@@ -95,15 +90,15 @@ flowchart LR
   class R,CU,CR m
   class RP,AD d
   class T,S,U io
-  style ATTEMPT fill:#94a3b810,stroke:#94a3b877,stroke-dasharray:4 3,color:#64748b
 ```
 
 **Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and the
 critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
 reach `unmineable` having never run a predicate. The critic is what hands the candidate over, and
 ⛔ **what it hands it to is a gate, not another opinion.** `run_predicate` is the only decision
-point in the loop (D-081), it is where the control set arrives, and every exit leaves from it —
-which is why it is drawn beside the agents and never inside them.
+point in the loop (D-081), it is where the control set arrives, and every exit leaves from it.
+⛔ **It is not downstream of the agents — it is the loop's condition.** An attempt ends when
+`run_predicate` fails, and that same failure is what starts the next one.
 
 ⛔ **Two hand-backs, not one, and they carry different things.** The critic returns an **argument**,
 *before* anything runs — does the candidate quote a `task_id`? does it restate the trace instead of
