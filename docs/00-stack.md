@@ -55,6 +55,12 @@ authority if the two ever disagree.**
 | `NL_ASSERTION_MODEL` | `claude-opus-5` | τ²'s NL-assertion evaluator |
 | `REVIEW_MODEL` | `claude-opus-5` | The opt-in hallucination reviewer — validates the *simulator*, not the agent |
 
+⚠️ **`doctor` resolves exactly one of these five against a live call — `MODEL`.** The other four
+have no caller yet, and a probe with nothing behind it would report green on a pin that was never
+resolved: it would be checking this table against itself. ⛔ **A green `doctor` is evidence about
+one pin, not five**, and the gap closes as each role gains a real caller, not by adding four more
+assertions here.
+
 ⛔ **ollama and Cerebras are `doctor` diagnostics and never model sources.** Both are reachable
 from this machine, which is exactly why the rule has to be written down rather than enforced by
 absence. A run that quietly falls back to a local model is not a cheaper run — it is a
