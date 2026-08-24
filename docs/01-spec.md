@@ -113,7 +113,7 @@ What survives the cut, in one line each:
   specimen-dependent and moves intact onto the 114 tasks. [docs/02](02-gates.md) §4.
 - **Invariant 11** — every case carries a `why`, an `added` date and an `origin` — still binds,
   and now applies to *mined* cases rather than generated ones, since mining is the only way a
-  case enters. ⚠️ **Case admission is specified and unbuilt until P3.5**, so today the answer is
+  case enters. ⚠️ **The gauntlet is specified and unbuilt until P3.5**, so today the answer is
   *all 114, no selection*, and that is the honest state.
 - **The `history/` corpus for v5** is cut twice over: by D-062 with the generator, and by D-030
   with v5 itself.
@@ -171,7 +171,7 @@ what they say.** ⛔ **Numbers are never reused or closed up** — they are cite
 | 8 | Correctness never reads prose | The gate takes `reward_breakdown["DB"]` only. Asserted by scoring a run whose every assistant message is garbage but whose DB is correct, and requiring the DB component to be 1.0 |
 | 9 | *(v5)* ~~`history/` is disjoint from both tiers~~ | ⛔ **Cut twice** — D-030 cut v5, D-062 cut `history/` |
 | 10 | *(v5)* ~~Nothing is ever written to `history/`~~ | ⛔ **Cut twice**, same as 9 |
-| 11 | **Every mined case has a non-empty `why`, an `added` date and an `origin`** | CI walks the regression manifest and fails on a blank field. ⛔ **A case nobody can justify does not get to gate anything** — D-024. ⚠️ Vacuous today: D-030 defers admission, so the manifest is empty |
+| 11 | **Every mined case has a non-empty `why`, an `added` date and an `origin`** | CI walks the regression manifest and fails on a blank field. ⛔ **A case nobody can justify does not get to gate anything** — D-024. ⚠️ Vacuous today: D-030 defers the gauntlet, so the manifest is empty |
 | 12 | **A `locked` regression case only ever became locked by passing** | `locked_at` names a version, and `results/<that version>.json` shows it passing. A lock with no run behind it is a fabricated gate |
 | 13 | 🆕 **No specialist's prompt contains another specialist's finding** | Render every `identity` / `catalogue` / `policy` prompt in a full run and assert no other node's finding text appears. ⚠️ **Retired by D-062 and un-retired by D-071** — it was retired because there were no specialists, and there are again ([docs/03](03-agent-and-tools.md) §1). A blackboard lets one node anchor the next, and then a correctness movement is attributable to neither |
 | 14 | 🆕 **No two specialist spans overlap in time** | Assert over `touchstone.node.*` span timestamps that exactly one specialist is open at a time (D-026 — a merge order is a hidden variable). ⚠️ **Un-retired by D-071.** Its argument was kept in place for *"the day something does"* fan out: **an orchestration bug wearing the costume of the thing being measured is the worst defect this design can have** — and now something asserts against it |

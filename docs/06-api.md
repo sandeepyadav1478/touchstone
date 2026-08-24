@@ -63,13 +63,13 @@ touchstone compare v4 --against v3                 # → promote | reject
 touchstone promote v4                              # → results/index.json
 touchstone record                                  # → regenerates the README table
 
-# ⛔ NOT BUILT YET — ⚠️ nothing below is a working command. `mine` and `suite admit` are
+# ⛔ NOT BUILT YET — ⚠️ nothing below is a working command. `mine` and `suite gauntlet` are
 #    P3.4 / P3.5 (D-070); the reading verbs stay deferred, and the reasoning is D-024.
 # touchstone mine  v4                              # THE INNER LOOP: one trace, n attempts
 # touchstone suite log                             # every suite version: what entered, why, when
 # touchstone suite show r-018                      # one case: origin, why, the mining trace, history
 # touchstone suite diff v6..v7                     # what changed between two suite versions
-# touchstone suite admit                           # runs the three admission gates: proposed/ → regression/
+# touchstone suite gauntlet                           # runs the gauntlet's three gates: proposed/ → regression/
 # touchstone suite quarantine r-031 --why "…"      # stops it gating; --why is required
 
 # single case
@@ -77,7 +77,7 @@ touchstone run retail_1 --version v4               # one simulation, prints the 
 ```
 
 ⛔ **There is no `touchstone approve`, and there is no `suite review`.** No run ever pauses, so
-there is nothing to resume; `suite admit` applies the three mechanical gates in
+there is nothing to resume; `suite gauntlet` applies the three mechanical gates in
 [docs/02](02-gates.md) §5 and records which one rejected a case. **A human improves this
 system by rewriting it — reading traces, changing prompts, adding cases — never by standing
 inside a run** (D-040).
@@ -86,7 +86,7 @@ inside a run** (D-040).
 must never appear in a doc example whose output is pasted into the README.
 
 **When the `suite` verbs are built, `suite show` is the one that makes a growing suite
-defensible** — every case answers *why is this here, which gates admitted it, and what failure
+defensible** — every case answers *why is this here, which gates cleared it, and what failure
 produced it* ([docs/02](02-gates.md) §5). ⛔ There is never a `touchstone suite unlock`. Overriding a
 locked case is a hand edit plus a `DECISIONS.md` entry, on purpose: a gate with a convenient off
 switch is not a gate.

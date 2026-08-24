@@ -102,7 +102,7 @@ title touchstone — the loop that has to get better
 //
 //    1 · refuse a TOOL CALL          runtime, at make_tool_call()   — P3.1
 //    2 · reject a CANDIDATE VERSION  at compare                     — P2.4
-//    3 · admit a MINED CASE          at suite admit                 — P3.5
+//    3 · clear a MINED CASE          at suite gauntlet                 — P3.5
 //
 //  ⛔ ALL THREE ARE MECHANICAL. ANYTHING WITH A MODEL IN IT CANNOT GATE. That is
 //  the invariant this whole picture is arranged around, and it is why every node
@@ -314,7 +314,7 @@ Cmp > Refused: any ONE fails
 //  from the 834", so the two sections together said the mechanical selector still selects
 //  and the router runs after it. ⛔ NEITHER SECTION WAS WRONG ALONE, AND THE STALE TOPOLOGY
 //  SAT ON THE BOUNDARY BETWEEN THEM — which is the place no single section's review looks.
-//  a7fc003 rewired every edge INSIDE 8b (the critic got its own hand-back; the five admission
+//  a7fc003 rewired every edge INSIDE 8b (the critic got its own hand-back; the five gauntlet
 //  gates collapsed to three) and touched not one edge INTO it: Corpus still fed the diamond,
 //  and the diamond still fed the router. ⚠ THE FIRST WRITE-UP OF THIS SAID a7fc003 "touched
 //  no EDGE", which is FALSE — `git show a7fc003 -- diagrams/touchstone.eraser` has TWELVE
@@ -363,13 +363,13 @@ SelNotGate --> Signals
 //  existed.
 Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nthe CRITIC decides (D-086) and run_predicate is EVIDENCE, not a gate — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
   M0 [shape: diamond, color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 §A · reads ONE τ² session and returns ENHANCE or SKIP\nit is THE SELECTOR now — it replaced `analyst`, the mechanical `select` and the unbuilt rubric judge"]
-  MT [color: orange, icon: cpu, label: "2 · CURATOR — decides WHETHER a failure is worth an eval at all, names the rule it broke, writes the predicate\nD-086 C · the loop's centre of gravity. It proposes a CANDIDATE; it never ADMITS one"]
+  MT [color: orange, icon: cpu, label: "2 · CURATOR — decides WHETHER a failure is worth an eval at all, names the rule it broke, writes the predicate\nD-086 C · the loop's centre of gravity. It proposes a CANDIDATE; it never CLEARS one"]
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — the ONLY judge of the curator's call, and the loop's DECISION POINT · D-086 A\nit runs the predicate, reads the result, and picks: bounce, hand over, or give up\nit exists because D-040 admitted the hole: a rule can be reproducible, distinct and still measure nothing interesting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
-PosMem > MT: D-087 — the curator checks its candidate against the ADMITTED suite. Exact half runs the admitted predicates on the trace BEFORE any agent call; the suite index goes in the prompt. Still no tool
+PosMem > MT: D-087 — the curator checks its candidate against the CLEARED suite. Exact half runs the cleared predicates on the trace BEFORE any agent call; the suite index goes in the prompt. Still no tool
 M0 > Clean: SKIP — a skipped session joins the CONTROL SET. D-082 §A
 MT > MCrit: the candidate goes to QA
 MCrit > MT: hand-back — the SPECIFIC bad finding, never 'this seems weak'. D-086 C: a vague objection costs an attempt and teaches nothing. ONE bounce per attempt (D-082)
@@ -382,7 +382,7 @@ Cal [shape: document, color: red, icon: percent, label: "criterion_1_agreement �
 Cal --> M0
 Anom --> Cal: the 834 the signals flagged
 Clean --> Cal: and the 878 they did not — together, the answer already known
-Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so an admitted predicate rests ENTIRELY on this corpus"]
+Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so a cleared predicate rests ENTIRELY on this corpus"]
 Overfit --> MTest
 
 // ── 8c · THE CURATOR'S TWO MEMORIES (D-078), and the first thing to say is which memory
@@ -400,7 +400,7 @@ Curator [color: pink, icon: database, label: "8c · the curator's TWO memories �
   PosMem [color: green, icon: check-square, label: "positive — THE ACTIVE RULE SET, queried by RUNNING it\nexact, because a predicate either fires or it does not"]
   NegMem [color: grey, icon: x-square, label: "negative — a RECOMPUTABLE VIEW over retained failing traces\nheuristic, derived-never-stored · a sig_version bump rebuilds it, never migrates it"]
 }
-Admit --> PosMem: an admitted rule IS the positive memory
+Gauntlet --> PosMem: a cleared rule IS the positive memory
 MGive --> NegMem: every UNMINEABLE lands here, with its counterexamples
 NegMem --> M0: has this shape already been dealt with? — prevalence ranking, D-078 · D-081 rewired this from the deleted filter
 
@@ -427,22 +427,22 @@ Immutable --> MT
 Decisions [color: red, icon: git-branch, label: "9 · THREE decisions — and 'promotion' named only the middle one"] {
   D1 [icon: shield, label: "1 · refuse a TOOL CALL — runtime, P3.1\nno model in the verdict"]
   D2 [icon: filter, label: "2 · reject a CANDIDATE VERSION — at compare, P2.4\nno model in the verdict"]
-  D3 [icon: filter, label: "3 · admit a MINED CASE — at suite admit, P3.5\nno model in the verdict · fed by the inner loop, section 8b"]
+  D3 [icon: filter, label: "3 · clear a MINED CASE — at suite gauntlet, P3.5\nno model in the verdict · fed by the inner loop, section 8b"]
 }
 Enforce > D1
 Cmp > D2
 Invariant [shape: document, color: red, icon: alert-octagon, label: "ANYTHING THAT GATES IS MECHANICAL\nANYTHING WITH A MODEL IN IT CANNOT GATE\nD-064 puts the model in TRANSLATION, never in the VERDICT"]
 Invariant --> Decisions
 
-Admit [color: green, icon: filter, label: "10 · the three admission gates — P3.5, all mechanical. No human is a step, and no AGENT is either: three boolean checks, no model\nD-084 dropped not_a_void and merged not_flaky · D-086 D: the ONLY mechanical boundary left, and deprioritised until the loop runs"] {
+Gauntlet [color: green, icon: filter, label: "10 · the gauntlet's three gates — P3.5, all mechanical. No human is a step, and no AGENT is either: three boolean checks, no model\nD-084 dropped not_a_void and merged not_flaky · D-086 D: the ONLY mechanical boundary left, and deprioritised until the loop runs"] {
   A1 [icon: repeat, label: "1 · reproducible — all k trials, k distinct seeds"]
   A4 [icon: git-branch, label: "2 · distinct — task_id. signature half DEFERRED, D-083"]
   A5 [icon: edit, label: "3 · justified — a `why` is REQUIRED"]
 }
 A1 > A4 > A5
 A5 > D3
-MCrit --> Admit: the critic hands it over — D-086 A. The three gates are OUTSIDE the loop and deprioritised until it runs (D-086 D)
-Admit --> C5: the ONLY thing condition 5 would read
+MCrit --> Gauntlet: the critic hands it over — D-086 A. The three gates are OUTSIDE the loop and deprioritised until it runs (D-086 D)
+Gauntlet --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with
 //  D-071 on 2026-08-20 and this section said "Four" until 2026-08-21 — see the header.

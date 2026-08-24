@@ -338,7 +338,7 @@ def benchmark_hash(suite_dir: Path) -> str:
 
 | Out of the hash | Why |
 |---|---|
-| `why`, `added`, `admitted_by`, `origin`, `history[]` | ⛔ **Provenance prose must never invalidate the version table.** Fixing a typo in a justification would otherwise orphan every past result. ⚠️ **This row is why the `reviewed_by` → `admitted_by` rename (D-040) cost nothing** — a provenance field can be renamed without orphaning a single past score |
+| `why`, `added`, `cleared_by`, `origin`, `history[]` | ⛔ **Provenance prose must never invalidate the version table.** Fixing a typo in a justification would otherwise orphan every past result. ⚠️ **This row is why the `reviewed_by` → `admitted_by` → `cleared_by` renames (D-040, D-088) cost nothing** — a provenance field can be renamed without orphaning a single past score |
 | `status` | Benchmark cases have no status machine — that is the regression tier (D-024) |
 | The manifest's own `benchmark_hash` field | Self-reference |
 | File mtimes, key order, whitespace | Canonical JSON, sorted keys, sorted by id — **a re-serialise must not change the digest**, or `git checkout` alone could block a comparison |

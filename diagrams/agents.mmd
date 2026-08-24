@@ -1,5 +1,5 @@
 %% touchstone — the mining loop's three agents, and where the decision sits. D-082, D-086.
-%% The chain: router -> curator <-> critic <-> run_predicate, then critic -> admission -> suite.
+%% The chain: router -> curator <-> critic <-> run_predicate, then critic -> the gauntlet -> suite.
 %% Every green node is mechanical. D-086: run_predicate is EVIDENCE the critic reads, not a gate.
 flowchart LR
 
@@ -15,23 +15,23 @@ flowchart LR
   end
 
   TEST{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
-  ADMIT{{"three admission gates — OUTSIDE the loop<br/>reproducible · distinct · justified<br/>no model, ever — D-084 · deprioritised, D-086 §D"}}
+  GAUNTLET{{"the gauntlet's three gates — OUTSIDE the loop<br/>reproducible · distinct · justified<br/>no model, ever — D-084 · deprioritised, D-086 §D"}}
   SUITE[("the regression suite")]
   CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
   UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
   CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
-  ADMITTED[("the ADMITTED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
+  CLEARED[("the CLEARED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
 
   IN --> ROUTER
-  ADMITTED -. "the suite index goes in the curator's prompt — still no tool" .-> CURATOR
+  CLEARED -. "the suite index goes in the curator's prompt — still no tool" .-> CURATOR
   ROUTER -- "enhance" --> CURATOR
   ROUTER -. "skip" .-> CONTROL
   CRITIC <-- "its tool, and nobody else's — D-086 §A" --> TEST
   CONTROL -- "the NO half of the evidence" --> TEST
-  CRITIC -- "hands over" --> ADMIT
+  CRITIC -- "hands over" --> GAUNTLET
   CRITIC -. "attempt 5" .-> UNMINED
-  ADMIT --> SUITE
+  GAUNTLET --> SUITE
   ROUTER -.- CAL
 
   classDef agent fill:#3d2b0b,stroke:#ffb703,stroke-width:2px,color:#fff6e5
@@ -41,8 +41,8 @@ flowchart LR
   classDef box   fill:none,stroke:#666,color:#9a9aa8
 
   class ROUTER,CURATOR,CRITIC agent
-  class TEST,ADMIT mech
+  class TEST,GAUNTLET mech
   class IN,SUITE,CONTROL,UNMINED data
   class CAL note
-  class ADMITTED data
+  class CLEARED data
   class LOOP box

@@ -8,12 +8,12 @@
 
 An agent is only as good as the evals judging it, and an eval is wrong in two directions: it
 misses real failures, and it refuses correct fixes. touchstone mines failures into new eval
-cases, admits them through mechanical gates, and enforces them — so the suite keeps getting
+cases, clears them through mechanical gates, and enforces them — so the suite keeps getting
 stricter and the agent has to keep passing it.
 
 ⛔ **The invariant: nothing enters the suite except through a mechanical gate.** Models do the
 mining — they read the trace, decide what is worth encoding, write the predicate, argue about it
-and run it. ⛔ **What they cannot do is admit anything.** The three checks that stand between a
+and run it. ⛔ **What they cannot do is clear anything.** The three checks that stand between a
 finished candidate and the suite have no model in them (D-084), and ⚠️ **since D-086 they are the
 only checks that do not** — the loop itself is model-decided end to end, deliberately, and the
 guarantee lives at the suite boundary rather than inside the loop.
@@ -51,7 +51,7 @@ required confirmation and still writes the correct row scores `DB == 1`. Over th
 ```
 
 🔴 **Those 371 are why the miner reads three signals and not one.** Selecting on `DB == 0` alone
-leaves them in the silence set — the population a new predicate must be quiet on to be admitted —
+leaves them in the silence set — the population a new predicate must be quiet on to be cleared —
 so a predicate **correctly** catching a confirmation violation would have been thrown out as a
 false positive, by an answer key that was itself wrong. **A broken eval does not just miss
 failures; it refuses the fix.**
@@ -84,7 +84,7 @@ flowchart LR
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>the loop's one mechanical step<br/>fires on the trace, silent on the control set"}}
   CR -->|"attempt 5"| U(["unmineable"])
-  CR -->|"hands over"| AD{{"<b>admission</b> — outside the loop<br/>reproducible · distinct · justified<br/>no model, ever"}}
+  CR -->|"hands over"| AD{{"<b>the gauntlet</b> — outside the loop<br/>reproducible · distinct · justified<br/>no model, ever"}}
   AD --> S(["regression<br/>suite"])
 
   classDef m fill:#f9731622,stroke:#ea580c,stroke-width:1.5px,color:#ea580c
@@ -95,10 +95,10 @@ flowchart LR
   class T,S,U io
 ```
 
-**Orange decides, blue verifies** — and ⛔ **no orange box admits anything.** The **curator** is the
+**Orange decides, blue verifies** — and ⛔ **no orange box clears anything.** The **curator** is the
 centre of gravity: it decides whether a failure is worth an eval at all, which rule it broke, and
 what the predicate should say — ⛔ **against the suite that already exists, never in a vacuum**
-(D-087). A rule already gated is not worth mining twice, so an exact check runs the admitted
+(D-087). A rule already gated is not worth mining twice, so an exact check runs the cleared
 predicates against the trace first, and the suite index goes into the curator's prompt so that two
 cases cannot encode one rule in different words. The **critic** is the only thing that judges that call, and it is
 the loop's decision point (D-086): it reads the curator's candidate, calls `run_predicate`, reads
@@ -116,15 +116,15 @@ under D-086 it is no longer a gate**; it supplies the evidence, the critic suppl
 is deliberate: five attempts of argue-run-revise put **more** reasoning on one trace than a single
 test can (D-087 §E). ⚠️ **But effort is not correctness** — a loop can iterate its way to a
 confident wrong answer, and nothing inside it can tell. That is what the last boundary is for, and
-it is untouched: ⛔ **nothing enters the suite without passing `admission`.**
+it is untouched: ⛔ **nothing enters the suite without clearing the gauntlet.**
 
-**`admission` is three boolean checks — not an agent, no model, nothing to prompt.** They run
+**The gauntlet is three boolean checks — not an agent, no model, nothing to prompt.** They run
 **downstream of the loop** on a finished candidate, and each one refuses a specific way a bad case
 poisons a suite you have to trust for months:
 
 | gate | the check | what it refuses, and why that matters |
 |---|---|---|
-| **reproducible** | the case fails **all 4** of τ²'s trials, not some — `all(reward_breakdown["DB"] == 0)`, and ⚠️ **the 4 trials carry 4 distinct seeds**, so they are four draws rather than one copied | **A flaky failure.** It is `pass^4` inverted: a case is admitted only if it is as reliable a *failure* as a shipped pass is a *pass*. Admit a 3-of-4 case and the suite fails your agent at random, and you debug a regression that never happened. ⛔ **Admits 34 of 456** (file,task) pairs — 7.5%, and that yield is the honest cost of the rule |
+| **reproducible** | the case fails **all 4** of τ²'s trials, not some — `all(reward_breakdown["DB"] == 0)`, and ⚠️ **the 4 trials carry 4 distinct seeds**, so they are four draws rather than one copied | **A flaky failure.** It is `pass^4` inverted: a case is cleared only if it is as reliable a *failure* as a shipped pass is a *pass*. Clear a 3-of-4 case and the suite fails your agent at random, and you debug a regression that never happened. ⛔ **Clears 34 of 456** (file,task) pairs — 7.5%, and that yield is the honest cost of the rule |
 | **distinct** | no two cases share a `task_id` — this one **refuses**. A failure-signature check sits beside it and ✅ **records `duplicate_of` instead of refusing** | **A suite that grows without covering more**, and a pass rate that counts one failure mode twice. The signature half does not refuse because it is a **bucketing heuristic measured at 1–2 orders of magnitude of error** — an over-merge would reject a real, different failure permanently, and ⛔ **a refusal is undoable while a recorded suspicion is not** |
 | **justified** | `why`, `added` and `origin` are all non-empty | **A case nobody can ever delete.** Six months on, one fails: is it a real regression, or something mined in a hurry? Without the rule it encodes, when it arrived and which version produced it, you cannot answer — so you keep it forever, and the suite ratchets on cases no one can defend |
 
@@ -172,7 +172,7 @@ implemented**; listed because the spec is fixed, not because it runs:
 ```bash
 touchstone suite freeze --domain retail   # ⬜ pin the task ids and hash them
 touchstone mine --from results/final      # ⬜ one anomalous trace → a candidate predicate
-touchstone suite admit r-018              # ⬜ three mechanical gates → the regression suite
+touchstone suite gauntlet r-018              # ⬜ three mechanical gates → the regression suite
 touchstone run --enforce                  # ⬜ the predicate refuses the call before it runs
 ```
 
@@ -217,7 +217,7 @@ design, so they hold whether or not a run has happened. The full list is in
 |---|---|
 | [docs/00-stack.md](docs/00-stack.md) | Every dependency pinned and why, the five model pins, `touchstone doctor` |
 | [docs/01-spec.md](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, the live invariants |
-| [docs/02-gates.md](docs/02-gates.md) | ⛔ **The three admission gates**, the two tiers, the acceptance rule, the stages, case provenance |
+| [docs/02-gates.md](docs/02-gates.md) | ⛔ **The gauntlet's three gates**, the two tiers, the acceptance rule, the stages, case provenance |
 | [docs/03-agent-and-tools.md](docs/03-agent-and-tools.md) | The adapter at the seam, what we may and may not change about the τ² agent |
 | [docs/04-observability.md](docs/04-observability.md) | Span schema, OpenInference conventions, why the scorer reads spans |
 | [docs/05-scoring.md](docs/05-scoring.md) | Reward, `pass^k`, cost per success — and why a judge can never gate |

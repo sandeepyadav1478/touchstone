@@ -24,7 +24,7 @@ flowchart TB
     GATE["gate · shadow then enforce<br/>D-064 · D-065"]
     TEL["telemetry.py — provider + exporter<br/>the span is opened by the adapter (D-073)"]
     SUITE["suite<br/>benchmark frozen · regression grows"]
-    ADMIT["3 admission gates<br/>reproducible<br/>distinct · justified"]
+    GAUNTLET["3 gauntlet gates<br/>reproducible<br/>distinct · justified"]
     DOC["doctor.py<br/>asserts the pins"]
   end
 
@@ -72,15 +72,15 @@ flowchart TB
   TEL --> MLF
 
   REW --> D2
-  ADMIT --> D3
+  GAUNTLET --> D3
   GATE --> D1
-  PRED -- "holds" --> ADMIT
-  ADMIT --> SUITE
+  PRED -- "holds" --> GAUNTLET
+  GAUNTLET --> SUITE
   SUITE --> D2
 
   D1{{"DECISION 1<br/>refuse a tool call<br/>no model"}}
   D2{{"DECISION 2<br/>reject a candidate version<br/>no model<br/>DEFERRED ENTIRE — D-080, no second operand"}}
-  D3{{"DECISION 3<br/>admit a mined case<br/>no model"}}
+  D3{{"DECISION 3<br/>clear a mined case<br/>no model"}}
 
   classDef nomodel fill:#0b3d2e,stroke:#3ddc97,color:#eaffef,stroke-width:2px
   classDef model fill:#3d2b0b,stroke:#ffb703,color:#fff6e5
@@ -89,7 +89,7 @@ flowchart TB
   classDef data fill:#26262e,stroke:#8a8a99,color:#dcdce4
   classDef deferred fill:#1e2a26,stroke:#3ddc97,stroke-dasharray:4 3,color:#8fbfa8
 
-  class D1,D2,D3,REW,ADMIT,MUT nomodel
+  class D1,D2,D3,REW,GAUNTLET,MUT nomodel
   class AGENT,USER,REVIEW,SDK,ANTH model
   class GEN,ADP,ENVC seam
   class CORPUS,CTRL data

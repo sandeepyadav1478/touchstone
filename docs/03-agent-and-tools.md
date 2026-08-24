@@ -176,7 +176,7 @@ table compares two different systems under one row.
 | user simulator | `user_simulator.py:235` | `claude-haiku-4-5-20251001` — ⛔ **frozen apparatus**, never a candidate |
 | NL-assertion evaluator | `evaluator_nl_assertions.py:121` | `claude-opus-5` — in the composite, **outside the gate** (D-069) |
 | hallucination reviewer | `hallucination_reviewer.py:196` | `claude-opus-5` — diagnostic |
-| touchstone's three mining-loop agents | `loop/mine.py` | `claude-opus-5` (`LOOP_MODEL`) — **router** grades 4 rubric criteria and picks; **curator** decides what is worth encoding and writes it, ⛔ **against the existing suite** (`D-087`) — exact pre-check outside the agent, suite index in the prompt, still no tool; **critic** judges the curator and **decides the branch** (`D-086` §A). ⛔ **None of them admits anything** — admission is mechanical and downstream |
+| touchstone's three mining-loop agents | `loop/mine.py` | `claude-opus-5` (`LOOP_MODEL`) — **router** grades 4 rubric criteria and picks; **curator** decides what is worth encoding and writes it, ⛔ **against the existing suite** (`D-087`) — exact pre-check outside the agent, suite index in the prompt, still no tool; **critic** judges the curator and **decides the branch** (`D-086` §A). ⛔ **None of them clears anything** — the gauntlet is mechanical and downstream |
 
 ⚠️ **Only the first row may change between versions.** Moving the simulator's pin changes the
 ruler, and every earlier row in the version table silently stops being comparable. That is why

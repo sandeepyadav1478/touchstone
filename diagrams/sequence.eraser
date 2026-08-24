@@ -55,7 +55,7 @@ title touchstone — one simulation, and every boundary it crosses
 //  run; the alt/else at the bottom is what it revives to, not what happens today.
 //
 //  D-082 replaced the mining loop's selector with a ROUTER AGENT and named the chain
-//  once and for all: router → curator ⇄ critic → run_predicate → admission → suite.
+//  once and for all: router → curator ⇄ critic → run_predicate → the gauntlet → suite.
 //  That chain is the live half of the project, so it is now drawn here. Three agents
 //  propose; `run_predicate()` is the only thing that decides, and it holds no model.
 //  ⛔ Its companion picture is diagrams/agents.mmd — same chain, no boundaries.
@@ -107,7 +107,7 @@ Router [icon: git-branch, color: orange, label: "router agent — D-082 §A\nrub
 Curator [icon: edit-3, color: orange, label: "curator agent — D-082\nwrites the predicate, and owns the two memories"]
 Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2, D-086 A\nthe ONLY judge of the curator's call, and the loop's DECISION POINT. It calls run_predicate, reads the result, and picks: bounce, hand over, or give up"]
 Pred [icon: check-square, color: green, label: "run_predicate() — the CRITIC'S TOOL, D-086 A. EVIDENCE, not a gate\nno model. It fires on the trace, and must be SILENT on the control set"]
-Admit [icon: shield, color: green, label: "three admission gates — D-084\nreproducible, distinct, justified. Five were specified; measuring them against 1,824 shipped simulations cut two"]
+Gauntlet [icon: shield, color: green, label: "the gauntlet's three gates — D-084\nreproducible, distinct, justified. Five were specified; measuring them against 1,824 shipped simulations cut two"]
 
 CLI > Tel: init_telemetry() — ONCE, from cli.py
 Tel > Tel: register the exporter BEFORE importing anything that instruments
@@ -170,8 +170,8 @@ loop [label: "n = 5 attempts on ONE trace — every UNMINEABLE has a run_predica
   Pred > Pred: record the attempt, the verdict and the counterexample. Giving up is recorded the same way
 }
 
-Pred > Admit: it holds on the trace and is silent on the control set
-Admit > CLI: admitted to the regression suite, or UNMINEABLE — which is a RESULT, not an error
+Pred > Gauntlet: it holds on the trace and is silent on the control set
+Gauntlet > CLI: cleared to the regression suite, or UNMINEABLE — which is a RESULT, not an error
 
 alt [label: "phase 2 — the gate runs in SHADOW and changes nothing. DEFERRED with compare, D-080"] {
   Cmp --> CLI: the gate's precision and recall, scored against sessions whose outcome is known

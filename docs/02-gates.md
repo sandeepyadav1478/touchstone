@@ -19,12 +19,12 @@ interesting one.
 |---|---|---|---|---|
 | **1** | refuse a **tool call** | `Environment.make_tool_call()`, at runtime | an extracted constraint plus a mechanical check | **P3.1** |
 | **2** | reject a **candidate version** | `loop/compare.py`, at compare time | the five conditions in §2 | 🔴 **DEFERRED — `D-080`** |
-| **3** | admit a **mined case** into the regression suite | `touchstone suite admit` | the three admission gates in §5 (`D-084`) | **P3.5** |
+| **3** | clear a **mined case** into the regression suite | `touchstone suite gauntlet` | the gauntlet's three gates in §5 (`D-084`) | **P3.5** |
 
 🔴 **Decision 2 is specified here and not built.** `D-080` deferred it: it
 compares a candidate against an incumbent, and until a second version exists it has **no second
 operand**. ⛔ **This section is left standing in full rather than cut** — it is the specification
-the row revives from, and the five conditions in §2 are load-bearing for §5's admission gates,
+the row revives from, and the five conditions in §2 are load-bearing for §5's gauntlet gates,
 which *do* ship. ⚠️ **Read every sentence about decision 2 in the present tense as a design, not a
 description of running code.**
 
@@ -34,9 +34,9 @@ description of running code.**
 
 ⚠️ **D-086 moved where that boundary runs and did not weaken it.** Inside the mining loop there is
 now no mechanical gate at all — the critic decides, and `run_predicate` only supplies it evidence.
-⛔ **The gates are the three admission checks**, which stand between a finished candidate and the
+⛔ **The gates are the gauntlet's three gates**, which stand between a finished candidate and the
 suite, and ⛔ **they still have no model in them.** Read the rest of this section as being about
-*admission* and *enforcement*, never about the loop.
+*the gauntlet* and *enforcement*, never about the loop.
 
 **D-064 is where the model *is* allowed to sit, and the distinction is narrow on purpose.** The
 model's only job is **translation** — turn a constraint the customer *stated* into a predicate over
@@ -103,8 +103,8 @@ Anything else is a **reject**, and a reject is written to `results/` exactly lik
 decision 2 deferred **no version is ever accepted**, so the second state is unreachable. ⛔ **A
 two-state field whose second state cannot be reached reads exactly like one that works.** Until
 P2.4 ships, a mined case carries no status and **the control described below does not exist** —
-say so wherever admission is reported. It is restored **in the same commit as P2.4**, because a
-case admitted under the weaker rule would otherwise start gating on a predicate nothing confirmed.
+say so wherever the gauntlet is reported. It is restored **in the same commit as P2.4**, because a
+case cleared under the weaker rule would otherwise start gating on a predicate nothing confirmed.
 
 **A mined case is by definition one the agent just failed.** If it gated immediately, every
 mined case would block every candidate forever and the loop would be unusable. So each
@@ -172,7 +172,7 @@ actually resolve, and everything else is reported without being acted on.
                                  │
                                  │  the INNER loop — up to n times per TRACE
                                  └─▶ curator ⇄ critic ⇄ run_predicate   (D-086: the critic decides)
-                                                    ├─▶ admit ─▶ suite  ⛔ mechanical, outside the loop
+                                                    ├─▶ gauntlet ─▶ suite  ⛔ mechanical, outside the loop
                                                     └─▶ unmineable
 ```
 
@@ -198,7 +198,7 @@ P2.4 ships, and calling it a loop out loud would be a claim about code that is n
 ⚠️ **One naming rule, because two words were drifting apart in this file.** `mine` is a **stage**
 — a verb, a step of the inner loop, the module `mine.py`. **The curator** is the **component** that
 runs it and, unlike the stage, **holds state across traces**: the rule registry, what has already
-been admitted, what has already been tried and refused. 🎯 **The distinction is not cosmetic — it is
+been cleared, what has already been tried and refused. 🎯 **The distinction is not cosmetic — it is
 the whole reason the component needed a name of its own.** A stage is stateless by construction and
 can be described entirely by its inputs and outputs; the thing that stops the loop re-deriving the
 same rule from the fiftieth instance of one failure cannot. **The registry and its two phases are
@@ -309,8 +309,8 @@ computes, which would make it a route on an existing label rather than a judge.
      │                       fires on the target session?       must be YES
      │                       fires on any always-pass session?  must be NO
      │           │
-     │           ├──▶ both hold ──▶ 3. ADMIT ──▶ regression suite (🔴 no status — D-080)
-     │           │                  the three admission gates below still apply
+     │           ├──▶ both hold ──▶ 3. GAUNTLET ──▶ regression suite (🔴 no status — D-080)
+     │           │                  the gauntlet's three gates below still apply
      │           │
      │           └──▶ either fails ──▶ hand back the COUNTEREXAMPLE: the passing
      └───────────────── session it wrongly fired on, or the fact that it missed
@@ -336,12 +336,12 @@ means clean on the selector, which is a stronger bar than `DB == 1`** — that i
 
 ⚠️ **And silent-on-the-passing-set is a claim about the sessions that were run, never about the
 domain.** Same shape as `pass^k` in [docs/05](05-scoring.md): a predicate can be quiet on all of
-them and still be wrong about a task nobody has run. That is why an admitted case arrives `open`
+them and still be wrong about a task nobody has run. That is why a cleared case arrives `open`
 and cannot gate until it has been quiet under an accepted version — `open → locked` above is the
 second, slower control, and it exists precisely because this one is not sufficient. 🔴 **And
 `D-080` deleted that second control.** ⛔ **Say this out loud with every
-admitted case**: the slower check that this section calls necessary is **not running**, so an
-admitted predicate rests entirely on the corpus it was tested against.
+cleared case**: the slower check that this section calls necessary is **not running**, so an
+cleared predicate rests entirely on the corpus it was tested against.
 
 #### Which failure goes in — clustering picks the trace
 
@@ -362,34 +362,34 @@ point of the swap.
 
 ```mermaid
 flowchart TB
-  SUITE0[("the ADMITTED suite so far<br/>D-087 · exact check BEFORE any agent call:<br/>a predicate already fires ⇒ already_covered, zero attempts spent")] -.-> TRANS
+  SUITE0[("the CLEARED suite so far<br/>D-087 · exact check BEFORE any agent call:<br/>a predicate already fires ⇒ already_covered, zero attempts spent")] -.-> TRANS
   SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A · criteria in D-086 §B<br/>reads ONE session, grades 4 criteria, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
   ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
   KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
-  ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>D-087 · reads the ADMITTED SUITE first — a rule already gated is not worth mining twice<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
+  ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>D-087 · reads the CLEARED SUITE first — a rule already gated is not worth mining twice<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
   TRANS --> CRIT{"1b. CRITIC — judges the curator's work, and DECIDES<br/>🔴 the loop's decision point since D-086 §A · reads the tool result and chooses<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"}
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
   CRIT -->|"nothing left to try · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
-  PROP --> ADMIT{"⛔ admission gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop and deprioritised until it runs — D-086 §D"}
-  ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
-  ADMIT -->|all three hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
+  PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop and deprioritised until it runs — D-086 §D"}
+  GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
+  GAUNTLET -->|all three hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
   REG -.->|"🔴 DEFERRED with P2.4 — no version is ever accepted"| LOCK["status: locked · gates from here"]
-  ADMIT -->|"lift into the benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
+  GAUNTLET -->|"lift into the benchmark · rare, a deliberate edit"| BENCH["benchmark vN+1<br/>⛔ baseline resets"]
 ```
 
-#### ⛔ Admission is mechanical, and no human is a step in it
+#### ⛔ The gauntlet is mechanical, and no human is a step in it
 
-⛔ **And no *agent* is a step in it either.** Admission is three boolean checks over artefacts the
+⛔ **And no *agent* is a step in it either.** The gauntlet is three boolean checks over artefacts the
 pipeline already wrote — there is no model in it, nothing to prompt, nothing to argue with. It is
 the only mechanical boundary left after D-086, and it sits **downstream of the loop**, on a
 finished candidate.
 
 ⚠️ **Deprioritised, not deleted — D-086 §D.** Until the loop runs end to end these three are the
 less important half, and ⛔ **the loop is not blocked on them.** That is safe exactly as long as
-nothing is being admitted; the moment a case is, they have to exist.
+nothing is being cleared; the moment a case is, they have to exist.
 
 A wrong case gates *correct* behaviour forever, and you would debug it as an agent regression.
 §4 calls a wrong label the most valuable defect this project can produce. **So the last stage
@@ -403,24 +403,24 @@ us and not by a judge (§2), so the label was correct before the failure happene
 which this document already said: *review is a batch approval over machine-prepared cases,
 never a labelling task.*
 
-**What that review was actually doing is admission control** — *is this failure worth locking
+**What that review was actually doing is the gauntlet** — *is this failure worth locking
 into the suite forever?* — and every one of its criteria is computable from artefacts the
 pipeline already produces:
 
-| Admission gate | The check | Where it comes from |
+| Gauntlet gate | The check | Where it comes from |
 |---|---|---|
-| **Reproducible** | fails on **every** one of k trials, not some — `all(reward_breakdown["DB"] == 0)` over k=4, and ⚠️ **the 4 trials carry 4 distinct seeds** (456 of 456 (file,task) pairs). ⛔ **Replay identity is unverified** — a seed exists, whether it reproduces byte-identically does not follow, because model sampling may not be seeded. **Admits 34 of 456** on the shipped retail set | `pass^k` — [docs/05](05-scoring.md) §2, `D-084` |
+| **Reproducible** | fails on **every** one of k trials, not some — `all(reward_breakdown["DB"] == 0)` over k=4, and ⚠️ **the 4 trials carry 4 distinct seeds** (456 of 456 (file,task) pairs). ⛔ **Replay identity is unverified** — a seed exists, whether it reproduces byte-identically does not follow, because model sampling may not be seeded. **Clears 34 of 456** on the shipped retail set | `pass^k` — [docs/05](05-scoring.md) §2, `D-084` |
 | ~~**Not flaky**~~ | 🔴 **MERGED into Reproducible — `D-084`.** *"Re-run reproduces the failure"* **is** *"fails 4/4 across 4 seeds"*: there is no second run, the outer loop is deferred and the agent is never called. Two names, one predicate | — |
 | ~~**Not a void**~~ | 🔴 **DROPPED — `D-084`.** `termination_reason` is `user_stop` on **1,824 of 1,824** shipped retail simulations. One value, zero variance, nothing to refuse. ⛔ **A gate that cannot fail reads exactly like a gate that passes.** Returns with P2.4, when a run of *ours* can produce a void at all | the four attempt statuses, [docs/09](09-schemas.md) §6 |
-| **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check (`D-078` §11.2, same function, `sig_version`) which ✅ **admits and records** `duplicate_of` rather than refusing (`D-083`). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, `D-083` |
+| **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check (`D-078` §11.2, same function, `sig_version`) which ✅ **clears and records** `duplicate_of` rather than refusing (`D-083`). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, `D-083` |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
 
 **Each one refuses a specific way a bad case poisons a suite you have to trust for months**, and
 the check reads as arbitrary without the failure it is aimed at:
 
 - **reproducible** refuses a **flaky** failure. It is `pass^k` inverted ([docs/05](05-scoring.md)
-  §2): a case is admitted only if it is as reliable a *failure* as a shipped pass is a *pass*.
-  Admit a 3-of-4 case and the suite fails the agent at random, and someone debugs a regression that
+  §2): a case is cleared only if it is as reliable a *failure* as a shipped pass is a *pass*.
+  Clear a 3-of-4 case and the suite fails the agent at random, and someone debugs a regression that
   never happened. ⛔ **The 34-of-456 yield is the cost of that rule, not a disappointment.**
 - **distinct** refuses a suite that **grows without covering more**, and a pass rate that counts one
   failure mode twice. ⚠️ **The signature half does not refuse**, because a bucketing heuristic at
@@ -436,7 +436,7 @@ the check reads as arbitrary without the failure it is aimed at:
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was
 applying criteria that were written down. `origin` records `mined` and the version that
-produced it; **`admitted_by` records the gate set that admitted the case, not a name.**
+produced it; **`cleared_by` records the gate set that cleared the case, not a name.**
 
 ⚠️ **The field was `reviewed_by` and it is renamed, for the same reason `APPROVAL_THRESHOLD`
 was ([docs/09](09-schemas.md) §10).** A field named after a person is read as a person having
@@ -445,8 +445,8 @@ said `"reviewed_by": "sandeep"` — the rename is what stops that recurring. It 
 provenance fields are outside `benchmark_hash` by construction ([docs/09](09-schemas.md) §5).
 
 ⚠️ **The cost, stated rather than hidden.** A degenerate case that passes all three is now
-admitted with nobody having looked at it. The recovery path is the regression tier itself: if
-it ever refuses a candidate on a case that inspection shows should not have been admitted,
+cleared with nobody having looked at it. The recovery path is the regression tier itself: if
+it ever refuses a candidate on a case that inspection shows should not have been cleared,
 review comes back as an **offline batch that quarantines** — never as a step a run waits on.
 D-040.
 
@@ -458,7 +458,7 @@ every case carries its own record, in its `manifest.json` entry:
 ⚠️ **This example is a *future* entry and shows the fields as they will be once P2.4 ships.** Under
 `D-080` an entry written today has **no `status`, no `locked_at`, and no
 `mined_from.version`** — there are no versions. ⛔ **Every other field ships**, and `why` /
-`admitted_by` / `history` are the ones that carry the weight.
+`cleared_by` / `history` are the ones that carry the weight.
 
 ```json
 {
@@ -476,8 +476,8 @@ every case carries its own record, in its `manifest.json` entry:
     "confusion": ["cache_stampede", "db_pool_exhausted"],
     "trace_id": "4bf92f35…"
   },
-  "admitted_by": ["reproducible", "distinct", "justified"],
-  "admitted": "2026-09-02",
+  "cleared_by": ["reproducible", "distinct", "justified"],
+  "cleared": "2026-09-02",
   "locked_at": "v7",
   "supersedes": null, "superseded_by": null,
   "history": [
