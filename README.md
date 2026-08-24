@@ -83,8 +83,7 @@ flowchart LR
   R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
-  CR -.->|"gives up early"| RU{{"<b>record_unmineable</b><br/>the rule it looked for and did not find<br/>it may REFUSE — it can never buy an attempt"}}
-  CAP{{"<b>the cap</b> — attempt = MAX_ATTEMPTS<br/>config, checked before any agent runs<br/>the only thing that ends the loop"}} --> RU
+  CR <-.->|"may I keep going?"| RU{{"<b>record_unmineable</b> — the critic's budget<br/>owns MAX_ATTEMPTS: says exit, records a give-up, may refuse<br/>one function, so no second place knows the cap"}}
   RU --> U(["unmineable"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
@@ -93,7 +92,7 @@ flowchart LR
   classDef d fill:#3b82f622,stroke:#2563eb,stroke-width:1.5px,color:#3b82f6
   classDef io fill:#94a3b81a,stroke:#94a3b8,stroke-width:1.2px,color:#94a3b8
   class R,CU,CR m
-  class RP,RU,CAP,AD d
+  class RP,RU,AD d
   class T,S,U io
 ```
 
@@ -114,20 +113,21 @@ it should refuse.
 reason between them — ⛔ **the graph reads a recorded call, never a model's account of one.**
 `run_predicate` fires the candidate at the trace and at the control set and hands back what
 happened; it is the loop's only mechanical step and ⛔ **under D-086 it is no longer a gate** — it
-supplies the evidence, the critic supplies the decision. `record_unmineable` is how the critic gives
-up early, and it is a tool rather than a field in its answer for exactly one reason: **D-082 says
-every unmineable must have at least one `run_predicate` result behind it, and a tool can refuse.** A
-field in a structured answer cannot refuse anything. 🔴 **A model with a give-up button will press
-it** — a correct refusal and a lazy one produce the identical artefact, so the unmineable rate is
-watched against the router's agreement number rather than trusted on its own (D-089 §D).
+supplies the evidence, the critic supplies the decision. `record_unmineable` is the critic's **attempt
+budget**: it asks whether it may keep going, and the tool reads `MAX_ATTEMPTS` and answers — keep
+going, or exit now. ⛔ **The critic never counts attempts itself and is never told the number in a
+prompt**, because a number in a prompt is a word and does not change when the config does. The same
+tool records a give-up and **may refuse one**: D-082 wants at least one `run_predicate` result behind
+every unmineable, and this is the moment that check can fire. **Refusing and terminating are
+different verbs** — a refused give-up costs an attempt and never buys one.
 
-⛔ **Neither tool can end the loop, and neither can any agent.** The cap is `MAX_ATTEMPTS` in
-`config.py`, checked before an agent is dispatched — because `n` is a setting a human changes, and a
-number a model was told in a prompt does not change with it. **Refusing and terminating are
-different verbs**: a refused give-up costs the critic an attempt and tells it why, and never buys
-one (D-090). Flags any agent raises land in the MLflow span for a human to read; ⛔ **the loop does
-not branch on them**, because a loop that branches on a flag lets an agent extend its own run by
-raising one.
+⛔ **One function reads `MAX_ATTEMPTS`, and the graph's loop condition calls the same one.** Two
+places that know the cap are two places that can disagree about it, and a trace that ends in the
+wrong state is what that disagreement looks like (D-091). 🔴 **A model with a give-up button will
+press it** — a correct refusal and a lazy one produce the identical artefact, so the unmineable rate
+is watched against the router's agreement number rather than trusted on its own (D-089 §D). Flags
+any agent raises land in the MLflow span for a human to read; ⛔ **the loop does not branch on
+them**, because a loop that branches on a flag lets an agent extend its own run by raising one.
 
 🔴 **So inside the loop there is now no mechanical gate at all — every branch is a model's.** That
 is deliberate: repeated argue-run-revise puts **more** reasoning on one trace than a single

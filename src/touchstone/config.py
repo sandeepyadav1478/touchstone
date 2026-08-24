@@ -30,10 +30,14 @@ CHECKPOINTS = ROOT / ".touchstone" / "checkpoints.db"
 # printed at 5/5. A number in five files has five chances to go stale.
 K = 3
 
-# Attempts the mining loop spends on ONE trace before it stops. ⛔ The graph checks this BEFORE
-# dispatching to any agent, so termination is a counter and a config value and nothing else —
-# D-090 §C. record_unmineable() may REFUSE a give-up; it can never reset, extend or decrement
-# this. The loop must terminate against a critic that never calls a tool at all.
+# Attempts the mining loop spends on ONE trace before it stops. ⛔ Exactly ONE function reads
+# this — attempts_exhausted() — and it has two callers: the critic's record_unmineable() tool,
+# which is how the critic asks whether it may keep going, and the graph's own loop condition,
+# which is why a critic that never calls a tool still stops here. D-091 §C.
+#
+# ⛔ Two places that know the cap are two places that can disagree about it. Nothing an agent
+# does resets, extends or decrements the count: a refused give-up costs an attempt and never
+# buys one.
 #
 # ⛔ The docs quote this constant. They do not restate the number — same reason as K above, and
 # `n = 5` had already gone prose-only in four files before D-090 put it here.

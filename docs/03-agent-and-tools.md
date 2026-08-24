@@ -196,8 +196,10 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
   **grown once already**, so ⛔ **grep the two lists, not the literal**). ⚠️ **`record_unmineable` is a
   tool rather than a field for exactly one reason, and 🔴 it is not the one `D-089` §B first
   gave**: `D-082` requires ≥1 `run_predicate` result behind every unmineable, and **a tool can
-  refuse where a structured field cannot** (`D-090` §B). ⛔ **It may refuse; it can never end the
-  loop** — the cap is `config.MAX_ATTEMPTS`, checked before any agent is dispatched (`D-090` §C). The
+  refuse where a structured field cannot** (`D-090` §B). ⛔ **It is also the critic's attempt
+  budget** — the critic asks it whether it may keep going and is told to exit, and never counts
+  attempts itself (`D-091` §B). ⛔ **One function reads `config.MAX_ATTEMPTS`**; the tool and the
+  graph's loop condition both call it, so no second place knows the cap. The
   SDK's own tools stay off in every role: the SDK ships Read/Bash/Glob; a model that can
   reach the filesystem can read the task file with the gold actions in it. **This is the leakage
   path that would produce a perfect score**, and it is one argument.
