@@ -1,6 +1,6 @@
-%% touchstone — the mining loop's three agents, and the one thing that decides. D-082.
-%% The chain is fixed by D-082 §D: router -> curator <-> critic -> run_predicate -> admission -> suite.
-%% Every green node is mechanical. No green node holds a model, and no other node decides anything.
+%% touchstone — the mining loop's three agents, and where the decision sits. D-082, D-086.
+%% The chain: router -> curator <-> critic <-> run_predicate, then critic -> admission -> suite.
+%% Every green node is mechanical. D-086: run_predicate is EVIDENCE the critic reads, not a gate.
 flowchart LR
 
   IN[("1,712 simulations<br/>τ²-bench already shipped")]
@@ -8,14 +8,14 @@ flowchart LR
 
   subgraph LOOP["The Mining Loop — n = 5 attempts on ONE trace"]
     direction LR
-    CURATOR("curator agent<br/>writes the predicate")
-    CRITIC("qa / critic agent<br/>reads it, argues once")
+    CURATOR("curator agent<br/>decides what is worth encoding,<br/>and writes the predicate")
+    CRITIC("qa / critic agent<br/>judges that call, and DECIDES<br/>D-086 §A")
     CURATOR -- "candidate" --> CRITIC
-    CRITIC -- "argument — ONE bounce per attempt" --> CURATOR
+    CRITIC -- "the SPECIFIC bad finding — ONE bounce per attempt" --> CURATOR
   end
 
-  TEST{{"run_predicate()<br/>THE ONLY DECISION POINT<br/>no model — D-081"}}
-  ADMIT{{"three admission gates<br/>reproducible · distinct · justified<br/>no model — D-084"}}
+  TEST{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
+  ADMIT{{"three admission gates — OUTSIDE the loop<br/>reproducible · distinct · justified<br/>no model, ever — D-084 · deprioritised, D-086 §D"}}
   SUITE[("the regression suite")]
   CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
   UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
@@ -24,11 +24,10 @@ flowchart LR
   IN --> ROUTER
   ROUTER -- "enhance" --> CURATOR
   ROUTER -. "skip" .-> CONTROL
-  CRITIC -- "run whatever it has" --> TEST
-  TEST -- "counterexample — attempt i+1 sees what i got wrong" --> CURATOR
-  CONTROL -- "the NO half of the verdict" --> TEST
-  TEST -- "holds" --> ADMIT
-  TEST -. "attempt 5" .-> UNMINED
+  CRITIC <-- "its tool, and nobody else's — D-086 §A" --> TEST
+  CONTROL -- "the NO half of the evidence" --> TEST
+  CRITIC -- "hands over" --> ADMIT
+  CRITIC -. "attempt 5" .-> UNMINED
   ADMIT --> SUITE
   ROUTER -.- CAL
 

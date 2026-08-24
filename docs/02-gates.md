@@ -32,6 +32,12 @@ description of running code.**
 
 > **Anything that gates is mechanical. Anything with a model in it cannot gate.**
 
+⚠️ **D-086 moved where that boundary runs and did not weaken it.** Inside the mining loop there is
+now no mechanical gate at all — the critic decides, and `run_predicate` only supplies it evidence.
+⛔ **The gates are the three admission checks**, which stand between a finished candidate and the
+suite, and ⛔ **they still have no model in them.** Read the rest of this section as being about
+*admission* and *enforcement*, never about the loop.
+
 **D-064 is where the model *is* allowed to sit, and the distinction is narrow on purpose.** The
 model's only job is **translation** — turn a constraint the customer *stated* into a predicate over
 the database. The verdict is then a mechanical evaluation of that predicate against the proposed
@@ -165,8 +171,9 @@ actually resolve, and everything else is reported without being acted on.
                         └──── mine ◀─┘  τ²'s own 834/878 split is the ANSWER KEY now
                                  │
                                  │  the INNER loop — up to n times per TRACE
-                                 └─▶ curator ⇄ critic ─▶ run_predicate ─▶ admit ─▶ suite
-                                                                     └─▶ unmineable
+                                 └─▶ curator ⇄ critic ⇄ run_predicate   (D-086: the critic decides)
+                                                    ├─▶ admit ─▶ suite  ⛔ mechanical, outside the loop
+                                                    └─▶ unmineable
 ```
 
 ⚠️ **`promote` was the fourth verb here and it is retired.** The stage still exists — a candidate
@@ -294,7 +301,11 @@ computes, which would make it a route on an existing label rather than a judge.
      │                     over DB state and tool calls. A MODEL IS ALLOWED HERE,
      │           │         because it is producing a candidate, not a verdict.
      │           ▼
-     │    2. TEST ──────── mechanical, no model, and this IS the whole verdict:
+     │    1b. CRITIC ───── judges what the curator did, and DECIDES (D-086 §A).
+     │       │              It calls TEST, reads the result, and picks the branch.
+     │       ▼
+     │    2. TEST ──────── mechanical, no model. ⚠️ EVIDENCE, not the verdict —
+     │                     D-086 overturned that; the critic reads this and chooses:
      │                       fires on the target session?       must be YES
      │                       fires on any always-pass session?  must be NO
      │           │
@@ -351,18 +362,17 @@ point of the swap.
 
 ```mermaid
 flowchart TB
-  SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A<br/>reads ONE session, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
+  SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A · criteria in D-086 §B<br/>reads ONE session, grades 4 criteria, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
   ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
   KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
-  ROUTER -->|ENHANCE| TRANS["1. CURATOR — model writes a candidate predicate<br/>D-064 · candidate, never verdict<br/>🔴 no scope pre-check — D-081 deleted it"]
-  TRANS --> CRIT["1b. CRITIC — attacks it, and holds run_predicate as its one tool<br/>D-085 · MAY bounce on the argument alone, or run first and bounce with the counterexample<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"]
-  CRIT --> TEST{"2. run_predicate — mechanical, no model<br/>THE ONLY DECISION POINT · D-081<br/>fires on the target · silent on the control set"}
+  ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
+  TRANS --> CRIT{"1b. CRITIC — judges the curator's work, and DECIDES<br/>🔴 the loop's decision point since D-086 §A · reads the tool result and chooses<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"}
+  CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
-  TEST -->|"either fails · attempt < n · D-085: the result returns to its caller"| CRIT
-  CRIT -->|"hand-back — argument, or argument + counterexample"| TRANS
-  TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
-  TEST -->|both hold| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
-  PROP --> ADMIT{"⛔ admission gates — all three, mechanical<br/>reproducible · distinct · justified"}
+  CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
+  CRIT -->|"nothing left to try · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
+  CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
+  PROP --> ADMIT{"⛔ admission gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop and deprioritised until it runs — D-086 §D"}
   ADMIT -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
   ADMIT -->|all three hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
   REG -.->|"🔴 DEFERRED with P2.4 — no version is ever accepted"| LOCK["status: locked · gates from here"]
@@ -370,6 +380,15 @@ flowchart TB
 ```
 
 #### ⛔ Admission is mechanical, and no human is a step in it
+
+⛔ **And no *agent* is a step in it either.** Admission is three boolean checks over artefacts the
+pipeline already wrote — there is no model in it, nothing to prompt, nothing to argue with. It is
+the only mechanical boundary left after D-086, and it sits **downstream of the loop**, on a
+finished candidate.
+
+⚠️ **Deprioritised, not deleted — D-086 §D.** Until the loop runs end to end these three are the
+less important half, and ⛔ **the loop is not blocked on them.** That is safe exactly as long as
+nothing is being admitted; the moment a case is, they have to exist.
 
 A wrong case gates *correct* behaviour forever, and you would debug it as an agent regression.
 §4 calls a wrong label the most valuable defect this project can produce. **So the last stage

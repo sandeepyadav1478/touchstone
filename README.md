@@ -11,10 +11,12 @@ misses real failures, and it refuses correct fixes. touchstone mines failures in
 cases, admits them through mechanical gates, and enforces them — so the suite keeps getting
 stricter and the agent has to keep passing it.
 
-⛔ **The invariant: anything that gates is mechanical; anything with a model in it cannot gate.**
-A model may **translate** — turn a written policy constraint into a predicate over the database —
-and it may **invoke** that predicate (D-085). ⛔ **It never delivers the verdict.** The verdict is
-the predicate's return value, read off the tool result and never off a model's account of it.
+⛔ **The invariant: nothing enters the suite except through a mechanical gate.** Models do the
+mining — they read the trace, decide what is worth encoding, write the predicate, argue about it
+and run it. ⛔ **What they cannot do is admit anything.** The three checks that stand between a
+finished candidate and the suite have no model in them (D-084), and ⚠️ **since D-086 they are the
+only checks that do not** — the loop itself is model-decided end to end, deliberately, and the
+guarantee lives at the suite boundary rather than inside the loop.
 
 **The loop is the product; the domain is a specimen.** A project that owns both the agent and the
 answer key can improve either one, and you cannot tell from the outside which it did. So the
@@ -72,16 +74,17 @@ putting them beside a number of ours would fuse two environments.
 
 ## How it works
 
-**One routed trace, up to 5 attempts, seconds.** Three agents propose; one predicate decides.
+**One routed trace, up to 5 attempts, seconds.** ⛔ **Three agents, and never a fourth** — the
+router picks, the curator decides what is worth encoding, the critic judges what the curator did.
 
 ```mermaid
 flowchart LR
-  T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
-  R --> CU["<b>curator</b><br/>rule → predicate"]
-  CU <-.-> CR["<b>critic</b><br/>attacks it, then<br/>runs it"]
-  CR <-. "its one tool" .-> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
-  RP -->|"attempt 5"| U(["unmineable"])
-  RP -->|"both hold"| AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
+  T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?<br/>rubric — 4 criteria"]
+  R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
+  CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
+  CR <-.-> RP{{"<b>run_predicate</b><br/>the loop's one mechanical step<br/>fires on the trace, silent on the control set"}}
+  CR -->|"attempt 5"| U(["unmineable"])
+  CR -->|"hands over"| AD{{"<b>admission</b> — outside the loop<br/>reproducible · distinct · justified<br/>no model, ever"}}
   AD --> S(["regression<br/>suite"])
 
   classDef m fill:#f9731622,stroke:#ea580c,stroke-width:1.5px,color:#ea580c
@@ -92,30 +95,36 @@ flowchart LR
   class T,S,U io
 ```
 
-**Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and the
-critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
-reach `unmineable` having never run a predicate. `run_predicate` is the **critic's one tool**
-(D-085) — it runs the check itself and sees the result inside its own turn, which is the only
-point in this loop where an opinion can be tested against the mechanism for the cost of one call.
-⛔ **Invoking is not adjudicating.** The graph reads the **tool result**, never the critic's
-account of it, so the verdict stays mechanical (D-064) while the objection finally gets checked.
-`run_predicate` is still the only decision point (D-081) and still where the control set arrives.
-⛔ **Both terminal exits leave from it and the retry does not** — a failed attempt returns to the
-critic, and the critic is what bounces.
+**Orange decides, blue verifies** — and ⛔ **no orange box admits anything.** The **curator** is the
+centre of gravity: it decides whether a failure is worth an eval at all, which rule it broke, and
+what the predicate should say. The **critic** is the only thing that judges that call, and it is
+the loop's decision point (D-086): it reads the curator's candidate, calls `run_predicate`, reads
+what comes back, and chooses — bounce, hand over, or give up. ⛔ **A bounce carries the specific
+bad finding, never *"this seems weak"*** — a vague objection costs one of five attempts and teaches
+the curator nothing. `unmineable` is a **result, not an error**: *the agent was not smart enough*
+has no rule to translate, and a miner that has never given up has never been pointed at a failure
+it should refuse.
 
-⛔ **Two hand-backs, not one, and which one you get is the critic's call.** It returns an
-**argument** — does the candidate quote a `task_id`? does it restate the trace instead of the
-rule? — and it **may** send that back having run nothing, which is the cheap refusal worth
-keeping. Or it runs first and sends the **counterexample** with it: the clean session the
-predicate wrongly fired on, or the fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
-**result, not an error** — *the agent was not smart enough* has no rule to translate, and a miner
-that has never given up has never been pointed at a failure it should refuse.
+`run_predicate` is the **critic's tool and nobody else's** — it fires the candidate at the trace and
+at the control set and hands back what happened. ⛔ **It is the loop's only mechanical step, and
+under D-086 it is no longer a gate**; it supplies the evidence, the critic supplies the decision.
+
+🔴 **So inside the loop there is now no mechanical gate at all — every branch is a model's.** That
+is a deliberate trade while the loop is being built, and the boundary that matters is untouched:
+⛔ **nothing enters the suite without passing `admission`.** Those are **three mechanical checks,
+not an agent** — *reproducible* (the case fails all 4 trials across 4 distinct seeds), *distinct*
+(no two cases share a `task_id`), *justified* (`why`, `added`, `origin` all non-empty) — and they
+run **downstream of the loop**, after a candidate is finished. On shipped retail, reproducible
+alone admits **34 of 456**.
 
 🔴 **The router is the one place a model shapes the answer key**, and it is the expensive half of
-this design: what it skips becomes the control set a candidate must not fire on. Its verdicts are
-scored against τ²'s own three signals — the 834/878 split above — and ⛔ **no result from this loop
-is reportable without that agreement figure.** If it comes back poor, the rubric drops to a
-diagnostic and selection reverts to mechanical.
+this design: what it skips becomes the control set a candidate must not fire on. It grades each
+trace on **four criteria** (D-086 §B) — *is this anomalous · does it map to a written rule · is the
+failure visible in the process, not just the end state · is it specific enough to write a predicate
+over*. ⛔ **The first is not editable**: it duplicates τ²'s own three signals, so agreement with the
+834/878 split above **is** the router's measured error rate, and ⛔ **no result from this loop is
+reportable without that figure.** If it comes back poor, the rubric drops to a diagnostic and
+selection reverts to mechanical.
 
 **Two attachment points, both upstream, both one function.**
 

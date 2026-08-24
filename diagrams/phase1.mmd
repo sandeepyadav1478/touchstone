@@ -35,15 +35,16 @@ flowchart TB
     direction LR
     CORPUS[("1,712 shipped simulations<br/>τ² already ran them — D-080")]
     ROUTER{"router agent<br/>rubric — D-082 §A"}
-    CURATOR("curator agent<br/>writes the predicate")
-    CRITIC("qa / critic agent<br/>argues once per attempt")
-    PRED{{"run_predicate()<br/>THE ONLY DECISION POINT<br/>no model — D-081"}}
+    CURATOR("curator agent<br/>decides what is worth encoding")
+    CRITIC("qa / critic agent<br/>judges it, and DECIDES — D-086 §A")
+    PRED{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
     CTRL[("control set<br/>878 clean + every SKIP")]
     CORPUS --> ROUTER
     ROUTER -- "enhance" --> CURATOR
     ROUTER -. "skip" .-> CTRL
-    CURATOR --> CRITIC --> PRED
-    PRED -- "counterexample" --> CURATOR
+    CURATOR --> CRITIC
+    CRITIC <-- "its tool — D-086 §A" --> PRED
+    CRITIC -- "the specific bad finding" --> CURATOR
     CTRL --> PRED
   end
 
