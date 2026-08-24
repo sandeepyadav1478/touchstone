@@ -21,7 +21,10 @@ flowchart LR
   UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
   CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
+  ADMITTED[("the ADMITTED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
+
   IN --> ROUTER
+  ADMITTED -. "the suite index goes in the curator's prompt — still no tool" .-> CURATOR
   ROUTER -- "enhance" --> CURATOR
   ROUTER -. "skip" .-> CONTROL
   CRITIC <-- "its tool, and nobody else's — D-086 §A" --> TEST
@@ -41,4 +44,5 @@ flowchart LR
   class TEST,ADMIT mech
   class IN,SUITE,CONTROL,UNMINED data
   class CAL note
+  class ADMITTED data
   class LOOP box

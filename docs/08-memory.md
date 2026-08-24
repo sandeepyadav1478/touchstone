@@ -378,10 +378,18 @@ iterations buy one rule instead of `n`.
 | Cost of a false positive | a duplicate rule, caught by the admit gate — ⚠️ **only since `D-083`**; before it the gate deduplicated `task_id`, not failures, and this cell named a net that was not there | ⚠️ **a real failure silently skipped** |
 | Cost of a false negative | — | a wasted iteration |
 
+🔴 **D-087 added a second read point, and *"it never sees a predicate"* below is no longer true.**
+The **positive** side — rules already admitted — is now read twice: at the picker, as before, and
+again by the **curator**, which checks its candidate against the suite that already exists. The
+exact half runs the admitted predicates against the trace **before any agent call**; the judged
+half puts the suite index in the curator's prompt. ⛔ **Still no tool** — `allowed_tools=[]` holds
+for the curator. The paragraph below stands otherwise, and its test is what clears D-087.
+
 ⚠️ **"Silently skipped" names a DEPRIORITISED TRACE, not a rejected candidate — and after D-081
 that distinction is the whole reason this registry survives.** The registry is read where the
 inner loop *picks* its next anomalous session; it never sees a predicate and never reaches the
-verdict. The one decision point in that loop is `run_predicate()`, which holds no model. ⛔ **A
+verdict. ⚠️ **The loop's decision point is the CRITIC since D-086** — `run_predicate()` holds no
+model but no longer gates; it hands the critic evidence. ⛔ **A
 skip that happened after translation would be the deleted scope filter under a new name** — that
 one asked *"was a written rule broken?"* before any predicate existed, which is a question only
 translation can answer. This one asks *"have we already dealt with this shape?"*, which is a

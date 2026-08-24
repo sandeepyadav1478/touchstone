@@ -362,10 +362,11 @@ point of the swap.
 
 ```mermaid
 flowchart TB
+  SUITE0[("the ADMITTED suite so far<br/>D-087 · exact check BEFORE any agent call:<br/>a predicate already fires ⇒ already_covered, zero attempts spent")] -.-> TRANS
   SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A · criteria in D-086 §B<br/>reads ONE session, grades 4 criteria, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
   ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
   KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
-  ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
+  ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>D-087 · reads the ADMITTED SUITE first — a rule already gated is not worth mining twice<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
   TRANS --> CRIT{"1b. CRITIC — judges the curator's work, and DECIDES<br/>🔴 the loop's decision point since D-086 §A · reads the tool result and chooses<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"}
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
@@ -413,6 +414,25 @@ pipeline already produces:
 | ~~**Not a void**~~ | 🔴 **DROPPED — `D-084`.** `termination_reason` is `user_stop` on **1,824 of 1,824** shipped retail simulations. One value, zero variance, nothing to refuse. ⛔ **A gate that cannot fail reads exactly like a gate that passes.** Returns with P2.4, when a run of *ours* can produce a void at all | the four attempt statuses, [docs/09](09-schemas.md) §6 |
 | **Distinct** | no two cases share a `task_id` — ⛔ **refuses**. Plus a **failure-signature** check (`D-078` §11.2, same function, `sig_version`) which ✅ **admits and records** `duplicate_of` rather than refusing (`D-083`). ⚠️ **The one gate that can pass while reporting a problem** — an over-merged signature would refuse a real failure permanently, and a bucketing heuristic measured at 1–2 OOM of error must not hold an undoable refusal | [docs/01](01-spec.md) §6, `D-083` |
 | **Justified** | non-empty `why`, `added`, `origin` | [docs/01](01-spec.md) §6, invariant 11 |
+
+**Each one refuses a specific way a bad case poisons a suite you have to trust for months**, and
+the check reads as arbitrary without the failure it is aimed at:
+
+- **reproducible** refuses a **flaky** failure. It is `pass^k` inverted ([docs/05](05-scoring.md)
+  §2): a case is admitted only if it is as reliable a *failure* as a shipped pass is a *pass*.
+  Admit a 3-of-4 case and the suite fails the agent at random, and someone debugs a regression that
+  never happened. ⛔ **The 34-of-456 yield is the cost of that rule, not a disappointment.**
+- **distinct** refuses a suite that **grows without covering more**, and a pass rate that counts one
+  failure mode twice. ⚠️ **The signature half does not refuse**, because a bucketing heuristic at
+  1–2 OOM of error must not hold an **undoable** rejection — a recorded `duplicate_of` is reversible
+  and a refusal is not.
+- **justified** refuses a case **nobody can ever delete**. Six months on one fails: real regression,
+  or something mined in a hurry? Without the rule it encodes, when it arrived and which version
+  produced it, that is unanswerable — so it stays forever, and the suite ratchets on cases no one
+  can defend.
+
+⚠️ **456 (file,task) pairs × 4 trials = 1,824 simulations over all 114 tasks. That is not the
+1,712 / 107-task corpus** this project mines — ⛔ **never divide one by the other.**
 
 **Four of the five were already specified machinery**, which is the tell: the reviewer was
 applying criteria that were written down. `origin` records `mined` and the version that

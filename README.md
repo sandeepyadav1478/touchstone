@@ -97,7 +97,10 @@ flowchart LR
 
 **Orange decides, blue verifies** — and ⛔ **no orange box admits anything.** The **curator** is the
 centre of gravity: it decides whether a failure is worth an eval at all, which rule it broke, and
-what the predicate should say. The **critic** is the only thing that judges that call, and it is
+what the predicate should say — ⛔ **against the suite that already exists, never in a vacuum**
+(D-087). A rule already gated is not worth mining twice, so an exact check runs the admitted
+predicates against the trace first, and the suite index goes into the curator's prompt so that two
+cases cannot encode one rule in different words. The **critic** is the only thing that judges that call, and it is
 the loop's decision point (D-086): it reads the curator's candidate, calls `run_predicate`, reads
 what comes back, and chooses — bounce, hand over, or give up. ⛔ **A bounce carries the specific
 bad finding, never *"this seems weak"*** — a vague objection costs one of five attempts and teaches
@@ -110,12 +113,25 @@ at the control set and hands back what happened. ⛔ **It is the loop's only mec
 under D-086 it is no longer a gate**; it supplies the evidence, the critic supplies the decision.
 
 🔴 **So inside the loop there is now no mechanical gate at all — every branch is a model's.** That
-is a deliberate trade while the loop is being built, and the boundary that matters is untouched:
-⛔ **nothing enters the suite without passing `admission`.** Those are **three mechanical checks,
-not an agent** — *reproducible* (the case fails all 4 trials across 4 distinct seeds), *distinct*
-(no two cases share a `task_id`), *justified* (`why`, `added`, `origin` all non-empty) — and they
-run **downstream of the loop**, after a candidate is finished. On shipped retail, reproducible
-alone admits **34 of 456**.
+is deliberate: five attempts of argue-run-revise put **more** reasoning on one trace than a single
+test can (D-087 §E). ⚠️ **But effort is not correctness** — a loop can iterate its way to a
+confident wrong answer, and nothing inside it can tell. That is what the last boundary is for, and
+it is untouched: ⛔ **nothing enters the suite without passing `admission`.**
+
+**`admission` is three boolean checks — not an agent, no model, nothing to prompt.** They run
+**downstream of the loop** on a finished candidate, and each one refuses a specific way a bad case
+poisons a suite you have to trust for months:
+
+| gate | the check | what it refuses, and why that matters |
+|---|---|---|
+| **reproducible** | the case fails **all 4** of τ²'s trials, not some — `all(reward_breakdown["DB"] == 0)`, and ⚠️ **the 4 trials carry 4 distinct seeds**, so they are four draws rather than one copied | **A flaky failure.** It is `pass^4` inverted: a case is admitted only if it is as reliable a *failure* as a shipped pass is a *pass*. Admit a 3-of-4 case and the suite fails your agent at random, and you debug a regression that never happened. ⛔ **Admits 34 of 456** (file,task) pairs — 7.5%, and that yield is the honest cost of the rule |
+| **distinct** | no two cases share a `task_id` — this one **refuses**. A failure-signature check sits beside it and ✅ **records `duplicate_of` instead of refusing** | **A suite that grows without covering more**, and a pass rate that counts one failure mode twice. The signature half does not refuse because it is a **bucketing heuristic measured at 1–2 orders of magnitude of error** — an over-merge would reject a real, different failure permanently, and ⛔ **a refusal is undoable while a recorded suspicion is not** |
+| **justified** | `why`, `added` and `origin` are all non-empty | **A case nobody can ever delete.** Six months on, one fails: is it a real regression, or something mined in a hurry? Without the rule it encodes, when it arrived and which version produced it, you cannot answer — so you keep it forever, and the suite ratchets on cases no one can defend |
+
+⚠️ **Two populations are in play and they are not the same one.** The 34-of-456 figure is over the
+**full** shipped retail set — 456 (file,task) pairs × 4 trials = **1,824** simulations across all
+114 tasks. The **1,712 / 107 tasks** above is the corpus this project mines. ⛔ **Never divide one
+by the other.**
 
 🔴 **The router is the one place a model shapes the answer key**, and it is the expensive half of
 this design: what it skips becomes the control set a candidate must not fire on. It grades each

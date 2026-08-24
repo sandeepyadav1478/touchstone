@@ -369,6 +369,7 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
   MGive [shape: oval, color: grey, icon: x-circle, label: "after n attempts · UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
+PosMem > MT: D-087 — the curator checks its candidate against the ADMITTED suite. Exact half runs the admitted predicates on the trace BEFORE any agent call; the suite index goes in the prompt. Still no tool
 M0 > Clean: SKIP — a skipped session joins the CONTROL SET. D-082 §A
 MT > MCrit: the candidate goes to QA
 MCrit > MT: hand-back — the SPECIFIC bad finding, never 'this seems weak'. D-086 C: a vague objection costs an attempt and teaches nothing. ONE bounce per attempt (D-082)
