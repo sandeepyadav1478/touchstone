@@ -160,7 +160,7 @@ Router > Curator: ENHANCE — straight to the curator. There is no pre-check, an
 Router --> Corpus: SKIP — the session joins the CONTROL SET, which is why the router costs a measured error rate
 Router > Router: criterion_1_agreement — the router verdict scored against τ²'s own three signals, over all 1,712. No result is reportable without it
 
-loop [label: "n = 5 attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
+loop [label: "config.MAX_ATTEMPTS attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
   Curator > Critic: a candidate predicate, and the stated rule it claims to encode
   Critic > Pred: the critic calls its ONE tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
   Pred > Corpus: fire it against the 878 clean sessions

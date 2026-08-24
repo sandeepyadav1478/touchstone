@@ -84,7 +84,7 @@ flowchart LR
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
   CR <-.->|"may I keep going?"| BUDGET{{"<b>attempt_budget</b><br/>owns MAX_ATTEMPTS — one function, so nothing else knows the cap"}}
-  BUDGET -->|"exit, or a give-up it accepts"| U(["unmineable"])
+  BUDGET -->|"the edge routes — D-093<br/>budget_exhausted · gave_up"| U(["unmineable"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
 

@@ -7,7 +7,7 @@ flowchart LR
   IN[("1,712 simulations<br/>τ²-bench already shipped")]
   ROUTER{"router agent<br/>rubric — D-082 §A"}
 
-  subgraph LOOP["The Mining Loop — n = 5 attempts on ONE trace"]
+  subgraph LOOP["The Mining Loop — config.MAX_ATTEMPTS on ONE trace"]
     direction LR
     CURATOR("curator agent<br/>decides what is worth encoding,<br/>and writes the predicate")
     CRITIC("qa / critic agent<br/>judges that call, and DECIDES<br/>D-086 §A")

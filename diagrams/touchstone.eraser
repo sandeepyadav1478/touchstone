@@ -359,9 +359,9 @@ SelNotGate --> Signals
 //  scope check believed. ⚠ WHAT IT COST TO DELETE: up to n model calls on a trace with no
 //  rule to find. Unpaid today, and the exhaustion records ARE the measurement of it.
 //  ⚠ The phase-3 exit gate still requires one recorded UNMINEABLE and now gets a BETTER
-//  one — five attempts and five counterexamples, not a bare assertion that no rule
+//  one — every attempt and its counterexample, not a bare assertion that no rule
 //  existed.
-Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to n = 5 attempts on ONE failing trace\nthe CRITIC decides (D-086) and run_predicate is EVIDENCE, not a gate — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
+Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LOOP, and a second LangGraph graph (D-071) · up to config.MAX_ATTEMPTS attempts on ONE failing trace\nthe CRITIC decides (D-086) and run_predicate is EVIDENCE, not a gate — the scope filter is DELETED (D-081) · the outer loop REPORTS a number; this loop makes the number COVER MORE"] {
   M0 [shape: diamond, color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 §A · reads ONE τ² session and returns ENHANCE or SKIP\nit is THE SELECTOR now — it replaced `analyst`, the mechanical `select` and the unbuilt rubric judge"]
   MT [color: orange, icon: cpu, label: "2 · CURATOR — decides WHETHER a failure is worth an eval at all, names the rule it broke, writes the predicate\nD-086 C · the loop's centre of gravity. It proposes a CANDIDATE; it never CLEARS one"]
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — the ONLY judge of the curator's call, and the loop's DECISION POINT · D-086 A\nit runs the predicate, reads the result, and picks: bounce, hand over, or give up\nit exists because D-040 admitted the hole: a rule can be reproducible, distinct and still measure nothing interesting"]
