@@ -434,14 +434,14 @@ Cmp > D2
 Invariant [shape: document, color: red, icon: alert-octagon, label: "ANYTHING THAT GATES IS MECHANICAL\nANYTHING WITH A MODEL IN IT CANNOT GATE\nD-064 puts the model in TRANSLATION, never in the VERDICT"]
 Invariant --> Decisions
 
-Gauntlet [color: green, icon: filter, label: "10 · the gauntlet's three gates — P3.5, all mechanical. No human is a step, and no AGENT is either: three boolean checks, no model\nD-084 dropped not_a_void and merged not_flaky · D-086 D: the ONLY mechanical boundary left, and deprioritised until the loop runs"] {
+Gauntlet [color: green, icon: filter, label: "10 · THE GAUNTLET — renamed from `admission` by D-088, because one act was the wrong shape for three independent gates\nthe gauntlet's three gates — P3.5, all mechanical. No human is a step, and no AGENT is either: three boolean checks, no model\nD-084 dropped not_a_void and merged not_flaky · D-086 D: the ONLY mechanical boundary left. BACKLOG, not deferred — it runs on a FINISHED candidate, so the loop has to exist before its input does"] {
   A1 [icon: repeat, label: "1 · reproducible — all k trials, k distinct seeds"]
   A4 [icon: git-branch, label: "2 · distinct — task_id. signature half DEFERRED, D-083"]
   A5 [icon: edit, label: "3 · justified — a `why` is REQUIRED"]
 }
 A1 > A4 > A5
 A5 > D3
-MCrit --> Gauntlet: the critic hands it over — D-086 A. The three gates are OUTSIDE the loop and deprioritised until it runs (D-086 D)
+MCrit --> Gauntlet: the critic hands it over — D-086 A. The three gates are OUTSIDE the loop and in the BACKLOG — not deferred, they just need a finished candidate to run on (D-086 D)
 Gauntlet --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with

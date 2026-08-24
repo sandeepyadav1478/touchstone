@@ -84,7 +84,7 @@ flowchart LR
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>the loop's one mechanical step<br/>fires on the trace, silent on the control set"}}
   CR -->|"attempt 5"| U(["unmineable"])
-  CR -->|"hands over"| AD{{"<b>the gauntlet</b> — outside the loop<br/>reproducible · distinct · justified<br/>no model, ever"}}
+  CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
 
   classDef m fill:#f9731622,stroke:#ea580c,stroke-width:1.5px,color:#ea580c
@@ -127,6 +127,12 @@ poisons a suite you have to trust for months:
 | **reproducible** | the case fails **all 4** of τ²'s trials, not some — `all(reward_breakdown["DB"] == 0)`, and ⚠️ **the 4 trials carry 4 distinct seeds**, so they are four draws rather than one copied | **A flaky failure.** It is `pass^4` inverted: a case is cleared only if it is as reliable a *failure* as a shipped pass is a *pass*. Clear a 3-of-4 case and the suite fails your agent at random, and you debug a regression that never happened. ⛔ **Clears 34 of 456** (file,task) pairs — 7.5%, and that yield is the honest cost of the rule |
 | **distinct** | no two cases share a `task_id` — this one **refuses**. A failure-signature check sits beside it and ✅ **records `duplicate_of` instead of refusing** | **A suite that grows without covering more**, and a pass rate that counts one failure mode twice. The signature half does not refuse because it is a **bucketing heuristic measured at 1–2 orders of magnitude of error** — an over-merge would reject a real, different failure permanently, and ⛔ **a refusal is undoable while a recorded suspicion is not** |
 | **justified** | `why`, `added` and `origin` are all non-empty | **A case nobody can ever delete.** Six months on, one fails: is it a real regression, or something mined in a hurry? Without the rule it encodes, when it arrived and which version produced it, you cannot answer — so you keep it forever, and the suite ratchets on cases no one can defend |
+
+⚠️ **The gauntlet is backlog, and that is a dependency rather than a choice.** It runs on a
+*finished candidate* and the loop is what produces one, so its input does not exist yet — ⛔ **it
+cannot be built early even if you want to.** It is not deferred and not dropped; it is the next
+thing after the loop works, and holding it there is safe exactly as long as nothing is being
+cleared into the suite.
 
 ⚠️ **Two populations are in play and they are not the same one.** The 34-of-456 figure is over the
 **full** shipped retail set — 456 (file,task) pairs × 4 trials = **1,824** simulations across all

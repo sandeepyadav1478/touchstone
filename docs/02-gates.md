@@ -373,7 +373,7 @@ flowchart TB
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
   CRIT -->|"nothing left to try · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
-  PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop and deprioritised until it runs — D-086 §D"}
+  PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop · BACKLOG, not deferred — its input is a FINISHED candidate, D-086 §D"}
   GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
   GAUNTLET -->|all three hold| REG["regression suite<br/>🔴 no status — open/locked deleted, D-080"]
   REG -.->|"🔴 DEFERRED with P2.4 — no version is ever accepted"| LOCK["status: locked · gates from here"]
@@ -387,9 +387,11 @@ pipeline already wrote — there is no model in it, nothing to prompt, nothing t
 the only mechanical boundary left after D-086, and it sits **downstream of the loop**, on a
 finished candidate.
 
-⚠️ **Deprioritised, not deleted — D-086 §D.** Until the loop runs end to end these three are the
-less important half, and ⛔ **the loop is not blocked on them.** That is safe exactly as long as
-nothing is being cleared; the moment a case is, they have to exist.
+⚠️ **Backlog, and ⛔ not deferred — D-086 §D.** *Deferred* would say someone chose to postpone
+buildable work. **This is a dependency:** the gauntlet runs on a *finished candidate* and the loop
+is what produces one, so ⛔ **its input does not exist yet.** It is de-prioritised to be covered
+later, the loop is not blocked on it, and that is safe exactly as long as nothing is being cleared
+into the suite.
 
 A wrong case gates *correct* behaviour forever, and you would debug it as an agent regression.
 §4 calls a wrong label the most valuable defect this project can produce. **So the last stage
