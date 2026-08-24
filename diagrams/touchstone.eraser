@@ -371,8 +371,8 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
 M0 > Clean: SKIP — a skipped session joins the CONTROL SET. D-082 §A
 MT > MCrit: the candidate goes to QA
-MCrit > MT: hand-back ONE — the ARGUMENT, before anything runs. ONE bounce per attempt (D-082)
-MCrit > MTest: QA invokes the mechanical check
+MCrit > MT: hand-back ONE — the ARGUMENT. D-085: MAY precede any run, or carry a counterexample the critic ran itself. ONE bounce per attempt (D-082)
+MCrit > MTest: QA invokes the mechanical check — D-085, run_predicate is the critic's ONE tool. The graph reads the tool result, never the critic's report of it
 MTest > MT: hand-back TWO — the COUNTEREXAMPLE, attempt i+1 sees what i got wrong
 MTest > MGive: attempt n — and every UNMINEABLE has >=1 run_predicate result behind it (D-082)
 Corpus > M0: one session at a time — ALL 1,712, because the router is what selects now

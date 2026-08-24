@@ -147,7 +147,8 @@ async def complete(prompt: str, *, system: str, schema: dict, model: str,
     opts = ClaudeAgentOptions(
         model=model,
         system_prompt=system,
-        allowed_tools=[],          # ⛔ the SDK's own tools stay off — LangGraph owns tools
+        allowed_tools=tools,       # ⛔ SDK's own tools off in every role — D-085: [] for
+                                   #    router/curator, ["run_predicate"] for the critic
         max_turns=2,               # ⚠️ NOT 1 — output_format spends a turn of its own (D-032)
         setting_sources=[],        # ⛔ [] is isolation; None loads everything (D-034)
         output_format=schema,      # structured output; the Verdict comes back typed

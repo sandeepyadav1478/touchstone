@@ -355,7 +355,7 @@ flowchart TB
   ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
   KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
   ROUTER -->|ENHANCE| TRANS["1. CURATOR — model writes a candidate predicate<br/>D-064 · candidate, never verdict<br/>🔴 no scope pre-check — D-081 deleted it"]
-  TRANS --> CRIT["1b. CRITIC — attacks it BEFORE anything runs<br/>ONE bounce per attempt, then the loop runs what it has<br/>D-082 §C2 · ≤5 critic calls"]
+  TRANS --> CRIT["1b. CRITIC — attacks it, and holds run_predicate as its one tool<br/>D-085 · MAY bounce on the argument alone, or run first and bounce with the counterexample<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"]
   CRIT --> TEST{"2. run_predicate — mechanical, no model<br/>THE ONLY DECISION POINT · D-081<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
   TEST -->|"either fails · attempt < n"| TRANS

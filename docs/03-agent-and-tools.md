@@ -176,7 +176,7 @@ table compares two different systems under one row.
 | user simulator | `user_simulator.py:235` | `claude-haiku-4-5-20251001` — ⛔ **frozen apparatus**, never a candidate |
 | NL-assertion evaluator | `evaluator_nl_assertions.py:121` | `claude-opus-5` — in the composite, **outside the gate** (D-069) |
 | hallucination reviewer | `hallucination_reviewer.py:196` | `claude-opus-5` — diagnostic |
-| touchstone's three mining-loop agents | `loop/mine.py` | `claude-opus-5` (`LOOP_MODEL`) — router · curator · critic, **all propose, none gates** (`D-082`) |
+| touchstone's three mining-loop agents | `loop/mine.py` | `claude-opus-5` (`LOOP_MODEL`) — router · curator · critic, **all propose, none gates** (`D-082`). ⚠️ The critic *invokes* `run_predicate` since `D-085`; the graph reads the tool result, never its report of it |
 
 ⚠️ **Only the first row may change between versions.** Moving the simulator's pin changes the
 ruler, and every earlier row in the version table silently stops being comparable. That is why
@@ -191,7 +191,9 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
 
 - The model id is a **versioned parameter** — changing it makes a new candidate, exactly like
   changing a prompt (D-013).
-- ⛔ **`allowed_tools=[]` on every SDK call.** The SDK ships Read/Bash/Glob; a model that can
+- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate"]` for the critic**
+  (`D-085` — ⚠️ per-role since 2026-08-24, so ⛔ **grep the two lists, not the literal**). The
+  SDK's own tools stay off in every role: the SDK ships Read/Bash/Glob; a model that can
   reach the filesystem can read the task file with the gold actions in it. **This is the leakage
   path that would produce a perfect score**, and it is one argument.
 - ⛔ **`setting_sources=[]`** — 🔴 **not `None`, which is what this line said until 2026-08-14 and

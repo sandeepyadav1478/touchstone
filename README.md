@@ -77,8 +77,8 @@ putting them beside a number of ours would fuse two environments.
 flowchart LR
   T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
   R --> CU["<b>curator</b><br/>rule → predicate"]
-  CU <-.-> CR["<b>critic</b><br/>attacks it first"]
-  CR --> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
+  CU <-.-> CR["<b>critic</b><br/>attacks it, then<br/>runs it"]
+  CR -->|"its one tool"| RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
   RP -. "counterexample<br/>attempt &lt; 5" .-> CU
   RP -->|"attempt 5"| U(["unmineable"])
   RP -->|"both hold"| AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
@@ -94,16 +94,19 @@ flowchart LR
 
 **Orange proposes, blue decides** — and ⛔ **no orange box admits anything.** The curator and the
 critic argue inside one attempt, one bounce each, so the loop cannot burn all five arguing and
-reach `unmineable` having never run a predicate. The critic is what hands the candidate over, and
-⛔ **what it hands it to is a gate, not another opinion.** `run_predicate` is the only decision
-point in the loop (D-081), it is where the control set arrives, and every exit leaves from it.
-⛔ **It is not downstream of the agents — it is the loop's condition.** An attempt ends when
-`run_predicate` fails, and that same failure is what starts the next one.
+reach `unmineable` having never run a predicate. `run_predicate` is the **critic's one tool**
+(D-085) — it runs the check itself and sees the result inside its own turn, which is the only
+point in this loop where an opinion can be tested against the mechanism for the cost of one call.
+⛔ **Invoking is not adjudicating.** The graph reads the **tool result**, never the critic's
+account of it, so the verdict stays mechanical (D-064) while the objection finally gets checked.
+`run_predicate` is still the only decision point (D-081), still where the control set arrives, and
+every exit leaves from it.
 
-⛔ **Two hand-backs, not one, and they carry different things.** The critic returns an **argument**,
-*before* anything runs — does the candidate quote a `task_id`? does it restate the trace instead of
-the rule? `run_predicate` returns a **counterexample**: the clean session it wrongly fired on, or
-the fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
+⛔ **Two hand-backs, not one, and which one you get is the critic's call.** It returns an
+**argument** — does the candidate quote a `task_id`? does it restate the trace instead of the
+rule? — and it **may** send that back having run nothing, which is the cheap refusal worth
+keeping. Or it runs first and sends the **counterexample** with it: the clean session the
+predicate wrongly fired on, or the fact that it missed the target. Attempt *i+1* sees what attempt *i* got wrong. `unmineable` is a
 **result, not an error** — *the agent was not smart enough* has no rule to translate, and a miner
 that has never given up has never been pointed at a failure it should refuse.
 
