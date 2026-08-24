@@ -384,6 +384,21 @@ supposed to leave standing.
 }
 ```
 
+### `exit_reason` — how a mined trace ended
+
+⛔ **Every mined trace carries one**, written by the **conditional edge**, not by `attempt_budget`
+(`D-093` §C — a field written by something that did not decide is how two outcomes get conflated).
+
+| `exit_reason` | Means | Why it is split out |
+|---|---|---|
+| `handed_over` | a candidate reached the gauntlet | the only one that can become a suite case |
+| `budget_exhausted` | the edge fired at `config.MAX_ATTEMPTS` | the loop tried and could not — the honest failure |
+| `gave_up` | the critic called `attempt_budget` early and it accepted | 🔴 **`D-089` §D happening.** Watch **this**, not the unmineable total — a rate you cannot decompose is not a signal |
+
+⚠️ **The MLflow span already records the tool call** (`D-090` §D) and that is enough for a human
+reading one trace. It is **not** enough for a number across a corpus: a span store is not the results
+file. ⛔ **Never report an unmineable count without the `gave_up` share beside it.**
+
 | `status` | Means | Counts toward |
 |---|---|---|
 | `scored` | The run finished and produced a parseable verdict | Everything |

@@ -35,7 +35,10 @@ flowchart LR
   CRITIC <-. "may I keep going? · giving up early" .-> BUDGET
   FLAG("flags any agent raises → the MLflow span, for a human<br/>⛔ the loop does NOT branch on them — D-090 §D")
   CRITIC -. "raises" .-> FLAG
-  BUDGET --> UNMINED
+  EDGE{{"the conditional edge AFTER the tool node — D-093<br/>a TOOL CANNOT BREAK A LOOP: it returns to its caller<br/>calls attempts_exhausted(), the SAME function the tool calls<br/>placed after the tool and not after the critic, so no model turn is spent<br/>writes exit_reason: budget_exhausted | gave_up | handed_over"}}
+  BUDGET --> EDGE
+  EDGE -. "otherwise" .-> CRITIC
+  EDGE --> UNMINED
   GAUNTLET --> SUITE
   ROUTER -.- CAL
 
@@ -46,7 +49,7 @@ flowchart LR
   classDef box   fill:none,stroke:#666,color:#9a9aa8
 
   class ROUTER,CURATOR,CRITIC agent
-  class TEST,BUDGET,GAUNTLET mech
+  class TEST,BUDGET,EDGE,GAUNTLET mech
   class IN,SUITE,CONTROL,UNMINED data
   class CAL,FLAG note
   class CLEARED data

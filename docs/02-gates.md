@@ -373,8 +373,10 @@ flowchart TB
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
-  CRIT <-.->|"may I keep going? · giving up — D-089"| BUDGET{{"attempt_budget() — named for the job, not the consequence, D-092<br/>owns config.MAX_ATTEMPTS: says exit, records, ⛔ may REFUSE<br/>⛔ ONE function reads the cap, and the graph's edge calls the same one — D-091"}}
-  BUDGET --> UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
+  CRIT <-.->|"may I keep going? · giving up — D-089"| BUDGET{{"attempt_budget() — named for the job, not the consequence, D-092<br/>owns config.MAX_ATTEMPTS: answers the critic, records, ⛔ may REFUSE<br/>⛔ a TOOL CANNOT BREAK A LOOP — it returns to its caller, D-093 §A"}}
+  BUDGET --> EDGE{"the conditional edge AFTER the tool node<br/>🔴 THIS is the break — it calls attempts_exhausted(), the same function<br/>placed here and not after the critic, so no model turn is spent<br/>writes exit_reason, because the edge is what decided — D-093"}
+  EDGE -->|"otherwise"| CRIT
+  EDGE -->|"budget_exhausted · gave_up"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error<br/>⛔ exit_reason splits the two — D-093 §B"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop · BACKLOG, not deferred — its input is a FINISHED candidate, D-086 §D"}
   GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]

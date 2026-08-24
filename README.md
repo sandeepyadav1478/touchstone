@@ -121,9 +121,14 @@ tool records a give-up and **may refuse one**: D-082 wants at least one `run_pre
 every unmineable, and this is the moment that check can fire. **Refusing and terminating are
 different verbs** — a refused give-up costs an attempt and never buys one.
 
-⛔ **One function reads `MAX_ATTEMPTS`, and the graph's loop condition calls the same one.** Two
-places that know the cap are two places that can disagree about it, and a trace that ends in the
-wrong state is what that disagreement looks like (D-091). 🔴 **A model with a give-up button will
+⛔ **A tool cannot break a loop** — it returns to its caller, so the break is the graph's conditional
+edge placed *after* the tool node, and it calls the same `attempts_exhausted()` the tool does. Two
+places that know the cap are two places that can disagree about it (D-091); putting the edge after
+the tool rather than after the critic also saves a model turn spent repeating back what the tool just
+said (D-093). ⛔ **Every mined trace carries an `exit_reason`** — `handed_over`, `budget_exhausted` or
+`gave_up` — written by the edge, because the edge is what decided. **A rate you cannot decompose is
+not a signal**, and without that split a cap-exhausted trace and a critic that quit at attempt 2 look
+identical. 🔴 **A model with a give-up button will
 press it** — a correct refusal and a lazy one produce the identical artefact, so the unmineable rate
 is watched against the router's agreement number rather than trusted on its own (D-089 §D). Flags
 any agent raises land in the MLflow span for a human to read; ⛔ **the loop does not branch on

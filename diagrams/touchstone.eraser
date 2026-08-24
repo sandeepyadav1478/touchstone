@@ -367,6 +367,7 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — the ONLY judge of the curator's call, and the loop's DECISION POINT · D-086 A\nit runs the predicate, reads the result, and picks: bounce, hand over, or give up\nit exists because D-040 admitted the hole: a rule can be reproducible, distinct and still measure nothing interesting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MBudget [icon: edit-3, color: green, label: "attempt_budget() — the critic's OTHER tool, D-089\nnamed for the job and not the consequence — a name saying only 'record' invites a second owner of the cap, D-092\nowns config.MAX_ATTEMPTS: says EXIT, records a give-up, may REFUSE\n⚠ ONE function reads the cap and the graph's edge calls the same one — D-091\ntwo places that know the cap are two places that can disagree about it\nflags go to the MLflow span for a human; the loop does NOT branch on them — D-090 D"]
+  MEdge [icon: git-branch, color: green, label: "the conditional edge AFTER the tool node — D-093\nTHIS is the break: it calls attempts_exhausted(), the same function the tool calls\nplaced after the tool and not after the critic, so no model turn is spent\nwrites exit_reason, because the edge is what decided"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
@@ -377,7 +378,9 @@ MCrit > MT: hand-back — the SPECIFIC bad finding, never 'this seems weak'. D-0
 MCrit > MTest: the critic calls its ONE tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
 MTest > MCrit: the result returns to its CALLER, who DECIDES what it means — D-086 A. There is NO run_predicate > curator edge
 MCrit > MBudget: may I keep going? — and giving up goes through the same tool; every UNMINEABLE has >=1 run_predicate result behind it (D-082, D-086 A, D-089)
-MBudget > MGive: recorded, with the rule that was looked for and not found (D-089)
+MBudget > MEdge: a TOOL CANNOT BREAK A LOOP — it returns to its caller (D-093 A)
+MEdge > MCrit: otherwise — back for another attempt
+MEdge > MGive: budget_exhausted, or gave_up — and exit_reason says which (D-093 B)
 Corpus > M0: one session at a time — ALL 1,712, because the router is what selects now
 Clean > MTest: the silence set — the NO half of the evidence
 Cal [shape: document, color: red, icon: percent, label: "criterion_1_agreement — the router's verdict against τ²'s own signals, over all 1,712\nD-082 §B · NO RESULT IS REPORTABLE WITHOUT IT — a router verdict with no agreement figure is a population with no provenance\n⚠ if it comes back poor, §A REVERTS: the rubric becomes a diagnostic and selection goes back to mechanical"]
