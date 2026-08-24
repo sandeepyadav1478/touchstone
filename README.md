@@ -12,8 +12,9 @@ cases, admits them through mechanical gates, and enforces them — so the suite 
 stricter and the agent has to keep passing it.
 
 ⛔ **The invariant: anything that gates is mechanical; anything with a model in it cannot gate.**
-A model's only job is **translation** — turning a written policy constraint into a predicate over
-the database. The **verdict** is always a predicate, never a judgement.
+A model may **translate** — turn a written policy constraint into a predicate over the database —
+and it may **invoke** that predicate (D-085). ⛔ **It never delivers the verdict.** The verdict is
+the predicate's return value, read off the tool result and never off a model's account of it.
 
 **The loop is the product; the domain is a specimen.** A project that owns both the agent and the
 answer key can improve either one, and you cannot tell from the outside which it did. So the
