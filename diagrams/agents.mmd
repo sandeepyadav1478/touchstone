@@ -1,6 +1,7 @@
 %% touchstone — the mining loop's three agents, and where the decision sits. D-082, D-086.
 %% The chain: router -> curator <-> critic <-> run_predicate, then critic -> the gauntlet -> suite.
 %% Every green node is mechanical. D-086: run_predicate is EVIDENCE the critic reads, not a gate.
+%% D-089: the critic holds TWO tools. unmineable is a RESULT it records, never a stage.
 flowchart LR
 
   IN[("1,712 simulations<br/>τ²-bench already shipped")]
@@ -15,10 +16,12 @@ flowchart LR
   end
 
   TEST{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
+  REC{{"record_unmineable()<br/>the critic's OTHER tool — D-089<br/>requires the rule it looked for and did not find<br/>a tool, because a word a model writes is not a countable event"}}
   GAUNTLET{{"THE GAUNTLET — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever — D-084<br/>BACKLOG, not deferred: it runs on a FINISHED candidate,<br/>so the loop has to exist before its input does — D-086 §D"}}
   SUITE[("the regression suite")]
   CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
   UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
+  CAP{{"the attempt cap — attempt = n<br/>MECHANICAL, the graph: it already holds every attempt<br/>⛔ does NOT call the model — D-089 §C"}}
   CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
   CLEARED[("the CLEARED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
@@ -30,7 +33,9 @@ flowchart LR
   CRITIC <-- "its tool, and nobody else's — D-086 §A" --> TEST
   CONTROL -- "the NO half of the evidence" --> TEST
   CRITIC -- "hands over" --> GAUNTLET
-  CRITIC -. "attempt 5" .-> UNMINED
+  CRITIC -. "gives up early — saves up to 4 calls" .-> REC
+  CAP -- "the other way in, and the only one with no model" --> REC
+  REC --> UNMINED
   GAUNTLET --> SUITE
   ROUTER -.- CAL
 
@@ -41,7 +46,7 @@ flowchart LR
   classDef box   fill:none,stroke:#666,color:#9a9aa8
 
   class ROUTER,CURATOR,CRITIC agent
-  class TEST,GAUNTLET mech
+  class TEST,REC,CAP,GAUNTLET mech
   class IN,SUITE,CONTROL,UNMINED data
   class CAL note
   class CLEARED data

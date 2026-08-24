@@ -147,8 +147,9 @@ async def complete(prompt: str, *, system: str, schema: dict, model: str,
     opts = ClaudeAgentOptions(
         model=model,
         system_prompt=system,
-        allowed_tools=tools,       # ⛔ SDK's own tools off in every role — D-085: [] for
-                                   #    router/curator, ["run_predicate"] for the critic
+        allowed_tools=tools,       # ⛔ SDK's own tools off in every role — D-085/D-089: [] for
+                                   #    router/curator, ["run_predicate", "record_unmineable"]
+                                   #    for the critic
         max_turns=2,               # ⚠️ NOT 1 — output_format spends a turn of its own (D-032)
         setting_sources=[],        # ⛔ [] is isolation; None loads everything (D-034)
         output_format=schema,      # structured output; the Verdict comes back typed
@@ -174,6 +175,9 @@ installed `types.py`:**
 - ⛔ **`allowed_tools=[]`** — the SDK ships Read/Bash/Glob. If the model can reach the
   filesystem it can read `suite/benchmark/truth.json` — and `suite/regression/`, which holds
   the cases that gate. **This is the leakage path that would produce a perfect score.**
+  ⚠️ **The critic is the one exception and it is a whitelist, not a relaxation** —
+  `["run_predicate", "record_unmineable"]`, both written here, neither able to reach a file
+  (D-085, D-089).
 - **`max_turns=2`** — ⚠️ **the intent is one completion per node; the value is 2 because
   `output_format` spends a turn of its own** (D-032). LangGraph does the looping, so the graph
   stays the thing being measured. ⛔ **`max_turns` is not a count of model calls** — a budget

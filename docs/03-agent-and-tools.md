@@ -191,8 +191,12 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
 
 - The model id is a **versioned parameter** — changing it makes a new candidate, exactly like
   changing a prompt (D-013).
-- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate"]` for the critic**
-  (`D-085` — ⚠️ per-role since 2026-08-24, so ⛔ **grep the two lists, not the literal**). The
+- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate", "record_unmineable"]`
+  for the critic** (`D-085`, `D-089` — ⚠️ per-role since 2026-08-24 and the critic's list has
+  **grown once already**, so ⛔ **grep the two lists, not the literal**). ⚠️ **Both of the critic's
+  tools exist for the same reason: the graph reads a recorded call, never a model's account of
+  one** — `run_predicate` so a verdict is evidence, `record_unmineable` so giving up is a
+  countable event with its reason attached (`D-089` §B). The
   SDK's own tools stay off in every role: the SDK ships Read/Bash/Glob; a model that can
   reach the filesystem can read the task file with the gold actions in it. **This is the leakage
   path that would produce a perfect score**, and it is one argument.

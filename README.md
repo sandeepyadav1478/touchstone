@@ -82,8 +82,9 @@ flowchart LR
   T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?<br/>rubric — 4 criteria"]
   R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
-  CR <-.-> RP{{"<b>run_predicate</b><br/>the loop's one mechanical step<br/>fires on the trace, silent on the control set"}}
-  CR -->|"attempt 5"| U(["unmineable"])
+  CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
+  CR -.->|"gives up, or attempt 5"| RU{{"<b>record_unmineable</b><br/>the rule it looked for<br/>and did not find"}}
+  RU --> U(["unmineable"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
 
@@ -91,7 +92,7 @@ flowchart LR
   classDef d fill:#3b82f622,stroke:#2563eb,stroke-width:1.5px,color:#3b82f6
   classDef io fill:#94a3b81a,stroke:#94a3b8,stroke-width:1.2px,color:#94a3b8
   class R,CU,CR m
-  class RP,AD d
+  class RP,RU,AD d
   class T,S,U io
 ```
 
@@ -108,9 +109,16 @@ the curator nothing. `unmineable` is a **result, not an error**: *the agent was 
 has no rule to translate, and a miner that has never given up has never been pointed at a failure
 it should refuse.
 
-`run_predicate` is the **critic's tool and nobody else's** — it fires the candidate at the trace and
-at the control set and hands back what happened. ⛔ **It is the loop's only mechanical step, and
-under D-086 it is no longer a gate**; it supplies the evidence, the critic supplies the decision.
+**The critic holds two tools and nobody else holds either** (D-085, D-089), and they exist for one
+reason between them — ⛔ **the graph reads a recorded call, never a model's account of one.**
+`run_predicate` fires the candidate at the trace and at the control set and hands back what
+happened; it is the loop's only mechanical step and ⛔ **under D-086 it is no longer a gate** — it
+supplies the evidence, the critic supplies the decision. `record_unmineable` is how the critic gives
+up, and it is a tool rather than a field in its answer because **an unmineable is a number this
+project reports**, and a word a model writes is not a countable event. Giving up costs naming the
+rule it went looking for and did not find. 🔴 **A model with a give-up button will press it** — a
+correct refusal and a lazy one produce the identical artefact, so the unmineable rate is watched
+against the router's agreement number rather than trusted on its own (D-089 §D).
 
 🔴 **So inside the loop there is now no mechanical gate at all — every branch is a model's.** That
 is deliberate: five attempts of argue-run-revise put **more** reasoning on one trace than a single
