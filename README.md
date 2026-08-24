@@ -74,7 +74,7 @@ putting them beside a number of ours would fuse two environments.
 
 ## How it works
 
-**One routed trace, up to 5 attempts, seconds.** ⛔ **Three agents, and never a fourth** — the
+**One routed trace, up to `MAX_ATTEMPTS` attempts, seconds.** ⛔ **Three agents, and never a fourth** — the
 router picks, the curator decides what is worth encoding, the critic judges what the curator did.
 
 ```mermaid
@@ -83,7 +83,8 @@ flowchart LR
   R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
-  CR -.->|"gives up, or attempt 5"| RU{{"<b>record_unmineable</b><br/>the rule it looked for<br/>and did not find"}}
+  CR -.->|"gives up early"| RU{{"<b>record_unmineable</b><br/>the rule it looked for and did not find<br/>it may REFUSE — it can never buy an attempt"}}
+  CAP{{"<b>the cap</b> — attempt = MAX_ATTEMPTS<br/>config, checked before any agent runs<br/>the only thing that ends the loop"}} --> RU
   RU --> U(["unmineable"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
@@ -92,7 +93,7 @@ flowchart LR
   classDef d fill:#3b82f622,stroke:#2563eb,stroke-width:1.5px,color:#3b82f6
   classDef io fill:#94a3b81a,stroke:#94a3b8,stroke-width:1.2px,color:#94a3b8
   class R,CU,CR m
-  class RP,RU,AD d
+  class RP,RU,CAP,AD d
   class T,S,U io
 ```
 
@@ -104,7 +105,7 @@ predicates against the trace first, and the suite index goes into the curator's 
 cases cannot encode one rule in different words. The **critic** is the only thing that judges that call, and it is
 the loop's decision point (D-086): it reads the curator's candidate, calls `run_predicate`, reads
 what comes back, and chooses — bounce, hand over, or give up. ⛔ **A bounce carries the specific
-bad finding, never *"this seems weak"*** — a vague objection costs one of five attempts and teaches
+bad finding, never *"this seems weak"*** — a vague objection costs one attempt and teaches
 the curator nothing. `unmineable` is a **result, not an error**: *the agent was not smart enough*
 has no rule to translate, and a miner that has never given up has never been pointed at a failure
 it should refuse.
@@ -114,14 +115,22 @@ reason between them — ⛔ **the graph reads a recorded call, never a model's a
 `run_predicate` fires the candidate at the trace and at the control set and hands back what
 happened; it is the loop's only mechanical step and ⛔ **under D-086 it is no longer a gate** — it
 supplies the evidence, the critic supplies the decision. `record_unmineable` is how the critic gives
-up, and it is a tool rather than a field in its answer because **an unmineable is a number this
-project reports**, and a word a model writes is not a countable event. Giving up costs naming the
-rule it went looking for and did not find. 🔴 **A model with a give-up button will press it** — a
-correct refusal and a lazy one produce the identical artefact, so the unmineable rate is watched
-against the router's agreement number rather than trusted on its own (D-089 §D).
+up early, and it is a tool rather than a field in its answer for exactly one reason: **D-082 says
+every unmineable must have at least one `run_predicate` result behind it, and a tool can refuse.** A
+field in a structured answer cannot refuse anything. 🔴 **A model with a give-up button will press
+it** — a correct refusal and a lazy one produce the identical artefact, so the unmineable rate is
+watched against the router's agreement number rather than trusted on its own (D-089 §D).
+
+⛔ **Neither tool can end the loop, and neither can any agent.** The cap is `MAX_ATTEMPTS` in
+`config.py`, checked before an agent is dispatched — because `n` is a setting a human changes, and a
+number a model was told in a prompt does not change with it. **Refusing and terminating are
+different verbs**: a refused give-up costs the critic an attempt and tells it why, and never buys
+one (D-090). Flags any agent raises land in the MLflow span for a human to read; ⛔ **the loop does
+not branch on them**, because a loop that branches on a flag lets an agent extend its own run by
+raising one.
 
 🔴 **So inside the loop there is now no mechanical gate at all — every branch is a model's.** That
-is deliberate: five attempts of argue-run-revise put **more** reasoning on one trace than a single
+is deliberate: repeated argue-run-revise puts **more** reasoning on one trace than a single
 test can (D-087 §E). ⚠️ **But effort is not correctness** — a loop can iterate its way to a
 confident wrong answer, and nothing inside it can tell. That is what the last boundary is for, and
 it is untouched: ⛔ **nothing enters the suite without clearing the gauntlet.**

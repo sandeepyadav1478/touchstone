@@ -366,7 +366,8 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
   MT [color: orange, icon: cpu, label: "2 · CURATOR — decides WHETHER a failure is worth an eval at all, names the rule it broke, writes the predicate\nD-086 C · the loop's centre of gravity. It proposes a CANDIDATE; it never CLEARS one"]
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — the ONLY judge of the curator's call, and the loop's DECISION POINT · D-086 A\nit runs the predicate, reads the result, and picks: bounce, hand over, or give up\nit exists because D-040 admitted the hole: a rule can be reproducible, distinct and still measure nothing interesting"]
   MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
-  MRec [icon: edit-3, color: green, label: "record_unmineable() — the critic's OTHER tool, D-089\nrequires the RULE it looked for and did not find\na tool, not a field: a word a model writes is not a countable event\n⚠ two ways in — the critic gives up early, or the attempt cap fires with NO model"]
+  MRec [icon: edit-3, color: green, label: "record_unmineable() — the critic's OTHER tool, D-089\nrequires the RULE it looked for and did not find\na tool because it can REFUSE: D-082 wants >=1 run_predicate result behind every one\n⚠ it may refuse; it can NEVER reset, extend or decrement the counter — D-090 B"]
+  MCap [icon: hash, color: green, label: "the cap — attempt = config.MAX_ATTEMPTS\nchecked BEFORE any agent is dispatched — the ONLY thing that ends the loop\nn is a SETTING a human changes, and a number in a prompt does not change with it\nflags go to the MLflow span for a human; the loop does NOT branch on them — D-090 C, D"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
@@ -377,7 +378,8 @@ MCrit > MT: hand-back — the SPECIFIC bad finding, never 'this seems weak'. D-0
 MCrit > MTest: the critic calls its ONE tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
 MTest > MCrit: the result returns to its CALLER, who DECIDES what it means — D-086 A. There is NO run_predicate > curator edge
 MCrit > MRec: the CRITIC gives up — early, or at the cap; every UNMINEABLE has >=1 run_predicate result behind it (D-082, D-086 A, D-089)
-MRec > MGive: the recorded call IS the result — the graph never reads a model's account of one (D-089 B)
+MCap > MRec: the other way in, and the only one with no model in it (D-090 C)
+MRec > MGive: recorded, with the rule that was looked for and not found (D-089)
 Corpus > M0: one session at a time — ALL 1,712, because the router is what selects now
 Clean > MTest: the silence set — the NO half of the evidence
 Cal [shape: document, color: red, icon: percent, label: "criterion_1_agreement — the router's verdict against τ²'s own signals, over all 1,712\nD-082 §B · NO RESULT IS REPORTABLE WITHOUT IT — a router verdict with no agreement figure is a population with no provenance\n⚠ if it comes back poor, §A REVERTS: the rubric becomes a diagnostic and selection goes back to mechanical"]

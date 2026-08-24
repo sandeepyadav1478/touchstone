@@ -30,6 +30,15 @@ CHECKPOINTS = ROOT / ".touchstone" / "checkpoints.db"
 # printed at 5/5. A number in five files has five chances to go stale.
 K = 3
 
+# Attempts the mining loop spends on ONE trace before it stops. ⛔ The graph checks this BEFORE
+# dispatching to any agent, so termination is a counter and a config value and nothing else —
+# D-090 §C. record_unmineable() may REFUSE a give-up; it can never reset, extend or decrement
+# this. The loop must terminate against a critic that never calls a tool at all.
+#
+# ⛔ The docs quote this constant. They do not restate the number — same reason as K above, and
+# `n = 5` had already gone prose-only in four files before D-090 put it here.
+MAX_ATTEMPTS = 5
+
 # ⛔ RUNBOOKS, INTERVAL_SECONDS and MAX_HOPS stood here and were deleted on 2026-08-20. All
 # three were specimen-bound: runbooks/ and the sampling interval went with the infra-RCA
 # corpus (D-066), and the hop bound belonged to the supervisor loop the retail rewrite

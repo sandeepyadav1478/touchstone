@@ -16,12 +16,12 @@ flowchart LR
   end
 
   TEST{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
-  REC{{"record_unmineable()<br/>the critic's OTHER tool — D-089<br/>requires the rule it looked for and did not find<br/>a tool, because a word a model writes is not a countable event"}}
+  REC{{"record_unmineable()<br/>the critic's OTHER tool — D-089<br/>requires the rule it looked for and did not find<br/>a tool because it can REFUSE: D-082 wants >=1 run_predicate result<br/>D-090 B — it can never reset, extend or decrement the counter"}}
   GAUNTLET{{"THE GAUNTLET — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever — D-084<br/>BACKLOG, not deferred: it runs on a FINISHED candidate,<br/>so the loop has to exist before its input does — D-086 §D"}}
   SUITE[("the regression suite")]
   CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
   UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
-  CAP{{"the attempt cap — attempt = n<br/>MECHANICAL, the graph: it already holds every attempt<br/>⛔ does NOT call the model — D-089 §C"}}
+  CAP{{"the cap — attempt = config.MAX_ATTEMPTS<br/>MECHANICAL: checked BEFORE any agent is dispatched<br/>the ONLY thing that ends the loop — D-090 §C<br/>n is a SETTING, and a number in a prompt does not change with it"}}
   CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
   CLEARED[("the CLEARED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
@@ -35,6 +35,8 @@ flowchart LR
   CRITIC -- "hands over" --> GAUNTLET
   CRITIC -. "gives up early — saves up to 4 calls" .-> REC
   CAP -- "the other way in, and the only one with no model" --> REC
+  FLAG("flags any agent raises → the MLflow span, for a human<br/>⛔ the loop does NOT branch on them — D-090 §D")
+  CRITIC -. "raises" .-> FLAG
   REC --> UNMINED
   GAUNTLET --> SUITE
   ROUTER -.- CAL
@@ -48,6 +50,6 @@ flowchart LR
   class ROUTER,CURATOR,CRITIC agent
   class TEST,REC,CAP,GAUNTLET mech
   class IN,SUITE,CONTROL,UNMINED data
-  class CAL note
+  class CAL,FLAG note
   class CLEARED data
   class LOOP box

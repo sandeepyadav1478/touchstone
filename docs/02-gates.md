@@ -249,7 +249,7 @@ makes the thing that answers.
 |---|---|
 | **In** | one τ² retail session the **router** marked `ENHANCE` — it reads **all 1,712** shipped simulations, one at a time (`D-082` §A). ⚠️ **Not the 834**: that split is now the answer key, not the filter |
 | **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
-| **Or** | *unmineable* — the **one** terminal, after `n` attempts, with every attempt and its counterexample. A result, **not an error** (`D-081`) |
+| **Or** | *unmineable* — the **one** terminal, with every attempt and its counterexample. A result, **not an error** (`D-081`). Two ways in: the critic gives up early via `record_unmineable` (`D-089`), or the cap fires. ⛔ **The cap is `config.MAX_ATTEMPTS`, checked before any agent is dispatched, and it is the only thing that ends the loop** (`D-090` §C) |
 
 🔴 **`reward_breakdown["DB"] == 0` was the input and it was wrong.** The DB check compares **final
 database state** to the gold actions and is blind to *how* the state was reached, so an agent that
@@ -316,10 +316,12 @@ computes, which would make it a route on an existing label rather than a judge.
      └───────────────── session it wrongly fired on, or the fact that it missed
                         the target. Attempt i+1 sees what attempt i got wrong.
 
-   after n attempts (n = 5) ──▶ UNMINEABLE — every attempt and its counterexample
-                                recorded. ⚠️ NOT an error and NOT retried forever:
-                                a trace nobody can write a rule for is a finding
+   at config.MAX_ATTEMPTS  ──▶ UNMINEABLE — every attempt and its counterexample
+   (or the critic gives up      recorded. ⚠️ NOT an error and NOT retried forever:
+    early, D-089)               a trace nobody can write a rule for is a finding
                                 about the policy, not a bug in the curator.
+                                ⛔ the CAP is checked before any agent runs, and
+                                nothing an agent does can extend it — D-090 §C.
 ```
 
 **Why the stopping rule is that and not a score.** *Fires on the failure, silent on what passes*
@@ -371,7 +373,9 @@ flowchart TB
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
-  CRIT -->|"nothing left to try · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
+  CRIT -.->|"gives up early — D-089"| REC{{"record_unmineable()<br/>⛔ may REFUSE: D-082 wants >=1 run_predicate result behind every one<br/>⛔ can never reset, extend or decrement the counter — D-090 §C"}}
+  CAP{{"the cap · attempt = config.MAX_ATTEMPTS<br/>⛔ checked BEFORE any agent is dispatched<br/>the ONLY thing that ends the loop — D-090"}} --> REC
+  REC --> UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop · BACKLOG, not deferred — its input is a FINISHED candidate, D-086 §D"}
   GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]
