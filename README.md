@@ -77,7 +77,7 @@ putting them beside a number of ours would fuse two environments.
 flowchart LR
   T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
   R --> CU["<b>curator</b><br/>rule → predicate"]
-  CU <-. "one bounce<br/>per attempt" .-> CR["<b>critic</b><br/>attacks it first"]
+  CU <-.-> CR["<b>critic</b><br/>attacks it first"]
   CR --> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
   RP -. "counterexample<br/>attempt &lt; 5" .-> CU
   RP -->|"attempt 5"| U(["unmineable"])
