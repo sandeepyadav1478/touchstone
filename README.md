@@ -96,7 +96,11 @@ flowchart LR
   class T,S,U io
 ```
 
-**Orange decides, blue verifies** — and ⛔ **no orange box clears anything.** The **curator** is the
+**Orange decides, blue verifies, grey is what exists on disk when it is over** — and ⛔ **no
+orange box clears anything.** The three grey nodes are the whole input and output of the loop: one
+trace goes in, and either a **regression suite** case or an **unmineable** comes out. ⚠️ **Those
+two sit in the same structural slot** — a blue mechanical box writes each of them — so a diagram
+that drops `unmineable` is claiming the loop has one outcome. The **curator** is the
 centre of gravity: it decides whether a failure is worth an eval at all, which rule it broke, and
 what the predicate should say — ⛔ **against the suite that already exists, never in a vacuum**
 (D-087). A rule already gated is not worth mining twice, so an exact check runs the cleared
