@@ -249,7 +249,7 @@ makes the thing that answers.
 |---|---|
 | **In** | one τ² retail session the **router** marked `ENHANCE` — it reads **all 1,712** shipped simulations, one at a time (`D-082` §A). ⚠️ **Not the 834**: that split is now the answer key, not the filter |
 | **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
-| **Or** | *unmineable* — the **one** terminal, with every attempt and its counterexample. A result, **not an error** (`D-081`). The critic asks `record_unmineable` whether it may keep going and is told to exit, or gives up early through the same tool (`D-089`). ⛔ **One function reads `config.MAX_ATTEMPTS` — the tool and the graph's loop condition both call it, so no second place knows the cap** (`D-091`) |
+| **Or** | *unmineable* — the **one** terminal, with every attempt and its counterexample. A result, **not an error** (`D-081`). The critic asks `attempt_budget` whether it may keep going and is told to exit, or gives up early through the same tool (`D-089`). ⛔ **One function reads `config.MAX_ATTEMPTS` — the tool and the graph's loop condition both call it, so no second place knows the cap** (`D-091`) |
 
 🔴 **`reward_breakdown["DB"] == 0` was the input and it was wrong.** The DB check compares **final
 database state** to the gold actions and is blind to *how* the state was reached, so an agent that
@@ -373,8 +373,8 @@ flowchart TB
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
-  CRIT <-.->|"may I keep going? · giving up — D-089"| REC{{"record_unmineable() — the critic's ATTEMPT BUDGET<br/>owns config.MAX_ATTEMPTS: says exit, records, ⛔ may REFUSE<br/>⛔ ONE function reads the cap, and the graph's edge calls the same one — D-091"}}
-  REC --> UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
+  CRIT <-.->|"may I keep going? · giving up — D-089"| BUDGET{{"attempt_budget() — named for the job, not the consequence, D-092<br/>owns config.MAX_ATTEMPTS: says exit, records, ⛔ may REFUSE<br/>⛔ ONE function reads the cap, and the graph's edge calls the same one — D-091"}}
+  BUDGET --> UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop · BACKLOG, not deferred — its input is a FINISHED candidate, D-086 §D"}
   GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]

@@ -191,9 +191,9 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
 
 - The model id is a **versioned parameter** — changing it makes a new candidate, exactly like
   changing a prompt (D-013).
-- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate", "record_unmineable"]`
+- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate", "attempt_budget"]`
   for the critic** (`D-085`, `D-089` — ⚠️ per-role since 2026-08-24 and the critic's list has
-  **grown once already**, so ⛔ **grep the two lists, not the literal**). ⚠️ **`record_unmineable` is a
+  **grown once already**, so ⛔ **grep the two lists, not the literal**). ⚠️ **`attempt_budget` is a
   tool rather than a field for exactly one reason, and 🔴 it is not the one `D-089` §B first
   gave**: `D-082` requires ≥1 `run_predicate` result behind every unmineable, and **a tool can
   refuse where a structured field cannot** (`D-090` §B). ⛔ **It is also the critic's attempt

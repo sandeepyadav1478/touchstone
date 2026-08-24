@@ -83,8 +83,8 @@ flowchart LR
   R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
-  CR <-.->|"may I keep going?"| RU{{"<b>record_unmineable</b> — the critic's budget<br/>owns MAX_ATTEMPTS: says exit, records a give-up, may refuse<br/>one function, so no second place knows the cap"}}
-  RU --> U(["unmineable"])
+  CR <-.->|"may I keep going?"| BUDGET{{"<b>attempt_budget</b><br/>owns MAX_ATTEMPTS: says exit, records a give-up, may refuse<br/>named for the job, not the consequence — D-092"}}
+  BUDGET --> U(["unmineable"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
 
@@ -92,7 +92,7 @@ flowchart LR
   classDef d fill:#3b82f622,stroke:#2563eb,stroke-width:1.5px,color:#3b82f6
   classDef io fill:#94a3b81a,stroke:#94a3b8,stroke-width:1.2px,color:#94a3b8
   class R,CU,CR m
-  class RP,RU,AD d
+  class RP,BUDGET,AD d
   class T,S,U io
 ```
 
@@ -113,9 +113,9 @@ it should refuse.
 reason between them — ⛔ **the graph reads a recorded call, never a model's account of one.**
 `run_predicate` fires the candidate at the trace and at the control set and hands back what
 happened; it is the loop's only mechanical step and ⛔ **under D-086 it is no longer a gate** — it
-supplies the evidence, the critic supplies the decision. `record_unmineable` is the critic's **attempt
-budget**: it asks whether it may keep going, and the tool reads `MAX_ATTEMPTS` and answers — keep
-going, or exit now. ⛔ **The critic never counts attempts itself and is never told the number in a
+supplies the evidence, the critic supplies the decision. `attempt_budget` is the second tool, and it is
+named for the job rather than the consequence (D-092): the critic asks whether it may keep going,
+and the tool reads `MAX_ATTEMPTS` and answers — keep going, or exit now. ⛔ **The critic never counts attempts itself and is never told the number in a
 prompt**, because a number in a prompt is a word and does not change when the config does. The same
 tool records a give-up and **may refuse one**: D-082 wants at least one `run_predicate` result behind
 every unmineable, and this is the moment that check can fire. **Refusing and terminating are

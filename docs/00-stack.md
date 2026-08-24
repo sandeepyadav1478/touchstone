@@ -148,7 +148,7 @@ async def complete(prompt: str, *, system: str, schema: dict, model: str,
         model=model,
         system_prompt=system,
         allowed_tools=tools,       # ⛔ SDK's own tools off in every role — D-085/D-089: [] for
-                                   #    router/curator, ["run_predicate", "record_unmineable"]
+                                   #    router/curator, ["run_predicate", "attempt_budget"]
                                    #    for the critic
         max_turns=2,               # ⚠️ NOT 1 — output_format spends a turn of its own (D-032)
         setting_sources=[],        # ⛔ [] is isolation; None loads everything (D-034)
@@ -176,7 +176,7 @@ installed `types.py`:**
   filesystem it can read `suite/benchmark/truth.json` — and `suite/regression/`, which holds
   the cases that gate. **This is the leakage path that would produce a perfect score.**
   ⚠️ **The critic is the one exception and it is a whitelist, not a relaxation** —
-  `["run_predicate", "record_unmineable"]`, both written here, neither able to reach a file
+  `["run_predicate", "attempt_budget"]`, both written here, neither able to reach a file
   (D-085, D-089).
 - **`max_turns=2`** — ⚠️ **the intent is one completion per node; the value is 2 because
   `output_format` spends a turn of its own** (D-032). LangGraph does the looping, so the graph

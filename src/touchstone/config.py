@@ -31,7 +31,7 @@ CHECKPOINTS = ROOT / ".touchstone" / "checkpoints.db"
 K = 3
 
 # Attempts the mining loop spends on ONE trace before it stops. ⛔ Exactly ONE function reads
-# this — attempts_exhausted() — and it has two callers: the critic's record_unmineable() tool,
+# this — attempts_exhausted() — and it has two callers: the critic's attempt_budget() tool,
 # which is how the critic asks whether it may keep going, and the graph's own loop condition,
 # which is why a critic that never calls a tool still stops here. D-091 §C.
 #
