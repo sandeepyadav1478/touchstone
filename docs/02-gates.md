@@ -358,7 +358,8 @@ flowchart TB
   TRANS --> CRIT["1b. CRITIC — attacks it, and holds run_predicate as its one tool<br/>D-085 · MAY bounce on the argument alone, or run first and bounce with the counterexample<br/>ONE bounce per attempt · D-082 §C2 · ≤5 critic calls"]
   CRIT --> TEST{"2. run_predicate — mechanical, no model<br/>THE ONLY DECISION POINT · D-081<br/>fires on the target · silent on the control set"}
   CLEAN --> TEST
-  TEST -->|"either fails · attempt < n"| TRANS
+  TEST -->|"either fails · attempt < n · D-085: the result returns to its caller"| CRIT
+  CRIT -->|"hand-back — argument, or argument + counterexample"| TRANS
   TEST -->|"either fails · attempt = n"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error"]
   TEST -->|both hold| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> ADMIT{"⛔ admission gates — all three, mechanical<br/>reproducible · distinct · justified"}

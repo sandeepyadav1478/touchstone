@@ -79,8 +79,7 @@ flowchart LR
   T(["a failing<br/>trace"]) --> R["<b>router</b><br/>worth mining?"]
   R --> CU["<b>curator</b><br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>attacks it, then<br/>runs it"]
-  CR -->|"its one tool"| RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
-  RP -. "counterexample<br/>attempt &lt; 5" .-> CU
+  CR <-. "its one tool" .-> RP{{"<b>run_predicate</b><br/>the only decision point<br/>fires on the trace, silent on the control set"}}
   RP -->|"attempt 5"| U(["unmineable"])
   RP -->|"both hold"| AD{{"<b>admission</b><br/>reproducible · distinct<br/>justified"}}
   AD --> S(["regression<br/>suite"])
@@ -100,8 +99,9 @@ reach `unmineable` having never run a predicate. `run_predicate` is the **critic
 point in this loop where an opinion can be tested against the mechanism for the cost of one call.
 ⛔ **Invoking is not adjudicating.** The graph reads the **tool result**, never the critic's
 account of it, so the verdict stays mechanical (D-064) while the objection finally gets checked.
-`run_predicate` is still the only decision point (D-081), still where the control set arrives, and
-every exit leaves from it.
+`run_predicate` is still the only decision point (D-081) and still where the control set arrives.
+⛔ **Both terminal exits leave from it and the retry does not** — a failed attempt returns to the
+critic, and the critic is what bounces.
 
 ⛔ **Two hand-backs, not one, and which one you get is the critic's call.** It returns an
 **argument** — does the candidate quote a `task_id`? does it restate the trace instead of the
