@@ -316,12 +316,16 @@ computes, which would make it a route on an existing label rather than a judge.
      └───────────────── session it wrongly fired on, or the fact that it missed
                         the target. Attempt i+1 sees what attempt i got wrong.
 
-   the critic asks its     ──▶ UNMINEABLE — every attempt and its counterexample
-   budget tool and is told      recorded. ⚠️ NOT an error and NOT retried forever:
-   to exit — or gives up        a trace nobody can write a rule for is a finding
-   early, D-089                 about the policy, not a bug in the curator.
-                                ⛔ ONE function reads config.MAX_ATTEMPTS: the tool
-                                and the graph's edge both call it — D-091 §C.
+   the critic asks its     ──▶ UNMINEABLE — attempt_budget has ALREADY recorded
+   budget tool and is told      every attempt and its counterexample, so its reply
+   to exit — or gives up        IS the exit and nothing hands off — D-094 §A.
+   early, D-089                 ⚠️ NOT an error: a trace nobody can write a rule
+                                for is a finding about the policy, not a bug in
+                                the curator. ⛔ ONE function reads
+                                config.MAX_ATTEMPTS — D-091 §C.
+   an agent ignores that   ──▶ 🔴 FORCE-TERMINATE, exit_reason force_terminated.
+   and keeps going              ⛔ Expected value 0 — a bug report against a
+                                prompt, never a normal outcome — D-094 §C.
 ```
 
 **Why the stopping rule is that and not a score.** *Fires on the failure, silent on what passes*
@@ -374,9 +378,8 @@ flowchart TB
   CLEAN --> TEST
   CRIT -->|"hand-back — the SPECIFIC bad finding, never 'seems weak'"| TRANS
   CRIT <-.->|"may I keep going? · giving up — D-089"| BUDGET{{"attempt_budget() — named for the job, not the consequence, D-092<br/>owns config.MAX_ATTEMPTS: answers the critic, records, ⛔ may REFUSE<br/>⛔ a TOOL CANNOT BREAK A LOOP — it returns to its caller, D-093 §A"}}
-  BUDGET --> EDGE{"the conditional edge AFTER the tool node<br/>🔴 THIS is the break — it calls attempts_exhausted(), the same function<br/>placed here and not after the critic, so no model turn is spent<br/>writes exit_reason, because the edge is what decided — D-093"}
-  EDGE -->|"otherwise"| CRIT
-  EDGE -->|"budget_exhausted · gave_up"| UNM["UNMINEABLE · every attempt recorded<br/>⚠️ a result, not an error<br/>⛔ exit_reason splits the two — D-093 §B"]
+  BUDGET -->|"⛔ its reply IS the exit — D-094 §A"| DONE["the trace is done · every attempt recorded<br/>⚠️ a result, not an error<br/>exit_reason: budget_exhausted | gave_up"]
+  BUDGET -.->|"an agent was told to exit and continued anyway"| UNM["🔴 FORCE-TERMINATE — the edge, D-094<br/>exit_reason: force_terminated · EXPECTED VALUE 0<br/>⛔ an alarm, not a category: non-zero is a bug report against a prompt"]
   CRIT -->|"the critic hands it over"| PROP["suite/proposed/<br/>each case carries why · when · origin · the trace"]
   PROP --> GAUNTLET{"⛔ gauntlet gates — all three, mechanical, NO MODEL<br/>reproducible · distinct · justified<br/>🔴 OUTSIDE the loop · BACKLOG, not deferred — its input is a FINISHED candidate, D-086 §D"}
   GAUNTLET -->|any one fails| DROP["discarded · the failing gate is recorded, not the case"]

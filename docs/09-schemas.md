@@ -394,6 +394,7 @@ supposed to leave standing.
 | `handed_over` | a candidate reached the gauntlet | the only one that can become a suite case |
 | `budget_exhausted` | the edge fired at `config.MAX_ATTEMPTS` | the loop tried and could not — the honest failure |
 | `gave_up` | the critic called `attempt_budget` early and it accepted | 🔴 **`D-089` §D happening.** Watch **this**, not the unmineable total — a rate you cannot decompose is not a signal |
+| `force_terminated` | ⛔ an agent was told to exit and continued anyway; the edge stopped it | 🔴 **An alarm, not a category. Expected value: 0** — non-zero is a bug report against a prompt, never a normal outcome to tally (`D-094` §C) |
 
 ⚠️ **The MLflow span already records the tool call** (`D-090` §D) and that is enough for a human
 reading one trace. It is **not** enough for a number across a corpus: a span store is not the results

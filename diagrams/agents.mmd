@@ -20,7 +20,7 @@ flowchart LR
   GAUNTLET{{"THE GAUNTLET — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever — D-084<br/>BACKLOG, not deferred: it runs on a FINISHED candidate,<br/>so the loop has to exist before its input does — D-086 §D"}}
   SUITE[("the regression suite")]
   CONTROL[("the control set — 878 clean<br/>a predicate that fires HERE is a false positive")]
-  UNMINED("unmineable — a RESULT, not an error<br/>every attempt and its counterexample recorded")
+  UNMINED("the trace is done — a RESULT, not an error<br/>attempt_budget already recorded every attempt and its counterexample<br/>exit_reason: budget_exhausted | gave_up | 🔴 force_terminated")
   CAL["criterion_1_agreement<br/>the router's verdict vs τ²'s own signals, over all 1,712<br/>D-082 §B — no result is reportable without it"]
 
   CLEARED[("the CLEARED suite so far — D-087<br/>exact check BEFORE any agent call: a predicate that already fires<br/>means already_covered, and zero attempts are spent")]
@@ -35,9 +35,9 @@ flowchart LR
   CRITIC <-. "may I keep going? · giving up early" .-> BUDGET
   FLAG("flags any agent raises → the MLflow span, for a human<br/>⛔ the loop does NOT branch on them — D-090 §D")
   CRITIC -. "raises" .-> FLAG
-  EDGE{{"the conditional edge AFTER the tool node — D-093<br/>a TOOL CANNOT BREAK A LOOP: it returns to its caller<br/>calls attempts_exhausted(), the SAME function the tool calls<br/>placed after the tool and not after the critic, so no model turn is spent<br/>writes exit_reason: budget_exhausted | gave_up | handed_over"}}
-  BUDGET --> EDGE
-  EDGE -. "otherwise" .-> CRITIC
+  EDGE{{"🔴 FORCE-TERMINATE — the conditional edge, D-094<br/>fires ONLY when an agent is told to exit and continues anyway<br/>calls attempts_exhausted(), the SAME function the tool calls — D-091<br/>exit_reason: force_terminated · EXPECTED VALUE 0<br/>an alarm, not a category: non-zero is a bug report against a prompt"}}
+  BUDGET -- "⛔ its reply IS the exit — nothing hands off, D-094 §A" --> UNMINED
+  BUDGET -. "an agent ignores it and keeps going" .-> EDGE
   EDGE --> UNMINED
   GAUNTLET --> SUITE
   ROUTER -.- CAL

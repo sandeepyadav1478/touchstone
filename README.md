@@ -83,8 +83,8 @@ flowchart LR
   R --> CU["<b>curator</b><br/>worth an eval?<br/>rule → predicate"]
   CU <-.-> CR["<b>critic</b><br/>judges it,<br/>then decides"]
   CR <-.-> RP{{"<b>run_predicate</b><br/>fires on the trace, silent on the control set<br/>evidence, not a verdict"}}
-  CR <-.->|"may I keep going?"| BUDGET{{"<b>attempt_budget</b><br/>owns MAX_ATTEMPTS — one function, so nothing else knows the cap"}}
-  BUDGET -->|"the edge routes — D-093<br/>budget_exhausted · gave_up"| U(["unmineable"])
+  CR <-.->|"may I keep going?"| BUDGET{{"<b>attempt_budget</b><br/>owns MAX_ATTEMPTS — one function, so nothing else knows the cap<br/>its reply IS the exit: it has already recorded everything"}}
+  BUDGET -.->|"⛔ only if an agent ignores the exit"| U(["force-terminate<br/><i>expected: never</i>"])
   CR -->|"hands over"| AD{{"<b>the gauntlet</b> — three gates, all must hold<br/>reproducible · distinct · justified<br/>no model, ever · backlog, it needs a finished candidate"}}
   AD --> S(["regression<br/>suite"])
 
@@ -96,11 +96,13 @@ flowchart LR
   class T,S,U io
 ```
 
-**Orange decides, blue verifies, grey is what exists on disk when it is over** — and ⛔ **no
-orange box clears anything.** The three grey nodes are the whole input and output of the loop: one
-trace goes in, and either a **regression suite** case or an **unmineable** comes out. ⚠️ **Those
-two sit in the same structural slot** — a blue mechanical box writes each of them — so a diagram
-that drops `unmineable` is claiming the loop has one outcome. The **curator** is the
+**Orange decides, blue verifies, grey is where a trace ends up** — and ⛔ **no orange box clears
+anything.** ⚠️ **The two grey ends are not symmetric and should not be read as a pair:** the
+gauntlet really does hand a case to the **regression suite**, and `attempt_budget` hands off to
+nothing — its reply *is* the exit, because it has already recorded the attempts and the rule that was
+looked for and not found. **`force-terminate` is a safety net, not an outcome** (D-094): it fires
+only when an agent is told to exit and continues anyway, so ⛔ **it firing at all is a bug report
+against a prompt.** The **curator** is the
 centre of gravity: it decides whether a failure is worth an eval at all, which rule it broke, and
 what the predicate should say — ⛔ **against the suite that already exists, never in a vacuum**
 (D-087). A rule already gated is not worth mining twice, so an exact check runs the cleared
