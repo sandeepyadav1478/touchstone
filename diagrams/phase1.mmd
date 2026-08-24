@@ -38,6 +38,7 @@ flowchart TB
     CURATOR("curator agent<br/>decides what is worth encoding")
     CRITIC("qa / critic agent<br/>judges it, and DECIDES — D-086 §A")
     PRED{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
+    BUDGET{{"attempt_budget()<br/>the critic's other tool — D-089 · D-092<br/>owns config.MAX_ATTEMPTS · its reply IS the exit — D-094"}}
     CTRL[("control set<br/>878 clean + every SKIP")]
     CORPUS --> ROUTER
     ROUTER -- "enhance" --> CURATOR
@@ -46,6 +47,7 @@ flowchart TB
     CRITIC <-- "its tool — D-086 §A" --> PRED
     CRITIC -- "the specific bad finding" --> CURATOR
     CTRL --> PRED
+    CRITIC <-- "may I keep going?" --> BUDGET
   end
 
   RUN --> AGENT
@@ -94,6 +96,6 @@ flowchart TB
   class GEN,ADP,ENVC seam
   class CORPUS,CTRL data
   class ROUTER,CURATOR,CRITIC model
-  class PRED nomodel
+  class PRED,BUDGET nomodel
   class LITE dead
   class D2 deferred

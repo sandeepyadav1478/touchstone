@@ -107,6 +107,7 @@ Router [icon: git-branch, color: orange, label: "router agent — D-082 §A\nrub
 Curator [icon: edit-3, color: orange, label: "curator agent — D-082\nwrites the predicate, and owns the two memories"]
 Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2, D-086 A\nthe ONLY judge of the curator's call, and the loop's DECISION POINT. It calls run_predicate, reads the result, and picks: bounce, hand over, or give up"]
 Pred [icon: check-square, color: green, label: "run_predicate() — the CRITIC'S TOOL, D-086 A. EVIDENCE, not a gate\nno model. It fires on the trace, and must be SILENT on the control set"]
+Budget [icon: hash, color: green, label: "attempt_budget() — the CRITIC'S OTHER TOOL, D-089/D-092\nowns config.MAX_ATTEMPTS. ONE function reads it and the graph's edge calls the same one — D-091\nits reply IS the exit: everything is already recorded, nothing hands off — D-094 A"]
 Gauntlet [icon: shield, color: green, label: "the gauntlet's three gates — D-084\nreproducible, distinct, justified. Five were specified; measuring them against 1,824 shipped simulations cut two"]
 
 CLI > Tel: init_telemetry() — ONCE, from cli.py
@@ -162,16 +163,21 @@ Router > Router: criterion_1_agreement — the router verdict scored against τ�
 
 loop [label: "config.MAX_ATTEMPTS attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
   Curator > Critic: a candidate predicate, and the stated rule it claims to encode
-  Critic > Pred: the critic calls its ONE tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
+  Critic > Pred: the critic calls its evidence tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
   Pred > Corpus: fire it against the 878 clean sessions
   Corpus --> Pred: the NO half of the evidence — a hit here is a FALSE POSITIVE
   Pred --> Critic: the result returns to its CALLER, who DECIDES what it means — D-086 A
   Critic --> Curator: the SPECIFIC bad finding, never 'this seems weak' — D-086 C. ONE bounce per attempt
-  Pred > Pred: record the attempt, the verdict and the counterexample. Giving up is recorded the same way
+  Pred > Pred: record the attempt, the verdict and the counterexample
+  Critic > Budget: may I keep going? — the critic never counts attempts itself, D-091 B
+  Budget --> Critic: keep going, or EXIT. A give-up is accepted here too, and REFUSED if no run_predicate result stands behind it — D-082
 }
 
+Budget > CLI: the reply IS the exit — exit_reason budget_exhausted or gave_up, D-093 B / D-094 A
+Budget --> CLI: FORCE-TERMINATE only if an agent is told to exit and continues anyway — exit_reason force_terminated, EXPECTED VALUE 0, D-094 C
+
 Pred > Gauntlet: it holds on the trace and is silent on the control set
-Gauntlet > CLI: cleared to the regression suite, or UNMINEABLE — which is a RESULT, not an error
+Gauntlet > CLI: cleared to the regression suite. UNMINEABLE is a RESULT, not an error, and it leaves through attempt_budget — not here
 
 alt [label: "phase 2 — the gate runs in SHADOW and changes nothing. DEFERRED with compare, D-080"] {
   Cmp --> CLI: the gate's precision and recall, scored against sessions whose outcome is known
