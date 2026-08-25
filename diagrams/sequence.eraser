@@ -95,7 +95,7 @@ Orch [icon: repeat, color: grey, label: "τ² Orchestrator.run — orchestrator.
 Agent [icon: cpu, color: orange, label: "τ² agent — llm_agent.py:128\nTHE THING BEING MEASURED"]
 User [icon: user, color: orange, label: "τ² user simulator — user_simulator.py:235\nfrozen apparatus, deliberately NOT the agent's model"]
 Gen [icon: git-merge, color: red, label: "generate() — llm_utils.py:355\nthe SINGLE seam: all roles call this one function"]
-Adapter [icon: link, color: blue, label: "adapter.py — P1.1\nthe Claude Agent SDK, dispatching on `model`"]
+Adapter [icon: link, color: blue, label: "adapter.py — P1.1 ✅ shipped\nthe Claude Agent SDK, dispatching on `model`"]
 Claude [icon: cloud, color: orange, label: "ClaudeSDKClient to Anthropic\nsubscription auth, five-hour window, the cap REJECTS"]
 Env [icon: shield, color: red, label: "make_tool_call() — environment/environment.py:158\nthe enforcement point, empty until phase 3"]
 Tel [icon: activity, color: blue, label: "telemetry.py — P1.2\nOUR spans: litellm's callback died with litellm"]

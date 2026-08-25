@@ -191,7 +191,10 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
 
 - The model id is a **versioned parameter** — changing it makes a new candidate, exactly like
   changing a prompt (D-013).
-- ⛔ **`allowed_tools=[]` for the router and the curator; `["run_predicate", "attempt_budget"]`
+- ⛔ **`tools=[]` in every role.** 🔴 That is the switch that turns the SDK's own `Read`/`Bash`/
+  `Glob` off, and `allowed_tools=[]` **does not** — measured, DEF-064. The whitelist below is a
+  second, narrower lever and it was never the one that closed the filesystem: ⛔ **`allowed_tools=[]`
+  for the router and the curator; `["run_predicate", "attempt_budget"]`
   for the critic** (`D-085`, `D-089` — ⚠️ per-role since 2026-08-24 and the critic's list has
   **grown once already**, so ⛔ **grep the two lists, not the literal**). ⚠️ **`attempt_budget` is a
   tool rather than a field for exactly one reason, and 🔴 it is not the one `D-089` §B first

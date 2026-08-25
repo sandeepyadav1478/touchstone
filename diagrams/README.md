@@ -36,6 +36,26 @@ antialiasing, not a drawing — so `loop.png` was deliberately **not** replaced;
 `c1dd762` revert changed two label lines (`tau2 1.0.1` → `commit a2c024725189`) and it **was**.
 ⛔ **File mtime, commit count and byte delta all say "changed" for both.** They are not the test.
 
+🔴 **OPEN, and deliberately so — both `.eraser` files are AHEAD of their hosted copies and their
+PNGs as of 2026-08-25.** P1.1 flipped three rendered labels: `touchstone.eraser:209`
+(`adapter.py — P1.1 ✅ shipped`, plus D-095 on the same node), `touchstone.eraser:255` (the `D063`
+node, which described P1.1 in the future tense after it had shipped), and `sequence.eraser:98`.
+By the paragraph directly above, that is a **rendered-label** change and therefore a re-export —
+it is being held, not skipped. **The reason is that P1.2 (`telemetry.py`) edits the same three
+labels again**: D-073 makes the `touchstone.llm` span part of P1.1's definition of done, and the
+span writes to a no-op tracer until P1.2 lands, so every one of those nodes is mid-sentence right
+now. One rebuild after P1.2 costs one create-then-delete cycle and one round of exports; two
+rebuilds cost two, and the intermediate render would assert a span that emits nothing.
+
+⚠️ **This is a knowing departure from "the hosted copy is a renderer, not the artifact" (§below),
+and the row it will cost is the one it always costs.** Until the rebuild happens, **the committed
+`.eraser` is the only current source** — ⛔ do not read a label off the hosted diagram or off
+either PNG, and do not add a metrics row for a render that has not been re-exported. **The
+guard does not catch this**: `check-diagram.py` reads the `.eraser`, so it went green on the very
+labels that make the PNGs stale. This is the same shape as the 🔴 row above — *a perfectly-rendered
+picture of the wrong system passes every instrument in this repo* — with the difference that here
+it is recorded before the fact rather than found after it.
+
 **What the looking has found — and not one of these by a guard:**
 
 - 🔴 **A perfectly-rendered picture of the wrong system passes every instrument in this repo.**

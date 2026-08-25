@@ -206,7 +206,7 @@ Orch > Eval > Reward
 
 // ── 2 · the seam, and the pins behind it.
 Seam [color: blue, icon: git-merge, label: "2 · the seam — P1.1"] {
-  Adapter [color: blue, icon: link, label: "adapter.py — P1.1\nthe Claude Agent SDK behind generate(), dispatching on `model`\nONE adapter, FOUR roles — because there is one chokepoint"]
+  Adapter [color: blue, icon: link, label: "adapter.py — P1.1 ✅ shipped · the seam is generate(), NOT the litellm import (D-095)\nthe Claude Agent SDK behind generate(), dispatching on `model`\nONE adapter, FOUR roles — because there is one chokepoint"]
   Sdk [color: orange, icon: cpu, label: "ClaudeSDKClient — claude_agent_sdk\nsetting_sources=[] — the EMPTY LIST, never None (D-034)"]
   Anthropic [shape: cylinder, color: orange, icon: cloud, label: "Anthropic — subscription auth, NOT an API key\nfive-hour window · the cap REJECTS, it does not bill"]
 }
@@ -252,7 +252,7 @@ Orch > BudgetFlag: orthogonal to where the attempt lands
 
 // ── 5 · telemetry. This is the edge D-063 got wrong, and the picture says so.
 TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2\ntouchstone.* — NEVER gen_ai.* (D-017)\n🆕 the span is opened by adapter.py ITSELF (D-073) — no instrumentor can emit it"]
-D063 [shape: document, color: purple, icon: help-circle, label: "D-063 assumed litellm's OTel callback\nP1.1 kills that assumption — this is a CHANGE to a recorded decision"]
+D063 [shape: document, color: purple, icon: help-circle, label: "D-063 assumed litellm's OTel callback\nP1.1 ✅ shipped and killed it — generate() is replaced whole, so litellm never runs for these roles"]
 D063 --> TelemetryPy
 Adapter > TelemetryPy: one span per model call, all four roles
 EnvCall > TelemetryPy: one span per tool call, and per REFUSAL

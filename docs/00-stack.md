@@ -147,9 +147,9 @@ async def complete(prompt: str, *, system: str, schema: dict, model: str,
     opts = ClaudeAgentOptions(
         model=model,
         system_prompt=system,
-        allowed_tools=tools,       # ⛔ SDK's own tools off in every role — D-085/D-089: [] for
-                                   #    router/curator, ["run_predicate", "attempt_budget"]
-                                   #    for the critic
+        tools=[],                  # 🔴 THIS is what turns the SDK's own tools off — DEF-064
+        allowed_tools=tools,       # the whitelist — D-085/D-089: [] for router/curator,
+                                   #    ["run_predicate", "attempt_budget"] for the critic
         max_turns=2,               # ⚠️ NOT 1 — output_format spends a turn of its own (D-032)
         setting_sources=[],        # ⛔ [] is isolation; None loads everything (D-034)
         output_format=schema,      # structured output; the Verdict comes back typed
@@ -172,12 +172,20 @@ installed `types.py`:**
   would depend on files outside the repo. ⚠️ **Assert it by measurement, not by reading the
   constant**: `get_context_usage()` reports `memoryFiles`, `agents` and `mcpTools`, and
   `touchstone doctor` requires all three empty (D-034).
-- ⛔ **`allowed_tools=[]`** — the SDK ships Read/Bash/Glob. If the model can reach the
+- ⛔ **`tools=[]`** — the SDK ships Read/Bash/Glob. If the model can reach the
   filesystem it can read `suite/benchmark/truth.json` — and `suite/regression/`, which holds
   the cases that gate. **This is the leakage path that would produce a perfect score.**
+  🔴 **This bullet said `allowed_tools=[]` until 2026-08-25 and that is the wrong lever.**
+  `allowed_tools` means *auto-approve nothing*, not *offer nothing*: measured under
+  `allowed_tools=[]`, the model ran `Read` → `Bash pwd` → `Read` and answered out of a file on
+  disk — **there is no permission prompt in a non-interactive session to fail closed on.**
+  `tools=[]` is the field that removes them, and the same probe under it got *"NO ACCESS."*
+  DEF-064. ⚠️ **It leaks a second way**: with the built-ins live the model reached for
+  `ToolSearch` before an in-process MCP tool, so the agent under measurement is not the one
+  τ² defined.
   ⚠️ **The critic is the one exception and it is a whitelist, not a relaxation** —
   `["run_predicate", "attempt_budget"]`, both written here, neither able to reach a file
-  (D-085, D-089).
+  (D-085, D-089). ⛔ **A whitelist in `allowed_tools` still needs `tools=[]` beside it.**
 - **`max_turns=2`** — ⚠️ **the intent is one completion per node; the value is 2 because
   `output_format` spends a turn of its own** (D-032). LangGraph does the looping, so the graph
   stays the thing being measured. ⛔ **`max_turns` is not a count of model calls** — a budget

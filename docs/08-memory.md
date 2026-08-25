@@ -382,8 +382,9 @@ iterations buy one rule instead of `n`.
 The **positive** side — rules already cleared — is now read twice: at the picker, as before, and
 again by the **curator**, which checks its candidate against the suite that already exists. The
 exact half runs the cleared predicates against the trace **before any agent call**; the judged
-half puts the suite index in the curator's prompt. ⛔ **Still no tool** — `allowed_tools=[]` holds
-for the curator. The paragraph below stands otherwise, and its test is what clears D-087.
+half puts the suite index in the curator's prompt. ⛔ **Still no tool** — `tools=[]` **and**
+`allowed_tools=[]` together hold for the curator; ⛔ **the second alone does not** (DEF-064,
+measured: under `allowed_tools=[]` the model read a file off disk). The paragraph below stands otherwise, and its test is what clears D-087.
 
 ⚠️ **"Silently skipped" names a DEPRIORITISED TRACE, not a rejected candidate — and after D-081
 that distinction is the whole reason this registry survives.** The registry is read where the

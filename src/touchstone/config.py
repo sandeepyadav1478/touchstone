@@ -43,6 +43,17 @@ K = 3
 # `n = 5` had already gone prose-only in four files before D-090 put it here.
 MAX_ATTEMPTS = 5
 
+# Turns the SDK may spend inside ONE τ² `generate()` call — adapter.py, P1.1. ⛔ Not the same
+# knob as D-032's `max_turns=2` for the loop agents, and it is 2 for a different reason: there
+# is no `output_format` here, so the second turn is headroom for a model that emits text before
+# it calls a tool, not a turn the protocol spends.
+#
+# ⚠️ **Exhausting it raises rather than returns.** Measured: the CLI yields a ResultMessage with
+# `subtype=error_max_turns`, and `query()` then raises `ResultError`. docs/00 §2 says
+# `"max_turns"` is a scored outcome rather than a crash — that is true of the *value* and not of
+# the control flow, so adapter.py keeps the last ResultMessage and makes it one.
+MAX_SDK_TURNS = 2
+
 # ⛔ RUNBOOKS, INTERVAL_SECONDS and MAX_HOPS stood here and were deleted on 2026-08-20. All
 # three were specimen-bound: runbooks/ and the sampling interval went with the infra-RCA
 # corpus (D-066), and the hop bound belonged to the supervisor loop the retail rewrite
