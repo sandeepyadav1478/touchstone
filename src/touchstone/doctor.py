@@ -16,6 +16,7 @@ a session that *is* isolated are different claims (D-034).
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import shutil
 import subprocess
@@ -98,6 +99,76 @@ def _lockfile() -> Check:
         + sum(len(v) for v in data.get("dependency-groups", {}).values())
     )
     return Check("pass", "uv.lock", f"present, {direct} direct deps")
+
+
+def specimen_check(tasks: int, policy_bytes: int) -> Check:
+    """Compare a resolved specimen against the measured pin — the logic half of P1.0.
+
+    ⚠️ **Split out from `_tau2_data` so it can be tested without importing τ².** That
+    import costs **1.71 s** measured here, and phase 1's exit gate is *"`pytest
+    tests/unit` green, no network, under 2 seconds"* — one import would spend the whole
+    budget. `model_check` above is split for the same reason and it is the same
+    convention: the I/O goes in the private wrapper, the decision goes here.
+
+    Args:
+        tasks: How many tasks retail's `tasks.json` actually holds.
+        policy_bytes: The on-disk size of retail's `policy.md`.
+
+    Returns:
+        A pass only when both match `config`'s measured values.
+    """
+    detail = f"retail: {tasks} tasks, policy {policy_bytes} B"
+    if (tasks, policy_bytes) != (config.TAU2_RETAIL_TASKS, config.TAU2_RETAIL_POLICY_BYTES):
+        return Check(
+            "fail", "tau2 data", detail,
+            f"expected {config.TAU2_RETAIL_TASKS} and {config.TAU2_RETAIL_POLICY_BYTES} B — "
+            "a different specimen makes every number here about a different corpus",
+        )
+    return Check("pass", "tau2 data", detail)
+
+
+def _tau2_data() -> Check:
+    """Assert the specimen a run would actually load — P1.0.
+
+    ⛔ **τ² resolves its data directory ONCE, at import, and warns rather than fails.**
+    `tau2/utils/utils.py:30-35` logs three `logger.warning` lines and continues
+    (DEF-051), and `tau2/domains/retail/utils.py:3-6` freezes every `RETAIL_*` path
+    off that resolution at module level. A warning in someone else's logger is not a
+    check, and by the time a run notices, the paths have been wrong for the whole
+    process.
+
+    ⚠️ **It reads τ²'s own constants rather than re-deriving the path.** Re-deriving
+    would give a check that can pass while the run fails; the only value worth
+    asserting on is the one the run will use. That is also why the import is here and
+    not at module scope — importing τ² runs its resolution, and `doctor` should be
+    able to report that the import itself failed.
+
+    🔴 **The failing case is the DEFAULT one.** With `TAU2_DATA_DIR` unset, τ² falls
+    back to `Path(__file__).parents[3] / "data"`, which under a venv install resolves
+    inside the venv rather than the checkout. Measured here 2026-08-25:
+    `.venv/lib/python3.12/data`, which has never existed.
+
+    Returns:
+        A pass only when both retail files are on disk AND match the measured pin.
+    """
+    try:
+        from tau2.domains.retail.utils import RETAIL_POLICY_PATH, RETAIL_TASK_SET_PATH
+    except ImportError as exc:
+        return Check(
+            "fail", "tau2 data", f"tau2 not importable — {exc}",
+            "the specimen is pinned in pyproject's [tool.uv.sources]",
+        )
+
+    if missing := [p for p in (RETAIL_TASK_SET_PATH, RETAIL_POLICY_PATH) if not p.exists()]:
+        return Check(
+            "fail", "tau2 data", f"{len(missing)} of 2 files missing under {RETAIL_POLICY_PATH.parent}",
+            "set TAU2_DATA_DIR to the checkout's data/ directory — τ² only warns",
+        )
+
+    return specimen_check(
+        len(json.loads(RETAIL_TASK_SET_PATH.read_text())),
+        RETAIL_POLICY_PATH.stat().st_size,
+    )
 
 
 def _cerebras() -> Check:
@@ -237,6 +308,7 @@ def run(probe: bool = True) -> int:
         # writes to `mlruns/` on disk, so there is no service to be up or down.
         # A tracking-store check belongs in the P1.0 doctor pass, designed, not
         # bolted on here.
+        _tau2_data(),
         _lockfile(),
     ]
 

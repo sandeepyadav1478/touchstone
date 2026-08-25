@@ -8,7 +8,7 @@ model as a failed pin (D-035). These two cases are that bug, frozen.
 import pytest
 
 from touchstone import config
-from touchstone.doctor import _cerebras, model_check
+from touchstone.doctor import _cerebras, model_check, specimen_check
 
 HOUSEKEEPING = "claude-haiku-4-5-20251001"
 
@@ -44,3 +44,21 @@ def test_absent_cerebras_key_is_a_pass_not_a_warning(monkeypatch: pytest.MonkeyP
 def test_a_set_cerebras_key_warns(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CEREBRAS_API_KEY", "sk-whatever")
     assert _cerebras().status == "warn"
+
+
+def test_the_measured_specimen_passes() -> None:
+    # P1.0's two numbers, measured against tau2 at a2c024725189.
+    check = specimen_check(config.TAU2_RETAIL_TASKS, config.TAU2_RETAIL_POLICY_BYTES)
+    assert check.status == "pass"
+
+
+def test_a_different_task_count_fails() -> None:
+    # The whole point: reachable is not the same as right. A tree that resolves and
+    # holds a different corpus makes every downstream number about something else.
+    check = specimen_check(113, config.TAU2_RETAIL_POLICY_BYTES)
+    assert check.status == "fail"
+    assert "113" in check.detail  # what was found, not just that it was wrong
+
+
+def test_an_edited_policy_fails() -> None:
+    assert specimen_check(config.TAU2_RETAIL_TASKS, 6698).status == "fail"

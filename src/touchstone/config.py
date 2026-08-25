@@ -162,6 +162,23 @@ REVIEW_MODEL = "claude-opus-5"
 # ~11k model turns) therefore needs checkpoint-and-resume across windows, and the cheap pins
 # above are that constraint's doing, not a quality judgement.
 
+# ── the specimen, asserted rather than assumed ────────────────────────────────────────────
+# P1.0. Two numbers measured 2026-08-25 against tau2 at commit a2c024725189, the pin in
+# pyproject's [tool.uv.sources]. They exist because τ² resolves its data directory ONCE at
+# import and WARNS RATHER THAN FAILS when it is missing — three `logger.warning` lines at
+# `tau2/utils/utils.py:30-35` and then it continues (DEF-051).
+#
+# 🔴 THE FALLBACK IS BROKEN BY DEFAULT UNDER A NORMAL INSTALL, and that is why this is P1.0
+# rather than a nicety. With `TAU2_DATA_DIR` unset, τ² falls back to
+# `Path(__file__).parents[3] / "data"`, which resolves relative to the INSTALLED package —
+# `.venv/lib/python3.12/data` here, a directory that has never existed. Measured on this
+# machine 2026-08-25: every RETAIL_* path was a frozen module constant pointing into it.
+#
+# ⛔ These assert REACHABILITY, not identity. The pin is what makes the tree the right tree;
+# a task count cannot tell `1.0.1` from `a2c024725189` if their data files agree (DEF-055).
+TAU2_RETAIL_TASKS = 114
+TAU2_RETAIL_POLICY_BYTES = 6699
+
 # Namespaced, and the prefix is the point. This read `OLLAMA_URL` until 2026-08-21, which is
 # nobody's convention: ollama's own variable is `OLLAMA_HOST`, so the old name neither matched
 # the vendor nor announced itself as ours. A bare name in the environment is a name some other
