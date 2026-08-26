@@ -248,6 +248,14 @@ finding 2 (calls made before and after returned the same content hash), it **pas
 clip test of finding 2a, and it passed every DSL milestone, because the DSL was never wrong. It was
 copied over `loop.png` and was one commit away from being the artifact offered for D-021 approval.
 
+⚠️ **2026-08-26, and read the scope before quoting this finding.** The `{"note":"Error rendering
+diagram"}` half now has a second sample: the **sequence** failed at quality 2 twice and rendered on
+the third identical call — so *the error is retryable on both diagrams*, and calls 1, 2 and 4 above
+are attempts, not a property. ⛔ **The blank half is untouched.** Call 3's 0.013%-ink render is still
+the only measurement of it, and **the flowchart was not exported at quality 2 on 2026-08-26** — it
+shipped at 1 as recorded. So *"past a size, quality 2 stops rendering"* is **not disproved here**;
+it is **untested since 2026-08-17**, which is a different thing and the honest one to say out loud.
+
 **Two consequences, and the second is the durable one.**
 
 1. **`loop.png` ships at `imageQuality: 1`.** For this diagram the setting the table above called
@@ -307,7 +315,7 @@ evidence, so the check lives in the source.
 ⚠️ **Comments are exempt.** `//` lines never reach the canvas, so the glyphs stay in them — which
 is where the rules about the glyphs are written.
 
-### 9. 🔴 The working `imageQuality` is **per diagram**, and it inverts between these two
+### 9. 🔴 ~~The working `imageQuality` is **per diagram**, and it inverts between these two~~ — **DISPROVED 2026-08-26, see the bottom of this finding.** Kept in place because the reasoning that produced it is the point
 
 Finding 7 says quality 2 stops rendering past a size. That was measured on the flowchart and
 generalised — wrongly. Measured 2026-08-18 on both diagrams, **freshly created**, same parameters
@@ -329,6 +337,25 @@ command that produced it named in the same table.*
 settle rule confirms it and finding 7's extent check is the only thing that rejects it. The
 flowchart at least errors out loud; the sequence hands back a real PNG of nothing.
 
+🔴 **2026-08-26 — the title of this finding is wrong, and the table under it is one attempt, not a
+property.** Rebuilt for P1.1–P1.2, the sequence rendered **correctly at quality 1**: 4591 × 5700,
+ink 3.55%, four clear edges — and the frame is **exactly half** the quality-2 frame on both axes
+(9182 × 11400). That is finding 3's linear-multiplier property, which means **`imageQuality` is a
+scale factor and not a render mode**: there is no code path for it to select that could blank one
+diagram and not another. ⛔ **A setting that only scales cannot be the cause of a blank.**
+
+⚠️ **And quality 2 failed twice on the same call before succeeding on the third**, with nothing
+changed between the three. So on one day this diagram produced: a blank-free quality-1 render, two
+loud quality-2 errors, and a good quality-2 render. **The variable is the attempt.** "Per diagram"
+described a correlation across two samples taken minutes apart, and the mechanism it implied —
+that the renderer treats the two diagrams differently by quality — never existed.
+
+🎯 **What generalises is the check, not the setting.** Export, then measure extent and ink before
+committing; retry a failure at least once before recording it as a property. ⛔ **Two identical
+calls disagreeing is the disproof of every sentence in this file that names a setting as a
+cause** — and it was available from the start, because finding 2's settle rule already said to
+export twice. *A rule that says "do it twice" is also a rule that says "two results are data."*
+
 🔴 **Third measurement, 2026-08-23, flowchart, and it inverted again.** Diagram
 `b_gZk32ZtUtP9GgrmqOt`, minutes old, `background: true`, no `theme` passed:
 
@@ -343,8 +370,12 @@ flowchart.** ✅ The loud `{"note": ...}` string is back, which is the good fail
 2026-08-21 row above records the same setting failing *silently*, as a 2.9 MB blank.
 
 ⛔ **So the table at the top of this finding is not a lookup — it is the evidence that there is
-nothing to look up.** Reading a quality out of it is the exact mistake finding 9 exists to
-document.
+nothing to look up.** Reading a quality out of it is the exact mistake **finding 9 committed** —
+which is why that finding is struck through rather than deleted. ⚠️ **This sentence used to say
+finding 9 *documented* the mistake.** It did not; it was a per-diagram lookup table, i.e. the thing
+this paragraph says does not exist. **Two findings in one file contradicted each other for nine
+days and neither was re-read against the other** — a cross-reference is only a check if you open
+what it points at.
 
 **The rule: export at both qualities, measure ink and extent, keep the one that passes. Never
 carry a quality forward from another diagram, or from this diagram last week.** The flowchart's
