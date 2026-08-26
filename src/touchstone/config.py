@@ -1,7 +1,12 @@
 """Constants and paths. Everything env-dependent lives here, nowhere else.
 
-Kept deliberately small: a config module that grows a value per feature becomes the
-place bugs hide. See docs/09 §10.
+Kept deliberately small: a config module that grows a value per feature becomes the place bugs
+hide. See docs/09 §10.
+
+⚠️ **Why the comments here are one line each.** Every pin below was argued somewhere, and that
+argument lives in `DECISIONS.md` / `DEFECTS.md`, which `scripts/check-diagram.py` verifies and
+which the next reader can search. A comment carries what you need *at the line*; the citation
+carries the rest. History belongs to `git log` (D-101).
 """
 
 from __future__ import annotations
@@ -10,7 +15,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:  # the SDK is a runtime dependency; this import is only for the annotation
+if TYPE_CHECKING:  # annotation only — the runtime SDK import is policed by test_invariants
     from claude_agent_sdk import SettingSource
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,206 +26,77 @@ RESULTS = ROOT / "results"
 PROMPTS = ROOT / "prompts"
 DIAGRAMS = ROOT / "diagrams"
 
-# The trace store — P1.2. D-074 made MLflow the spine with NO service, so this is a directory
-# in the checkout rather than a URL. ⚠️ `.as_uri()` rather than an f-string: MLflow dispatches
-# on the URI SCHEME, and a bare path resolves to the file store by a different route that skips
-# the check below.
+# A directory, not a URL — D-074 made MLflow the spine with no service.
 MLRUNS = ROOT / "mlruns"
+# ⚠️ `.as_uri()`, not an f-string: MLflow dispatches on the URI scheme.
 TRACKING_URI = MLRUNS.as_uri()
 
-# One experiment, not one per run. A run is an MLflow *run* inside it; splitting experiments per
-# version would put the version table's rows in separate namespaces and make `search_traces`
-# across them the caller's problem.
+# One experiment, not one per run — else the version table's rows land in separate namespaces.
 EXPERIMENT = "touchstone"
 
 # The CLI's own checkpointer. ⛔ Not shared with the container's — docs/06 §3.
 CHECKPOINTS = ROOT / ".touchstone" / "checkpoints.db"
 
-# Attempts per case. The `--k` flag defaults to this and the docs quote the constant rather
-# than restating the number — DEF-003 is what happens otherwise: k lived as prose in five
-# files, D-030 lowered it to 3, and two of the five still said 5 alongside a worked example
-# printed at 5/5. A number in five files has five chances to go stale.
+# Attempts per case. ⛔ `--k` and the docs quote this constant, never the number (DEF-003).
 K = 3
 
-# Attempts the mining loop spends on ONE trace before it stops. ⛔ Exactly ONE function reads
-# this — attempts_exhausted() — and it has two callers: the critic's attempt_budget() tool,
-# which is how the critic asks whether it may keep going, and the graph's own loop condition,
-# which is why a critic that never calls a tool still stops here. D-091 §C.
-#
-# ⛔ Two places that know the cap are two places that can disagree about it. Nothing an agent
-# does resets, extends or decrements the count: a refused give-up costs an attempt and never
-# buys one.
-#
-# ⛔ The docs quote this constant. They do not restate the number — same reason as K above, and
-# `n = 5` had already gone prose-only in four files before D-090 put it here.
+# Attempts the mining loop spends on ONE trace. Read by attempts_exhausted() alone, which is
+# what keeps the critic's budget tool and the graph's loop condition from disagreeing (D-091 §C).
 MAX_ATTEMPTS = 5
 
-# Turns the SDK may spend inside ONE τ² `generate()` call — adapter.py, P1.1. ⛔ Not the same
-# knob as D-032's `max_turns=2` for the loop agents, and it is 2 for a different reason: there
-# is no `output_format` here, so the second turn is headroom for a model that emits text before
-# it calls a tool, not a turn the protocol spends.
-#
-# ⚠️ **Exhausting it raises rather than returns.** Measured: the CLI yields a ResultMessage with
-# `subtype=error_max_turns`, and `query()` then raises `ResultError`. docs/00 §2 says
-# `"max_turns"` is a scored outcome rather than a crash — that is true of the *value* and not of
-# the control flow, so adapter.py keeps the last ResultMessage and makes it one.
+# Turns the SDK may spend inside ONE τ² generate(). ⛔ Not D-032's `max_turns` for the loop
+# agents. ⚠️ Exhausting it RAISES `ResultError`; adapter.py turns that back into an outcome.
 MAX_SDK_TURNS = 2
 
-# ⛔ RUNBOOKS, INTERVAL_SECONDS and MAX_HOPS stood here and were deleted on 2026-08-20. All
-# three were specimen-bound: runbooks/ and the sampling interval went with the infra-RCA
-# corpus (D-066), and the hop bound belonged to the supervisor loop the retail rewrite
-# retired. docs/05 §6 already recorded that D-062 removed `max_hops` and `hops_exhausted` —
-# the source had simply never been swept to match, and MAX_HOPS's own comment named
-# `hops_exhausted` as its falsifier, a results field that no longer exists.
-#
-# ⚠️ What the hop bound was FOR does not go away. An agent that wanders lands on
-# `cost_per_success_usd`, and on `max_steps` in τ²'s own termination reasons. Two detectors
-# replaced by two detectors is the honest description — not "the bound was dropped".
-
-# ⛔ [] — NOT None. This is the single most misread flag in the Agent SDK.
-#
-#   None  →  "all sources are loaded (matches CLI defaults)", and project scope
-#            pulls in every CLAUDE.md it can find.
-#   []    →  SDK isolation mode. No settings.json, no CLAUDE.md, no skills.
-#
-# Quoted from claude_agent_sdk/types.py:1807. An agent under test that reads the
-# developer's CLAUDE.md is not the agent that ships, and its scores measure the
-# machine it ran on. `touchstone doctor` MEASURES this rather than trusting it:
-# get_context_usage()['memoryFiles'] must come back empty. D-034.
-# ⛔ NOT `list[str]`. The SDK's own annotation is `list[SettingSource] | None`, and mypy
-# --strict rejected the loose one (D-054) — an isolation setting that type-checks against
-# any string is one a typo can widen without complaint.
+# ⛔ [] — NOT None, the most misread flag in the Agent SDK (types.py:1807):
+#   None → every settings.json and CLAUDE.md on the machine is loaded
+#   []   → isolation. An agent reading the developer's CLAUDE.md is not the agent that ships.
+# `touchstone doctor` measures this rather than trusting it (D-034). The annotation is the SDK's
+# own type, not `list[str]` — an isolation setting a typo can widen is not a setting (D-054).
 SETTING_SOURCES: list[SettingSource] = []
 
 # Anthropic via the Claude Code subscription (D-001). Its absence is asserted, not hoped.
 API_KEY_ENV = "ANTHROPIC_API_KEY"
 
-# ⛔ Pinned, and pinned to a full id rather than the "sonnet" alias, which moves.
-#
-# This line exists because P0 measured its absence. The same trivial prompt answered as
-# claude-sonnet-4-6 with setting_sources=None and as claude-haiku-4-5-20251001 with [] —
-# the first was reading `"model": "sonnet"` out of the developer's ~/.claude/settings.json,
-# the second was a CLI default. Neither was this project's choice, and D-013 makes the model
-# part of a candidate's identity. An unpinned model means two rows of the version table can
-# differ by whose machine ran them. D-034.
+# ⛔ A full id, never the "sonnet" alias, which moves: the model is part of a candidate's
+# identity (D-013), and P0 measured two different models answering the same prompt (D-034).
 MODEL = "claude-sonnet-5"
 
-# The other two roles, pinned separately and for a different reason (D-067).
-#
-# ⛔ USER_MODEL is measurement apparatus, not a participant. It is FROZEN the way the
-# benchmark is frozen (D-024): change it and every pass^k number before the change becomes
-# incomparable to every number after, because the agent was talking to a different customer.
-# It is deliberately NOT `MODEL` — one model on both sides of the conversation shares its own
-# blind spots, and tau2 itself tested Claude against a gpt-4.1 simulator rather than itself.
-#
-# ⚠️ This breaks comparability with tau2's four shipped retail baselines, all of which ran the
-# simulator on gpt-4.1-2025-04-14. There is no OpenAI key here (D-001 asserts ANTHROPIC_API_KEY
-# absent; nothing else is set either), so those runs are CONTEXT, never a reference line. Our
-# own baseline gets measured, not inherited.
+# Measurement apparatus, not a participant — frozen the way the benchmark is (D-024), and
+# deliberately not MODEL, since one model on both sides shares its own blind spots (D-067).
+# ⚠️ τ²'s four retail baselines ran a gpt-4.1 simulator, so they are context, never a reference.
 USER_MODEL = "claude-haiku-4-5-20251001"
 
-# The judge only grades where a gate cannot be decided deterministically. Cheapest tier on
-# purpose: quota is the binding constraint (see below), and a judge call is the most numerous
-# call in the loop.
-# Anthropic only — stated twice by the candidate, and it governs (D-067). ollama and Cerebras
-# are reachable but are not on the table; `doctor` still probes them as diagnostics, not as
-# model sources.
-#
-# Cheapest tier on purpose. The judge grades explanation quality and ⛔ CANNOT GATE ANYTHING
-# (docs/05-scoring.md §5) — its output is an annotation on a span, never a decision — so a
-# weaker judge costs accuracy on a reported number, not correctness on a promotion.
-# ⛔ Not `MODEL`: sonnet-5 is the agent, and an agent grading its own explanation is not a
-# measurement. Sharing a pin with USER_MODEL is safe here precisely because neither gates and
-# the judge grades the *agent*, never the simulator.
-# ⚠️ Ceiling, stated where the number is made: a smaller judge is a weaker judge.
-#
-# ✅ CLOSED 2026-08-20. This carried a 🔴 open conflict against README §Limits, which used to say
-# "The judge never runs on the Claude quota ... the cheapest thing to move off the constrained
-# provider". Under Anthropic-only it does draw on the same five-hour cap, so the constraint won
-# and the README line went. Grepped before closing: the sentence is not in README.md any more.
-# ⚠️ The comment outlived the conflict by a day and read as an open problem the whole time —
-# a pointer at another file's error is a claim with a shelf life, and nothing re-runs it.
-# 🔴 RENAMED by D-082. Was JUDGE_MODEL, the rubric judge that reported and never gated.
-# The rubric moved to the ROUTER, and one pin now serves all three mining-loop agents:
-# router (rubric), curator (writes the predicate), critic (runs it, checks the work).
-# ⛔ NOT `MODEL` — sonnet-5 is the thing under test and must not also be the apparatus.
-# The count stays FIVE, so `doctor` is unchanged (D-067).
+# All three mining-loop agents: router, curator, critic (D-082). ⛔ Not MODEL — sonnet-5 is the
+# thing under test and must not also be the apparatus. None of the three can gate (docs/05 §5).
 LOOP_MODEL = "claude-opus-5"
 
-# τ²'s natural-language assertion evaluator — pinned defensively, because as configured it is
-# DORMANT and it must stay that way.
-#
-# 🔴 THIS COMMENT WAS WRONG AND THE CORRECTION IS D-069 / DEF-036. It read: "measured across all
-# four shipped retail baselines (1,824 simulations), reward_breakdown contains only
-# {DB, COMMUNICATE}; NL_ASSERTION never appeared once, although 112 of 114 tasks list it in
-# reward_basis" — and concluded that reward_basis was a mere declaration overridden by the
-# execution record.
-#
-# ⛔ THE TWO NUMBERS ARE ABOUT DIFFERENT TASK SETS. data/tau2/results/final/ holds leaderboard
-# runs made against the ORIGINAL τ-bench basis; data/tau2/domains/retail/tasks.json — the file a
-# run loads today — declares ["DB", "NL_ASSERTION"] on 112 of 114 tasks, ["DB"] on 2 (CHANGELOG
-# :214, tasks 33/34), and COMMUNICATE on ZERO. evaluator.py:223 multiplies in whatever the
-# loaded task declares, so a run today DOES put a judge in the composite.
-#
-# ⛔ So touchstone gates on reward_breakdown["DB"] — evaluator_env.py:153 writes it as its own
-# key on every task — and reports the composite beside it, unmodified. Nothing upstream is
-# edited and the gate stays mechanical. This evaluator stays pinned defensively because it WILL
-# fire: it is no longer dormant, it is simply outside the gate.
-#
-# ⚠️ Assert the shape of our own pilot's breakdown rather than assuming any of this carries
-# over — that assertion is a P1 exit-gate box.
-# ⚠️ τ² labels this evaluator "experimental/WIP" (evaluator/AGENTS.md).
+# τ²'s NL assertion evaluator. ⚠️ It is NOT dormant: today's tasks.json declares NL_ASSERTION on
+# 112 of 114, so it enters the composite (D-069). touchstone gates on reward_breakdown["DB"] and
+# reports the composite beside it, unmodified. τ² labels it experimental (evaluator/AGENTS.md).
 NL_ASSERTION_MODEL = "claude-opus-5"
 
-# τ²'s reviewer / hallucination checker (`--auto-review`, `--review-mode user`). Off by default
-# and NOT part of reward — it grades the conversation qualitatively, including whether the *user
-# simulator* fabricated facts. 🎯 This is the instrument that measures the D-067 simulator risk
-# directly, so it is pinned rather than left to τ²'s own `claude-opus-4-5` default.
+# τ²'s reviewer (`--auto-review`). Off by default, not part of reward. 🎯 Pinned because it is
+# the instrument that measures the D-067 simulator risk directly.
 REVIEW_MODEL = "claude-opus-5"
 
-# ⚠️ Quota is a ROLLING FIVE-HOUR WINDOW and overage is REJECTED, not billed. Measured
-# 2026-08-19 from the SDK's RateLimitEvent: rate_limit_type='five_hour',
-# overage_status='rejected', overage_disabled_reason='org_level_disabled'. Exhausting it does
-# not cost money — it kills the run in flight. Any full-suite run (114 tasks x k trials,
-# ~11k model turns) therefore needs checkpoint-and-resume across windows, and the cheap pins
-# above are that constraint's doing, not a quality judgement.
+# ⚠️ Quota is a rolling five-hour window and overage is REJECTED, not billed — it kills a run in
+# flight. The cheap pins above are that constraint's doing, not a quality judgement (D-067).
 
 # ── the specimen, asserted rather than assumed ────────────────────────────────────────────
-# P1.0. Two numbers measured 2026-08-25 against tau2 at commit a2c024725189, the pin in
-# pyproject's [tool.uv.sources]. They exist because τ² resolves its data directory ONCE at
-# import and WARNS RATHER THAN FAILS when it is missing — three `logger.warning` lines at
-# `tau2/utils/utils.py:30-35` and then it continues (DEF-051).
-#
-# 🔴 THE FALLBACK IS BROKEN BY DEFAULT UNDER A NORMAL INSTALL, and that is why this is P1.0
-# rather than a nicety. With `TAU2_DATA_DIR` unset, τ² falls back to
-# `Path(__file__).parents[3] / "data"`, which resolves relative to the INSTALLED package —
-# `.venv/lib/python3.12/data` here, a directory that has never existed. Measured on this
-# machine 2026-08-25: every RETAIL_* path was a frozen module constant pointing into it.
-#
-# ⛔ These assert REACHABILITY, not identity. The pin is what makes the tree the right tree;
-# a task count cannot tell `1.0.1` from `a2c024725189` if their data files agree (DEF-055).
+# P1.0. τ² resolves its data directory once at import and WARNS rather than fails when it is
+# missing, and the fallback is broken under a normal install (DEF-051). Measured 2026-08-25
+# against commit a2c024725189. ⛔ These assert REACHABILITY, not identity — a task count cannot
+# tell `1.0.1` from the pin if their data files agree (DEF-055).
 TAU2_RETAIL_TASKS = 114
 TAU2_RETAIL_POLICY_BYTES = 6699
 
-# Namespaced, and the prefix is the point. This read `OLLAMA_URL` until 2026-08-21, which is
-# nobody's convention: ollama's own variable is `OLLAMA_HOST`, so the old name neither matched
-# the vendor nor announced itself as ours. A bare name in the environment is a name some other
-# tool on this machine may already own — there is a system-wide litellm under systemd here — and
-# a config value silently supplied by a neighbour is the failure that has no symptom.
-#
-# ⛔ The two UNnamespaced names in this project are deliberate and must stay bare:
-# `ANTHROPIC_API_KEY` and `CEREBRAS_API_KEY`. `doctor` asserts they are ABSENT, and that
-# assertion only means anything under the exact name the vendor's SDK reads. Namespacing a
-# variable you are checking for the absence of turns the check into a tautology.
-# `tests/unit/test_env_namespace.py` holds that line — verified 2026-08-21 by injecting a bare
-# `LITELLM_BASE` read, which it caught by name.
+# ⛔ Namespaced, because a bare name is one a neighbour may already own — there is a system-wide
+# litellm under systemd on this machine. The rename is docs/09 §env.
+# ⛔ ANTHROPIC_API_KEY and CEREBRAS_API_KEY stay BARE on purpose: `doctor` asserts their absence,
+# and that only means anything under the name the vendor's SDK reads. test_env_namespace holds it.
 OLLAMA_URL = os.environ.get("TOUCHSTONE_OLLAMA_URL", "http://localhost:11434")
 
-# D-076: DeepEval phones home BY DEFAULT. Measured 2026-08-21 in the installed 4.1.9:
-# PostHog (`us.i.posthog.com`) plus Confident AI (`api.` / `app.` / `otel.confident-ai.com`,
-# and `au.`/`eu.` regional variants). `deepeval/telemetry/client.py:30` gates all of it on
-# one setting, and `DEEPEVAL_TELEMETRY_OPT_OUT` was verified to flip it (True set / False
-# unset). Set here rather than in the diagnostics module because config is imported first by
-# construction, so there is no import order to get wrong later. `setdefault`, not assignment:
-# default-deny, overridable out loud.
+# ⛔ DeepEval phones home by default — PostHog and Confident AI, measured in 4.1.9 (D-076). Set
+# here because config is imported first by construction. `setdefault`: default-deny, overridable.
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")

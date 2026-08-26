@@ -104,11 +104,8 @@ def _lockfile() -> Check:
 def specimen_check(tasks: int, policy_bytes: int) -> Check:
     """Compare a resolved specimen against the measured pin — the logic half of P1.0.
 
-    ⚠️ **Split out from `_tau2_data` so it can be tested without importing τ².** That
-    import costs **1.71 s** measured here, and phase 1's exit gate is *"`pytest
-    tests/unit` green, no network, under 2 seconds"* — one import would spend the whole
-    budget. `model_check` above is split for the same reason and it is the same
-    convention: the I/O goes in the private wrapper, the decision goes here.
+    ⚠️ Split from `_tau2_data` so it tests without τ²'s 1.71 s import. The convention through
+    this module: I/O in the private wrapper, the decision here.
 
     Args:
         tasks: How many tasks retail's `tasks.json` actually holds.
@@ -130,23 +127,9 @@ def specimen_check(tasks: int, policy_bytes: int) -> Check:
 def _tau2_data() -> Check:
     """Assert the specimen a run would actually load — P1.0.
 
-    ⛔ **τ² resolves its data directory ONCE, at import, and warns rather than fails.**
-    `tau2/utils/utils.py:30-35` logs three `logger.warning` lines and continues
-    (DEF-051), and `tau2/domains/retail/utils.py:3-6` freezes every `RETAIL_*` path
-    off that resolution at module level. A warning in someone else's logger is not a
-    check, and by the time a run notices, the paths have been wrong for the whole
-    process.
-
-    ⚠️ **It reads τ²'s own constants rather than re-deriving the path.** Re-deriving
-    would give a check that can pass while the run fails; the only value worth
-    asserting on is the one the run will use. That is also why the import is here and
-    not at module scope — importing τ² runs its resolution, and `doctor` should be
-    able to report that the import itself failed.
-
-    🔴 **The failing case is the DEFAULT one.** With `TAU2_DATA_DIR` unset, τ² falls
-    back to `Path(__file__).parents[3] / "data"`, which under a venv install resolves
-    inside the venv rather than the checkout. Measured here 2026-08-25:
-    `.venv/lib/python3.12/data`, which has never existed.
+    ⛔ Reads τ²'s own constants rather than re-deriving the path — τ² resolves its data
+    directory once at import and only warns, and the default fallback is broken under a venv
+    install (DEF-051). The import is local so `doctor` can report that it failed.
 
     Returns:
         A pass only when both retail files are on disk AND match the measured pin.
@@ -174,14 +157,9 @@ def _tau2_data() -> Check:
 def metric_check(disagreements: list[str]) -> Check:
     """Report whether our copied metrics still agree with upstream's — the logic half of D-099.
 
-    ⚠️ **`loop/score.py` COPIES `pass_hat_k` and `is_successful` instead of importing them**, so
-    that the unit suite never pays τ²'s 1.56 s import. A copy is only safe while something
-    notices it drifting, and this is that something: `doctor` imports τ² anyway, so the agreement
-    check costs nothing that is not already spent.
-
-    ⛔ **Agreement is checked by BEHAVIOUR, not by comparing source text.** A reformatted upstream
-    would fail a text comparison while computing the same number, and — far worse — a rewritten
-    one could keep the same source shape while changing the arithmetic.
+    ⚠️ `loop/score.py` copies the two metrics rather than importing them (D-099); this is what
+    notices the copy drifting, and it costs nothing because `doctor` imports τ² anyway.
+    ⛔ Agreement is checked by BEHAVIOUR — matching source text can hide changed arithmetic.
 
     Args:
         disagreements: One string per input where the two implementations differ.
@@ -233,12 +211,7 @@ def _metrics() -> Check:
         if is_successful(reward) != up_successful(reward):
             bad.append(f"is_successful({reward}) disagrees")
 
-    # ⚠️ **The termination vocabulary is a copy too, and it is the one a typo survives.**
-    # `TERMINATION_REASONS` is derived from the `TerminationReasons` TypedDict's own keys, so
-    # `mypy` guarantees the results file declares exactly the ten this project believes in — and
-    # guarantees nothing about whether those ten are SPELLED the way τ² spells them. A misspelt
-    # key would report a reason that never fires and hide one that does, and every test would
-    # still pass. Only upstream's enum settles it.
+    # A misspelt reason passes mypy and every test; only upstream's enum catches it (D-100).
     mine, upstream = set(TERMINATION_REASONS), {r.value for r in TerminationReason}
     if mine != upstream:
         bad.append(f"termination reasons differ: ours-only {sorted(mine - upstream)}, "
@@ -249,15 +222,9 @@ def _metrics() -> Check:
 def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
     """Compare a marker written into the trace store against the one read back out — P1.2.
 
-    ⛔ **A round trip, not an import.** Three emitters in this project were assumed live for
-    days because installing them raised nothing (DEF-052), and the trace store had the same
-    shape available to it: `mlflow.start_span()` succeeds whether or not anything persists,
-    and the export is asynchronous, so even a correct write is unreadable for a moment after
-    the block closes. Neither failure has a symptom until a run finishes with no evidence.
-
-    ⚠️ **Split from `_tracing` for the same reason as `specimen_check`** — the I/O half imports
-    MLflow, which costs **0.53 s** measured, and phase 1's gate is the whole unit suite under
-    2 s.
+    ⛔ A round trip, not an import: `start_span()` succeeds whether or not anything persists,
+    and the failure has no symptom until a run ends with no evidence (DEF-052). Split from
+    `_tracing` so the logic is testable without MLflow's 0.53 s import.
 
     Args:
         wrote: The marker put on the probe span.
@@ -284,16 +251,9 @@ def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
 def _tracing() -> Check:
     """Write one span, flush, read it back — P1.2, and it replaces the check D-077 removed.
 
-    🔴 **The default configuration RAISES on the installed version.** `mlflow-skinny` 3.15.1
-    refuses the filesystem tracking backend outright — *"in maintenance mode"* — unless
-    `MLFLOW_ALLOW_FILE_STORE=true` is set, which `telemetry.install()` does. D-074 chose the
-    file store precisely *because* it needs no service, so this fires on the design's happy
-    path rather than on a misconfiguration.
-
-    ⚠️ **The probe writes to its own experiment.** A doctor span in the experiment the version
-    table reads is noise in the evidence, and `search_traces` is scoped to whatever
-    `set_experiment` last named — so the separate experiment is also what makes "the newest
-    trace" mean "ours".
+    🔴 `mlflow-skinny` 3.15.1 refuses the file store unless `MLFLOW_ALLOW_FILE_STORE=true`, so
+    this fires on D-074's happy path, not on a misconfiguration. ⚠️ The probe writes to its own
+    experiment: doctor spans are noise in the version table, and it makes "newest" mean ours.
 
     Returns:
         A pass only when the marker survives the write → flush → read cycle.
@@ -326,13 +286,8 @@ def _tracing() -> Check:
 def _cerebras() -> Check:
     """Report the Cerebras key, with the polarity D-067 requires.
 
-    ⛔ **Absent is the CORRECT state and must read as a pass.** This check was written
-    the other way round: absent warned with *"path B unavailable, the judge has no
-    fallback"*, and present passed with *"path B available"*. That was the pre-D-067
-    design, where Cerebras judged and stood in when the Claude quota ran out. Under
-    D-067 every role is Anthropic and Cerebras is a `doctor` diagnostic, never a model
-    source — so the old wording made the correct environment emit a warning, and a
-    warning on the correct state is how a whole column of warnings stops being read.
+    ⛔ Absent is the CORRECT state and reads as a pass: under D-067 every role is Anthropic and
+    Cerebras is a diagnostic, never a model source. The polarity was inverted before that.
 
     Returns:
         A pass when the key is absent, a warning when it is set.

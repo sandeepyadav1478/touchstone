@@ -25,9 +25,7 @@ class Msg:
 
 
 class Call:
-    # `id` shadows a builtin (A002) in both signatures below, and stays: these mirror τ²'s
-    # message fields, which `render` reads by name. Renaming the parameter would make the
-    # fixture disagree with the schema it stands in for.
+    # `id` shadows a builtin, and stays: `render` reads τ²'s field by that name.
     def __init__(self, id: str, name: str, arguments: dict[str, object]) -> None:  # noqa: A002
         self.id, self.name, self.arguments = id, name, arguments
 
@@ -91,10 +89,7 @@ def test_rebind_reaches_the_modules_that_imported_the_function() -> None:
     def ours() -> str:
         return "ours"
 
-    # ⛔ `setattr`, not `mod.generate = …` — same spelling as `adapter.rebind`, and for the same
-    # reason: `ModuleType` declares no `generate`, so the assignment form is a type error while
-    # the *read* below is not (typeshed gives `ModuleType.__getattr__` an `Any` return). Writing
-    # the fixture the way the code under test writes it keeps the two from drifting.
+    # setattr, matching `adapter.rebind` — `ModuleType` declares no `generate` (D-100).
     home = types.ModuleType("tau2.utils.llm_utils")
     setattr(home, "generate", upstream)  # noqa: B010
     role = types.ModuleType("tau2.agent.llm_agent")

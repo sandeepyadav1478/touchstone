@@ -119,12 +119,9 @@ def is_successful(reward: float) -> bool:
 def pass_hat_k(num_trials: int, success_count: int, k: int) -> float:
     """Copied verbatim from `tau2/metrics/agent_metrics.py:113` (arXiv 2406.12045).
 
-    ⛔ **Not "the fraction of tasks that passed every attempt."** It is the probability that k
-    trials drawn *without replacement* from this task's n all pass. With `k == num_trials` the
-    two coincide; below that they do not, and the difference is a probability rather than a 0/1.
-
-    ⛔ **`pass^k`, never `pass@k`** — `pass@k` conventionally means *at least one of k passed*,
-    so a reader meeting the familiar name reads the gate as weaker than it is.
+    ⛔ Not "the fraction that passed every attempt" — it is the probability that k trials drawn
+    *without replacement* all pass; the two coincide only at `k == num_trials` (D-099).
+    ⛔ `pass^k`, never `pass@k`: the familiar name means *at least one of k*, a weaker gate.
 
     Args:
         num_trials: Trials actually run for one task.
@@ -156,17 +153,11 @@ def db_component(sim: dict[str, Any]) -> float | None:
 def score(simulations: list[dict[str, Any]], k: int) -> Scored:
     """Aggregate one τ² results file's simulations. Pure, deterministic, no I/O, no model.
 
-    ⚠️ **Infrastructure errors are counted as FAILED trials, and that is a choice between two
-    published conventions that disagree.** τ²'s own `get_metrics_df` (`agent_metrics.py:145`)
-    filters them out entirely; the leaderboard convention in its `RELEASE_NOTES.md` counts them
-    as failures. We follow the leaderboard, because a run that died is a run the operator did
-    not get an answer from — and `infra_error_convention` says so *in the results file*, because
-    a number whose convention is not stated beside it is not comparable to anyone else's.
-
-    ⚠️ **`k` is not inferred from the data.** A task that happens to have run 4 times does not
-    get scored at `pass^4` while its neighbour gets `pass^3`; `config.K` is one number for the
-    whole table. Tasks with fewer than `k` trials are reported in `undersampled` rather than
-    silently averaged in at a different strictness.
+    ⚠️ Infra errors count as FAILED — the leaderboard convention, the opposite of τ²'s own
+    `get_metrics_df` (`agent_metrics.py:145`). `infra_error_convention` records which, in the
+    results file, because a number without its convention is not comparable.
+    ⚠️ `k` is never inferred per task; undersampled tasks are named, not averaged in at a
+    different strictness.
 
     Args:
         simulations: The `simulations` list of a τ² results file, already loaded.

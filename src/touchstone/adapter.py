@@ -1,41 +1,26 @@
 """P1.1 — the single seam: the Claude Agent SDK behind τ²'s `generate()`.
 
-`tau2.utils.llm_utils.generate()` (`llm_utils.py:355`) is the one chokepoint every live τ²
-model role passes through — agent, user simulator, NL-assertion evaluator, hallucination
-reviewer — so **one** adapter dispatching on the `model` argument covers all four. ⛔ **No fork
-of τ².** The pin is commit `a2c024725189` and it stays readable as upstream, which is what makes
-*"we did not write the benchmark"* checkable by a stranger.
+`tau2.utils.llm_utils.generate()` (`llm_utils.py:355`) is the one chokepoint every live τ² model
+role passes through — agent, user simulator, NL-assertion evaluator, hallucination reviewer — so
+one adapter dispatching on `model` covers all four. ⛔ No fork of τ²: the pin stays readable as
+upstream, which is what makes *"we did not write the benchmark"* checkable by a stranger.
 
-🔴 **The seam is `generate()`, not the litellm import at `llm_utils.py:15`, and that is a
-correction to what the roadmap row implied.** Replacing `completion` would keep more of τ²
-running, which is the attractive property — but `generate()` then overwrites the cost by calling
-`get_response_cost()`, which recomputes from litellm's own price table. Measured here on the
-probe call: litellm's table says **7e-05** for a response the SDK measured at **0.0040**, a
-factor of 58, and wrong in the flattering direction because prompt caching is invisible to
-arithmetic. [docs/00](../../docs/00-stack.md) §3 says cost is measured, not arithmetic, so the
-seam has to sit *above* the line that recomputes it.
+🔴 The seam is `generate()`, NOT the litellm import at `llm_utils.py:15`. Replacing `completion`
+leaves more of τ² running, but `generate()` then overwrites cost via `get_response_cost()` —
+measured 7e-05 against the SDK's 0.0040 for the same call, a factor of 58 and wrong in the
+flattering direction, because prompt caching is invisible to arithmetic. docs/00 §3 requires
+cost to be measured, so the seam sits above the line that recomputes it.
 
-⚠️ **The adapter is stateless, and that is a deliberate ceiling rather than an oversight.**
-τ² hands `generate()` the whole history on every call, so each call here is one fresh SDK
-session with the history rendered into the prompt. The SDK's own defer→resume path was probed
-and does not take a caller-supplied `tool_result` back (the model reads the resume as a
-cancellation and says so), so making sessions work would mean fighting the CLI for a property
-τ² does not ask for. What it costs: the model sees a rendered transcript rather than native
-assistant/tool turns. What it buys: nothing to key sessions on, and no way for the adapter's
-state to drift from τ²'s.
+⚠️ Stateless, as a stated ceiling: τ² passes the whole history every call, so each call is one
+fresh SDK session with the transcript rendered into the prompt. The SDK's defer→resume path
+does not take a caller-supplied `tool_result` back. Cost: no native assistant/tool turns.
+Buys: nothing to key sessions on, and no way for adapter state to drift from τ²'s.
 
-**It also opens `touchstone.llm`** — D-073. ⛔ **P1.1 is not done without the span**: it is the
-only point every version shares, and no instrumentor can emit it (the SDK shells out to the CLI,
-so there is no in-process client to wrap).
-
-🔴 **The span is `mlflow.start_span()`, not the OTel SDK, and P1.1 shipped with that wrong.**
-D-074 deleted `opentelemetry-sdk` and the OTLP exporter; `opentelemetry-api` survives only as one
-of MLflow's own transitives, so `trace.get_tracer()` resolved, returned a **no-op**, and every
-attribute set below went nowhere. It looked exactly like *"correct code waiting for its provider"*
-— which is what the paragraph here used to claim — and both readings predict an empty store, so
-nothing distinguished them until the store was measured. ⚠️ **A dependency you did not declare
-answering your import is not the same as your dependency being present** (DEF-052 again, third
-time). `telemetry.install()` is what makes this land, and `doctor` round-trips it.
+⛔ P1.1 is not done without the span (D-073) — the only point every version shares, and no
+instrumentor can emit it, since the SDK shells out to the CLI. It is `mlflow.start_span()`, not
+the OTel SDK: D-074 deleted the OTel SDK, so `trace.get_tracer()` still resolves via MLflow's
+transitive `opentelemetry-api` and returns a silent no-op (DEF-052). `telemetry.install()` is
+what makes it land; `doctor` round-trips it.
 """
 
 from __future__ import annotations
@@ -290,16 +275,10 @@ def generate(
 def rebind(home: Any, replacement: Any) -> int:
     """Bind `replacement` over `home.generate` and every `tau2.*` module already holding it.
 
-    ⛔ **Patching `tau2.utils.llm_utils.generate` alone is a silent no-op for ten modules.** They
-    do `from tau2.utils.llm_utils import generate` at import, so each holds its own reference —
-    including `agent/llm_agent.py`, `user/user_simulator.py`, `evaluator/evaluator_nl_assertions.py`
-    and `evaluator/hallucination_reviewer.py`, which are the four roles this exists for.
-
-    ⚠️ **Both halves are needed and they cover different modules.** Setting `home.generate`
-    covers every module imported *after* this runs, because their `from … import generate` reads
-    the patched attribute; the sweep covers the ones already imported, which the assignment
-    cannot reach. Measured on the smoke check: 8 references, because only 7 τ² modules were
-    loaded at that point — the count is a floor on what is bound, not a census of the ten.
+    ⛔ Patching `home.generate` alone is a silent no-op for ten modules: they each did
+    `from tau2.utils.llm_utils import generate` at import and hold their own reference. Both
+    halves are needed — the assignment catches modules imported after this, the sweep catches
+    the ones already loaded. ⚠️ The returned count is a floor on what is bound, not a census.
 
     ⚠️ **Split from `install()` so it can be tested without importing τ².** Same reason as
     `doctor.specimen_check` — that import costs 1.71 s against phase 1's two-second gate — and the

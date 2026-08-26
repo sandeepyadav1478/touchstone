@@ -27,18 +27,37 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "touchstone"
 
-# ⛔ rglob, not `SRC.glob("*.py")` — a glob is not a tree, and `loop/` arrived in P1.5.
-#
-# 🔴 **Keyed on the dotted path, not `p.stem` — the stem collided the day `loop/` landed**
-# (DEF-069). Two `__init__.py` files have the same stem, so a dict keyed on it silently kept one
-# and dropped the other: 8 files on disk, 7 keys, and every assertion below simply stopped seeing
-# a module. **A dict comprehension over a tree is a silent deduplicator**, and the count check on
-# the next line is the cheap thing that would have caught it on day one.
+# ⛔ rglob, not `SRC.glob`, and keyed on the dotted path, not `p.stem`: two `__init__.py` files
+# share a stem, so a dict keyed on it silently dropped a module from every assertion (DEF-069).
 MODULES = {
     str(p.relative_to(SRC).with_suffix("")).replace("/", "."): ast.parse(p.read_text(), p.name)
     for p in sorted(SRC.rglob("*.py"))
 }
 assert len(MODULES) == len(list(SRC.rglob("*.py"))), "a module was swallowed by a key collision"
+
+
+def test_no_comment_block_is_longer_than_six_lines() -> None:
+    """The argument goes to the ledger; the comment says what you need at the line — D-101.
+
+    ⛔ A rule nobody checks is a rule that rots — this repo's own defect log is mostly that. The
+    cap is on *runs of `#` lines*, not on docstrings, which carry the contract.
+    """
+    long_runs = []
+    for path in sorted((SRC.parent.parent / "src").rglob("*.py")) + sorted(
+        (SRC.parent.parent / "tests").rglob("*.py")
+    ):
+        lines, i = path.read_text().splitlines(), 0
+        while i < len(lines):
+            if lines[i].strip().startswith("#"):
+                j = i
+                while j < len(lines) and lines[j].strip().startswith("#"):
+                    j += 1
+                if j - i > 6:
+                    long_runs.append(f"{path.name}:{i + 1} ({j - i} lines)")
+                i = j
+            else:
+                i += 1
+    assert not long_runs, f"move the argument to DECISIONS.md and cite it: {long_runs}"
 
 
 def _runtime_nodes(node: ast.AST) -> Iterator[ast.AST]:

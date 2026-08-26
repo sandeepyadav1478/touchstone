@@ -72,9 +72,7 @@ def test_the_detector_reads_the_receiver_not_the_method_name() -> None:
     import textwrap
 
     def names(src: str) -> set[str]:
-        # ⚠️ Same narrowing as `_env_names_read`, deliberately — a probe that accepts a
-        # non-`str` constant would pass on input the real guard drops, and then agree with it
-        # for the wrong reason.
+        # Same narrowing as `_env_names_read`: a looser probe agrees for the wrong reason.
         found = set()
         for node in ast.walk(ast.parse(textwrap.dedent(src))):
             literal: ast.expr | None = None
