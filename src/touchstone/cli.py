@@ -1,12 +1,26 @@
 """The CLI. Every command in docs/06 §1 lands here.
 
-Phase 0 has exactly one: `doctor`. Commands arrive with the code they drive — a stub that
-prints "not implemented" is a command that looks built.
+Commands arrive with the code they drive — a stub that prints "not implemented" is a command
+that looks built. Three exist: `doctor` (P0), then `run` and `score` (P1.6).
+
+Two of the four the P1.6 row names are deliberately absent, for different reasons:
+
+    compare   phase 2's. It needs a second version to mean anything, and a comparator with
+              one operand is scaffolding (D-080).
+    suite     the row is stale. `suite log`/`show`/`diff` were deferred AFTER it was written,
+              and `suite gauntlet`/`quarantine` are P3.5. All five read a regression tier that
+              does not exist, so every one would be a formatter over an empty directory.
+
+Each command imports what it drives inside the function. `touchstone doctor` exists to say
+whether the machine can run anything at all, and a module-level import of τ² (1.71 s) or MLflow
+would make the diagnostic pay for the thing it is diagnosing, or fail before it can report.
 """
 
 from __future__ import annotations
 
 import typer
+
+from . import config
 
 app = typer.Typer(
     name="touchstone",
@@ -18,10 +32,10 @@ app = typer.Typer(
 
 @app.callback()
 def _root() -> None:
-    """Keep `doctor` a subcommand.
+    """Hold the command namespace open.
 
-    Typer promotes a lone command to the root otherwise, and every command added
-    later would silently change the CLI's shape.
+    Typer promotes a LONE command to the root, so without this `doctor` was the CLI itself and
+    adding the second command would have silently changed the shape of the first.
     """
 
 
@@ -38,6 +52,42 @@ def doctor(
     from .doctor import run
 
     raise typer.Exit(run(probe=probe))
+
+
+@app.command()
+def run(
+    version: str = typer.Argument(..., help="The version label, e.g. `v1`. Names the run."),
+    k: int = typer.Option(config.K, "--k", help="Trials per task."),
+    resume: bool = typer.Option(
+        False, "--resume", help="Skip simulations already on disk — τ²'s own `auto_resume`."
+    ),
+) -> None:
+    """Run the frozen benchmark subset through τ², with the SDK behind every model role."""
+    from .loop.run import run as run_suite
+
+    typer.echo(f"wrote {run_suite(version, k, resume=resume)}")
+
+
+@app.command()
+def score(
+    version: str = typer.Argument(..., help="The version to score — the label `run` was given."),
+    k: int = typer.Option(config.K, "--k", help="Trials pass^k draws from."),
+) -> None:
+    """Score a run into `results/<version>.json` — no model call (D-007).
+
+    Takes a version, never a file path. τ²'s shipped baselines sit one directory away and an
+    arbitrary `--results` would publish four third-party models' numbers under one of our
+    version labels — D-080 ceiling 1 forbids quoting them, and a flag is a poor place to
+    enforce a ceiling. The corpus is mined (phase 3), not published.
+    """
+    from .loop.report import write
+    from .loop.run import results_path
+
+    results = results_path(version)
+    if not results.exists():
+        raise typer.BadParameter(f"{results} does not exist — run `touchstone run {version}`")
+
+    typer.echo(f"wrote {write(results, version, k)}")
 
 
 if __name__ == "__main__":

@@ -266,9 +266,10 @@ TelemetryPy > Spans
 Bench > Orch: which tasks — the ids only
 
 // ── 7 · the driver and the scorer.
-CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.6 adds run · score · suite"]
-RunPy [color: blue, icon: play, label: "loop/run.py — k attempts, config.K = 3 (D-030)\n--resume · attempt cache (D-015)"]
-CliPy > Doctor: the P0 subcommand, and the only one that runs today
+CliPy [color: blue, icon: terminal, label: "cli.py — P0 shipped `doctor`\nP1.6 ✅ adds run · score — TWO of the three the row names\nsuite is NOT deferred here: the row went stale, all five of its verbs were deferred AFTER it was written and every one reads a regression tier that phase 3 creates (D-103)\nscore takes a VERSION, never a --results path — an arbitrary file would publish τ²'s four third-party baselines under one of our version labels, which D-080 ceiling 1 forbids\nevery command imports what it drives INSIDE the function, so doctor never pays τ²'s 1.71s to say the machine is broken"]
+RunPy [color: blue, icon: play, label: "loop/run.py — P1.6 ✅ shipped · k attempts, config.K = 3 (D-030)\nTHIN: run_domain is τ²'s. Ours is the three things it cannot do — install the adapter, restrict to the frozen ten, and REFUSE a run the adapter did not attach to (D-103)\ninstall() returning under 2 raises: a run that quiet succeeds, measures litellm and reports it as ours\n--resume is τ²'s OWN auto_resume, not a cache we built — D-015 was already climbed upstream, checked before building\noutput lands in τ²'s data dir under touchstone-(version), namespaced because four shipped baselines live in that tree"]
+ReportPy [color: blue, icon: file-text, label: "loop/report.py — P1.6 ✅ shipped · the ENVELOPE around what score() computed (D-103)\nprovenance read from the file that wrote it, never restated: benchmark_hash and tau2_commit from the manifest, model from the run\nNOT info.git_commit — τ² stamps that with the commit of whatever directory it was launched from, which is OURS (DEF-074)\nwrite() refuses a results file whose task ids are not the frozen ten: benchmark_hash is a claim nothing downstream can contradict\nspan-derived keys stay ABSENT, not zero — a key emitted as 0 before anything measures it is a published number nothing computed"]
+CliPy > Doctor: the P0 subcommand — implemented since P0 and the only one that has ever been EXECUTED; run and score ship at P1.6 but wait on quota
 CliPy > RunPy > Orch
 
 Scoring [color: blue, icon: bar-chart-2, label: "7 · scoring — P1.5"] {
@@ -278,6 +279,8 @@ Scoring [color: blue, icon: bar-chart-2, label: "7 · scoring — P1.5"] {
 }
 Spans > ScorePy
 Reward > ScorePy: the answer key, and it is τ²'s, not ours
+ScorePy > ReportPy: aggregate + cases — the two halves score() can fill alone
+RunPy > ReportPy: the τ² results file, and the ids it must match
 ScorePy > Diag: the OTHER output — and it stops here
 Judge > Diag: writes the rubric fields — and reaches NOTHING else
 DeepEval [color: grey, icon: bar-chart-2, label: "deepeval — an OPTIONAL extra, `diagnostics` · D-076\nnothing that gates may import it · telemetry opted out at import"]

@@ -1,6 +1,6 @@
 # 09 — Schemas: the file map, the hash, and what the archived specimen defined
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. 🆕 **Three commands are implemented as of 2026-08-26** — `doctor`, `run` and `score` (P1.6) — but ⛔ **only `doctor` has ever been executed.** `run` spends quota and `score` has nothing to score until it has; phase 1's exit gate is the first time either will run. **Implemented is not exercised**, and this banner has said the weaker thing before. See the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 **Everything the other docs name but do not define.** [docs/01](01-spec.md) §2 gives the models
 that carry meaning; this file gives the ones that carry data, plus the four contracts a phase
@@ -512,7 +512,13 @@ src/touchstone/
     enforce.py         REFUSES the call before it executes — the hook at
                        `Environment.make_tool_call()` (D-065)                      [P3.1]
   loop/
-    run.py             suite runner, k attempts, --resume, attempt cache (D-015)
+    run.py             🆕 **P1.6** — the benchmark tier at k, through the adapter. THIN by
+                       design: τ²'s `run_domain` is the runner, and this is the three things
+                       it cannot do for us — install the adapter, restrict the tasks to the
+                       frozen ten, and REFUSE a run the adapter did not attach to. ⛔ Its
+                       `--resume` is τ²'s own `auto_resume`, ⚠️ **not an attempt cache we
+                       built** — τ² already writes each simulation as it finishes and skips
+                       what is on disk, so D-015 was satisfied upstream
     score.py           🆕 **P1.5** — τ² `RewardInfo` → `aggregate` + `cases` (§6). PURE: no
                        I/O, no τ² import (1.56s against a 2s gate), no model. ⛔ The span half
                        of §6 waits for `touchstone run`; those keys are ABSENT, not zeroed.
@@ -525,6 +531,12 @@ src/touchstone/
                        `score.py`: a VOCABULARY, not a step. `score` writes it, `doctor`'s
                        `metric_check` diffs the pinned ten against τ²'s live enum, and
                        `touchstone score` assembles the envelope around `Scored`
+    report.py          🆕 **P1.6** — the ENVELOPE around what `score()` computed: the §6
+                       provenance fields, each read from the file that wrote it rather than
+                       restated. ⛔ `tau2_commit` comes from `suite/benchmark/manifest.json`,
+                       ⚠️ **never from the results file's `info.git_commit`** — τ² stamps that
+                       with the commit of whatever directory it was launched from, which is
+                       ours (DEF-074)
     compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
     mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]

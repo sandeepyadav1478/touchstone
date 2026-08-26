@@ -88,6 +88,15 @@ ignore = [
     "ANN401",   # explicit Any, needed for LangGraph's dict[str, Any] node return
 ]
 
+[tool.ruff.lint.flake8-bugbear]
+# B008's hazard is a MUTABLE default shared between calls. `typer.Option()` returns an
+# `OptionInfo` descriptor that typer REPLACES before the function is ever called, so there is
+# no shared object to mutate — and it is the only way typer takes a flag's help and name.
+# ⛔ Scoped to these two, not a blanket B008 ignore: the rule still fires on `f(x=[])`.
+# ⚠️ It fires on the ANNOTATION, not the call — `str`/`int`/`bool` params were already silent
+# and `Path` was not, so a CLI could pass this lint until the day it took a path.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 

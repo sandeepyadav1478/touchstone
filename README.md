@@ -25,7 +25,7 @@ MIT, 114 customer-service tasks with a scorer that has **no model in it**.
 
 ## Status
 
-**In progress.** `touchstone doctor` runs. The specification ([`docs/`](#documentation)) and the
+**In progress.** `touchstone doctor`, `run` and `score` are implemented; ⛔ **only `doctor` has been executed** — `run` spends quota, and phase 1's exit gate is the first time it will. The specification ([`docs/`](#documentation)) and the
 structural diagrams that gate implementation are complete. The loop itself is not built.
 
 🔴 **The candidate-comparison half is deferred** — running the suite to produce v1…v5 and deciding
@@ -197,17 +197,21 @@ git clone git@github.com:sandeepyadav1478/touchstone.git && cd touchstone
 uv sync
 uv run touchstone doctor     # ⛔ asserts ANTHROPIC_API_KEY is *absent* — if it is set,
                              #    runs quietly bill an API account, not the subscription
+uv run touchstone run v1     # the frozen ten through τ², k=3, the SDK behind every model role
+uv run touchstone score v1   # → results/v1.json — no model call
 ```
 
 ⚠️ `uv sync` does not put `touchstone` on your `PATH` — use `uv run touchstone …`, or activate
-`.venv` first. The rest of the CLI is specified in [docs/06](docs/06-api.md) and **not yet
-implemented**; listed because the spec is fixed, not because it runs:
+`.venv` first. ⚠️ **`run` needs `TAU2_DATA_DIR`** and writes into that tree, not this one; `doctor`
+is what tells you whether it resolves. The rest of the CLI is specified in
+[docs/06](docs/06-api.md) and **not yet implemented**; listed because the spec is fixed, not
+because it runs:
 
 ```bash
 touchstone suite freeze --domain retail   # ⬜ pin the task ids and hash them
 touchstone mine --from results/final      # ⬜ one anomalous trace → a candidate predicate
 touchstone suite gauntlet r-018              # ⬜ three mechanical gates → the regression suite
-touchstone run --enforce                  # ⬜ the predicate refuses the call before it runs
+touchstone run --enforce                  # ⬜ the FLAG is unbuilt; `run` itself ships at P1.6
 ```
 
 **Models.** The agent runs on **Claude, through

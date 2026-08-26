@@ -1,6 +1,6 @@
 # 05 — Scoring
 
-> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. `touchstone doctor` is the only implemented command today — see the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
+> ⚠️ **Specification, phase 0.** This describes the design; it is not a description of shipped code. 🆕 **Three commands are implemented as of 2026-08-26** — `doctor`, `run` and `score` (P1.6) — but ⛔ **only `doctor` has ever been executed.** `run` spends quota and `score` has nothing to score until it has; phase 1's exit gate is the first time either will run. **Implemented is not exercised**, and this banner has said the weaker thing before. See the [README](../README.md) for what runs and what does not. ⛔ **And the specimen changed under it.** D-062 replaced the self-authored infra-RCA corpus with **τ²-bench retail** — 114 tasks, MIT, deterministic DB-state-diff reward. Where this file still says *incident*, *root cause*, *affected service* or *escalate*, it is describing the **archived** specimen (branch `incident-specimen`), not what touchstone measures. **The loop is unchanged; that is the claim the swap was for.**
 
 Three gating metrics, all mechanical. **The judged dimension is reported beside them and gates nothing — [§5](#5-the-judged-dimension--and-why-it-can-never-gate) says why that is an invariant rather than a threshold.**
 
@@ -297,6 +297,8 @@ that mistake is worth more than the metric was.**
                                                         // ⛔ the COMMIT, not the version — the
                                                         // string "1.0.1" names two trees (DEF-055)
   "model": "⟨the model_usage key, from the run — D-033⟩",
+  "user_model": "⟨the user simulator's, from the run⟩",  // 🆕 P1.6. The apparatus is TWO models
+                                                        //    and only one was on the record
   "provider": "subscription",                           // ⛔ Anthropic only; cerebras/ollama are
                                                         //    doctor diagnostics, never model sources
   "auth": "subscription",
@@ -353,6 +355,13 @@ emitted as `0` before anything can measure it is a published number that nothing
 (P1.3) and `model`/`provider`/`auth` are facts about a run, so the file is assembled by the
 `touchstone score` command rather than by the pure function. **A scorer that reaches for a
 manifest is a scorer that cannot be tested without one.**
+
+🆕 **`user_model` was added by P1.6 and is not in the block's original list.** The τ² apparatus is
+**two** models — the agent under test and the user simulator driving it — and D-067 pins both.
+A results file naming only the agent's cannot be compared against another: **a reward moves when
+the user simulator changes**, and with one name on the record there is no way to see that it did.
+⛔ It is read from the run's own `info.user_info.llm`, the same rule as `model` — a file naming a
+model it did not use is worse than one naming none.
 
 🆕 **Five keys the implementation added, each because a ratio needs its denominator visible:**
 `trials`, `tasks`, `infra_errors`, `undersampled_tasks`, and `k` echoed into `aggregate`.

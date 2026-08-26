@@ -68,19 +68,30 @@ predicted it would**, and **the same label grew two more lines the same day for 
 payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
 ⚠️ **That is one label edited three times, not three labels — the drift count is a count of
 labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
-six-node one. 🆕 **Four labels behind as of 2026-08-26**, not two: D-102 split three files
-and the flowchart named all three. `Doctor` was the load-bearing one — its label read
-`doctor.py`, and milestone 4 **failed on it**, because `docs/09 §9` had already been updated to
-`doctor/`. The other two, `ScorePy` and `Adapter`, no guard would have caught: nothing checks
-that a label naming a file still describes what is *in* it. ⛔ **The sequence diagram is NOT
-affected** — it has none of the four nodes — so only one of the two is stale, and re-exporting
-both would be the reflex, not the fix.
+six-node one. 🆕 **Seven labels behind as of 2026-08-26**, not two, and the number is
+**derived rather than stepped**: `git diff <the commit that last wrote loop.png> -- touchstone.eraser`
+names `Adapter`, `Bench`, `CliPy`, `Doctor`, `ReportPy`, `RunPy`, `ScorePy`. ⚠️ **A hand-incremented
+drift count is the one number in this file that decays silently**, so re-run that command before
+quoting it.
+
+D-102 accounted for three of them by splitting three files. `Doctor` was the load-bearing one — its
+label read `doctor.py`, and milestone 4 **failed on it**, because `docs/09 §9` had already been
+updated to `doctor/`. `ScorePy` and `Adapter` no guard would have caught: nothing checks that a
+label naming a file still *describes* what is in it. D-103 then added the rest — `CliPy` and
+`RunPy` edited, and ⛔ **`ReportPy` is not a stale label at all, it is a node the render does not
+contain**, which is a different kind of drift and the kind a reader cannot detect by looking. ⛔
+**The sequence diagram is still NOT affected** — it has none of the seven — so one of the two
+renders is stale, and re-exporting both would be the reflex, not the fix.
 
 ⚠️ **The prediction landing is what makes the deferral cheap, and it is worth naming.** The
 trigger below was chosen because two named rows were going to move two named labels. One of them
 has now moved, on the day forecast, at the line number forecast — so the batch is doing what it
-was defended as doing, rather than quietly becoming an excuse. **One row remains**: `CliPy`
-(`:269`) at P1.6.
+was defended as doing, rather than quietly becoming an excuse. 🆕 **Both rows have now landed** —
+`CliPy` (`:269`) took its shipped marker at P1.6 on 2026-08-26, at the line forecast. ⚠️ **The
+prediction was right about the labels and wrong about the count**: P1.6 also *added* a node
+(`ReportPy`) and two edges, which no row of the forecast anticipated, because the forecast was
+built by reading which labels named files and no file existed to name yet. **A drift forecast can
+only see the nodes that are already drawn.**
 
 **Trigger: the phase-1 exit gate.** Not "the next build row", and the reason is arithmetic
 rather than convenience: **two more rows flip a label on this same flowchart.** `CliPy` (`:269`)
