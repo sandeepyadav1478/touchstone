@@ -68,9 +68,13 @@ predicted it would**, and **the same label grew two more lines the same day for 
 payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
 ⚠️ **That is one label edited three times, not three labels — the drift count is a count of
 labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
-six-node one. **The hosted flowchart and `loop.png` are two labels behind as of
-2026-08-26.** ⛔ **The sequence diagram is NOT affected** — it has neither node — so only one of
-the two is stale, and re-exporting both would be the reflex, not the fix.
+six-node one. 🆕 **Four labels behind as of 2026-08-26**, not two: D-102 split three files
+and the flowchart named all three. `Doctor` was the load-bearing one — its label read
+`doctor.py`, and milestone 4 **failed on it**, because `docs/09 §9` had already been updated to
+`doctor/`. The other two, `ScorePy` and `Adapter`, no guard would have caught: nothing checks
+that a label naming a file still describes what is *in* it. ⛔ **The sequence diagram is NOT
+affected** — it has none of the four nodes — so only one of the two is stale, and re-exporting
+both would be the reflex, not the fix.
 
 ⚠️ **The prediction landing is what makes the deferral cheap, and it is worth naming.** The
 trigger below was chosen because two named rows were going to move two named labels. One of them

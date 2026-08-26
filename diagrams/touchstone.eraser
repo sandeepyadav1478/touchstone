@@ -206,7 +206,7 @@ Orch > Eval > Reward
 
 // ── 2 · the seam, and the pins behind it.
 Seam [color: blue, icon: git-merge, label: "2 · the seam — P1.1"] {
-  Adapter [color: blue, icon: link, label: "adapter.py — P1.1 ✅ shipped · the seam is generate(), NOT the litellm import (D-095)\nthe Claude Agent SDK behind generate(), dispatching on `model`\nONE adapter, FOUR roles — because there is one chokepoint"]
+  Adapter [color: blue, icon: link, label: "adapter.py — P1.1 ✅ shipped · the seam is generate(), NOT the litellm import (D-095)\nthe Claude Agent SDK behind generate(), dispatching on `model`\nONE adapter, FOUR roles — because there is one chokepoint\nthe tau2 <-> SDK value conversions are translate.py — no SDK, no tau2, no network, so they are pinned inside the 2s unit gate (D-102)"]
   Sdk [color: orange, icon: cpu, label: "ClaudeSDKClient — claude_agent_sdk\nsetting_sources=[] — the EMPTY LIST, never None (D-034)"]
   Anthropic [shape: cylinder, color: orange, icon: cloud, label: "Anthropic — subscription auth, NOT an API key\nfive-hour window · the cap REJECTS, it does not bill"]
 }
@@ -219,7 +219,7 @@ Gen --> LiteLLM: what it used to call
 Adapter > Sdk > Anthropic
 Cfg > Adapter: which pin, per role
 NoOther --> Cfg
-Doctor [color: green, icon: activity, label: "doctor.py — P0, THE FIRST FILE WRITTEN\n✅ shipped: `touchstone doctor` runs today · probes the AGENT pin by live call\nP1.0 adds the τ² data check · it checks NO trace server, because there is not one (D-077)"]
+Doctor [color: green, icon: activity, label: "doctor/ — P0, THE FIRST THING WRITTEN\n✅ shipped: `touchstone doctor` runs today · probes the AGENT pin by live call\nP1.0 adds the τ² data check · it checks NO trace server, because there is not one (D-077)\nfour modules by WHAT A CHECK NEEDS TO ANSWER — result, environment, pins, runtime — which is also their run order, so a failing environment check makes a runtime result a description of the wrong machine (D-102)"]
 Doctor > Cfg
 
 // ── 3 · the gates. Shadow earns enforce; nothing here carries a model in its verdict.
@@ -272,7 +272,7 @@ CliPy > Doctor: the P0 subcommand, and the only one that runs today
 CliPy > RunPy > Orch
 
 Scoring [color: blue, icon: bar-chart-2, label: "7 · scoring — P1.5"] {
-  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — NO model call (D-007)\nspans + reward_breakdown → results/(version).json\npass^k is the HEADLINE · pass@1 beside it — BOTH, especially when they differ\nP1.5 ✅ shipped · COPIES upstream pass^k and is_successful, never imports them — 1.56s against a 2s suite gate (D-099)\ndoctor re-checks the copy against the pin over every trials<=5 grid point; the plausible re-derivation agrees only where k = trials\ninfra errors count as FAILED — the leaderboard convention, the OPPOSITE of tau2 get_metrics_df, and the file says which\nthe payload is FOUR TypedDicts, not dict[str, Any] and not pydantic — nothing crosses a trust boundary here (D-100)\nall ten termination reasons are the TypedDict's OWN keys, so omitting one is a type error — but a MISSPELT one passes mypy and every test, and only doctor's diff against the upstream enum catches it"]
+  ScorePy [color: blue, icon: bar-chart-2, label: "loop/score.py — NO model call (D-007)\nspans + reward_breakdown → results/(version).json\npass^k is the HEADLINE · pass@1 beside it — BOTH, especially when they differ\nP1.5 ✅ shipped · COPIES upstream pass^k and is_successful, never imports them — 1.56s against a 2s suite gate (D-099)\ndoctor re-checks the copy against the pin over every trials<=5 grid point; the plausible re-derivation agrees only where k = trials\ninfra errors count as FAILED — the leaderboard convention, the OPPOSITE of tau2 get_metrics_df, and the file says which\nthe payload is FOUR TypedDicts, not dict[str, Any] and not pydantic — nothing crosses a trust boundary here (D-100)\nthose four live in loop/schema.py, NOT here — doctor and the score command read them too, and a shape three callers share inside one of them makes the other two import a step to reach a type (D-102)\nall ten termination reasons are the TypedDict's OWN keys, so omitting one is a type error — but a MISSPELT one passes mypy and every test, and only doctor's diff against the upstream enum catches it"]
   Diag [shape: document, color: red, icon: eye-off, label: "diagnostics{} — inside results/(version).json\ncompare.py NEVER reads inside it — ONE TEST proves it (D-045)\nNO OUTGOING EDGE, ON PURPOSE"]
   Judge [color: orange, icon: award, label: "the ROUTER rubric — LOOP_MODEL (D-082)\nit SELECTS which traces enter the loop and CANNOT GATE\ncriterion_1_agreement over all 1,712 is its MEASURED error rate"]
 }

@@ -481,12 +481,24 @@ what makes a fabricated path detectable.
 ```
 src/touchstone/
   config.py            env vars (§10 below), paths, the five model pins (D-067)   [phase 0 ✅]
-  doctor.py            phase 0, first file written — docs/00 §6                   [phase 0 ✅]
+  doctor/              phase 0, first thing written — docs/00 §6                   [phase 0 ✅]
+                       🆕 Split by WHAT A CHECK NEEDS TO ANSWER, which is also its run order
+                       and the reason each one is testable:
+    result.py          the verdict type and the terminal alphabet — no dependencies
+    environment.py     the machine: CLI, credentials, keys, lockfile. Neither τ² nor the SDK
+    pins.py            whether the pinned world still matches what was measured. Imports τ²
+    runtime.py         what only a live process settles: a span round trip, a real model call
+    __init__.py        `run()` — the only part that knows all four, and ordering them is its
+                       whole job: a failing `environment` check makes a `runtime` result a
+                       description of the wrong machine
   cli.py               typer app; every command in docs/06 §1                     [phase 0 ✅]
   adapter.py           ⛔ THE ONE THAT MATTERS. The Claude Agent SDK behind τ²'s
                        `generate()` seam, dispatching on `model`. ONE adapter, FOUR
                        roles, because there is one chokepoint — `llm_utils.py:355`
                                                                                   [P1.1]
+  translate.py         🆕 the τ² ↔ SDK conversions, split out of `adapter.py`: `render`,
+                       `tool_name`, `usage_of`. NO SDK, no τ², no network — values in, values
+                       out, so the shapes that break a run are pinned by a millisecond test
   telemetry.py         span tree, required attributes, exporter setup — docs/04    [P1.5]
                        ⛔ console + file exporters only; the tracking server is P2.6.
                        🔴 D-074: MLflow, not Phoenix — and the slot was misquoted as P2.8.
@@ -509,6 +521,10 @@ src/touchstone/
                        nothing crosses a trust boundary between `score()` and `json.dump`,
                        so validation would buy a second representation to keep in step
                        with this file and nothing else
+    schema.py          🆕 those four `TypedDict`s and `TERMINATION_REASONS`, split out of
+                       `score.py`: a VOCABULARY, not a step. `score` writes it, `doctor`'s
+                       `metric_check` diffs the pinned ten against τ²'s live enum, and
+                       `touchstone score` assembles the envelope around `Scored`
     compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
     mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]
@@ -588,7 +604,7 @@ the work is ever named by a phase**, so the map could not see it by construction
 added later lands in the same blind spot; put it here when it lands.
 
 ⚠️ **`domain.py` was the only file with a mandatory first position, and D-062 deleted the
-position along with the file.** `doctor.py` keeps its own: it is what tells you whether the
+position along with the file.** `doctor/` keeps its own: it is what tells you whether the
 machine can run anything at all. Everything else follows the build order in `ROADMAP.md`, which
 is the ordering that keeps the scorer independent of the agent's shape.
 

@@ -9,9 +9,9 @@ selection it claims.
 
 import importlib.util
 import json
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+from touchstone.config import ROOT
+
 MANIFEST = json.loads((ROOT / "suite" / "benchmark" / "manifest.json").read_text())
 
 _spec = importlib.util.spec_from_file_location(

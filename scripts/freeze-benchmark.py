@@ -22,7 +22,8 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from touchstone.config import ROOT
+
 MANIFEST = ROOT / "suite" / "benchmark" / "manifest.json"
 
 # D-098. Both halves are load-bearing and neither is a preference:

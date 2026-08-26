@@ -26,7 +26,9 @@ import tokenize
 from collections.abc import Iterator
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parents[2] / "src" / "touchstone"
+from touchstone.config import ROOT
+
+SRC = ROOT / "src" / "touchstone"
 
 # rglob, not `SRC.glob`, and keyed on the dotted path, not `p.stem`: two `__init__.py` files
 # share a stem, so a dict keyed on it silently dropped a module from every assertion (DEF-069).
@@ -59,7 +61,7 @@ def test_no_comment_block_buries_its_argument_in_a_paragraph() -> None:
     lead_cap, run_cap = 6, 14
     bad = []
     for d in ("src", "tests", "scripts"):
-        for path in sorted((SRC.parent.parent / d).rglob("*.py")):
+        for path in sorted((ROOT / d).rglob("*.py")):
             lines, i = path.read_text().splitlines(), 0
             while i < len(lines):
                 if not lines[i].strip().startswith("#"):
@@ -135,7 +137,7 @@ def test_no_comment_or_docstring_carries_markdown_or_emoji() -> None:
     styled = [
         f"{path.name}:{n}: {line.strip()[:60]}"
         for d in ("src", "tests", "scripts")
-        for path in sorted((SRC.parent.parent / d).rglob("*.py"))
+        for path in sorted((ROOT / d).rglob("*.py"))
         for n, line in _prose(path)
         if MARKUP.search(line)
     ]
@@ -199,10 +201,17 @@ def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
     Set equality, not a subset check: a third module reaching the SDK fails here and has to be
     argued for out loud. `adapter` is the single seam (D-095); `doctor` asserts the pin took,
     which is diagnostics and gates nothing.
+
+    Stated as the rule — the seam, or anywhere under `doctor` — rather than as a list of two
+    module names. Splitting `doctor.py` into a package failed this on `doctor.runtime`, which
+    is the same doctor and always was; a guard that has to be edited every time a file moves
+    trains you to edit it, and the edit that relaxes it looks identical to the edit that
+    renames a file.
     """
+    allowed = {n for n in MODULES if n == "adapter" or n.split(".")[0] == "doctor"}
     reach = {name for name, tree in MODULES.items() if "claude_agent_sdk" in imported(tree)}
-    assert reach == {"adapter", "doctor"}, (
-        f"{reach - {'adapter', 'doctor'}} reaches a model. The gate is mechanical — "
+    assert reach <= allowed and "adapter" in reach, (
+        f"{reach - allowed} reaches a model. The gate is mechanical — "
         "reward_breakdown['DB'] — and a model anywhere near it makes the number unfalsifiable"
     )
 

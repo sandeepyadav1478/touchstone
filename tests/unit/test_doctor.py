@@ -8,7 +8,8 @@ model as a failed pin (D-035). These two cases are that bug, frozen.
 import pytest
 
 from touchstone import config
-from touchstone.doctor import _cerebras, metric_check, model_check, specimen_check, tracing_check
+from touchstone.doctor import metric_check, model_check, specimen_check, tracing_check
+from touchstone.doctor.environment import _cerebras
 
 HOUSEKEEPING = "claude-haiku-4-5-20251001"
 

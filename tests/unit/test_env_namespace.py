@@ -10,9 +10,10 @@ config value silently supplied by a neighbouring tool is the failure with no sym
 """
 
 import ast
-import pathlib
 
-SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "touchstone"
+from touchstone.config import ROOT
+
+SRC = ROOT / "src" / "touchstone"
 
 # Bare by design. A name here is one we check for the ABSENCE of, never one we consume.
 ASSERTED_ABSENT = {"ANTHROPIC_API_KEY", "CEREBRAS_API_KEY"}

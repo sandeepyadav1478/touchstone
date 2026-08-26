@@ -18,13 +18,8 @@ from typing import Any
 
 import pytest
 
-from touchstone.loop.score import (
-    TERMINATION_REASONS,
-    db_component,
-    is_successful,
-    pass_hat_k,
-    score,
-)
+from touchstone.loop.schema import TERMINATION_REASONS
+from touchstone.loop.score import db_component, is_successful, pass_hat_k, score
 
 
 def sim(
