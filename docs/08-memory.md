@@ -306,8 +306,12 @@ already owns that machinery, so the write path is D-024's pipeline pointed at a 
 from source in `langgraph` 1.2.10 rather than from documentation: `namespace: tuple[str, ...]`
 with `list_namespaces()`, `created_at`/`updated_at` on every `Item`, `TTLConfig`, `IndexConfig`
 plus `base/embed.py` for optional semantic search, and `SqliteStore` shipped inside
-**`langgraph-checkpoint-sqlite`** — the package [docs/00](00-stack.md) already pins for the
-checkpointer.
+**`langgraph-checkpoint-sqlite`** — 🔴 **which this said [docs/00](00-stack.md) "already pins
+for the checkpointer", and it does not: measured 2026-08-26, the package is not declared, not
+locked and not installed.** So the sentence's real content survives — `SqliteStore` needs no
+*new* vendor, no server and no second store technology — but ⛔ **it is a dependency to add, not
+one already carried**, and this component is still a candidate. Adding it here would be paying
+for phase 3 in phase 1.
 
 **One store, namespaced — not one per agent.** Per-specialist stores let `timeline` and
 `dependency` hold contradictory beliefs with nothing to reconcile them. Namespaces scope reads;

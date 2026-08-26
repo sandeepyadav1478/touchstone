@@ -36,16 +36,22 @@ antialiasing, not a drawing — so `loop.png` was deliberately **not** replaced;
 `c1dd762` revert changed two label lines (`tau2 1.0.1` → `commit a2c024725189`) and it **was**.
 ⛔ **File mtime, commit count and byte delta all say "changed" for both.** They are not the test.
 
-🔴 **OPEN, and deliberately so — both `.eraser` files are AHEAD of their hosted copies and their
-PNGs as of 2026-08-25.** P1.1 flipped three rendered labels: `touchstone.eraser:209`
-(`adapter.py — P1.1 ✅ shipped`, plus D-095 on the same node), `touchstone.eraser:255` (the `D063`
-node, which described P1.1 in the future tense after it had shipped), and `sequence.eraser:98`.
-By the paragraph directly above, that is a **rendered-label** change and therefore a re-export —
-it is being held, not skipped. **The reason is that P1.2 (`telemetry.py`) edits the same three
-labels again**: D-073 makes the `touchstone.llm` span part of P1.1's definition of done, and the
-span writes to a no-op tracer until P1.2 lands, so every one of those nodes is mid-sentence right
-now. One rebuild after P1.2 costs one create-then-delete cycle and one round of exports; two
-rebuilds cost two, and the intermediate render would assert a span that emits nothing.
+🔴 **OPEN — both `.eraser` files are AHEAD of their hosted copies and their PNGs, and as of
+2026-08-26 the condition that was holding the rebuild has FIRED.** Five rendered labels moved
+across P1.1 and P1.2: `touchstone.eraser:209` (`adapter.py — P1.1 ✅ shipped`, plus D-095 on the
+same node), `:254` (`telemetry.py — P1.2 ✅ shipped`, plus the mlflow/OTel correction), `:255`
+(the `D063` node, which described P1.1 in the future tense after it had shipped),
+`sequence.eraser:98` and `:101`. By the paragraph directly above, every one of those is a
+**rendered-label** change and therefore a re-export.
+
+⚠️ **The deferral was written on 2026-08-25 with an explicit trigger and the trigger has now
+happened, which is the only reason it was a deferral rather than a skip.** It read: *"P1.2
+(`telemetry.py`) edits the same three labels again … one rebuild after P1.2 costs one
+create-then-delete cycle, two rebuilds cost two, and the intermediate render would assert a span
+that emits nothing."* That was right — and it is now **spent**. ⛔ **A deferral whose trigger has
+fired and which gets rolled forward anyway is just a skip with better paperwork**, which is the
+failure this whole file is a record of. The next diagram action is the rebuild, not another
+paragraph.
 
 ⚠️ **This is a knowing departure from "the hosted copy is a renderer, not the artifact" (§below),
 and the row it will cost is the one it always costs.** Until the rebuild happens, **the committed

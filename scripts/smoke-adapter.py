@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""One live pass through the seam — P1.1's runnable check.
+"""One live pass through the seam — P1.1's runnable check, extended by P1.2.
 
 ⚠️ **This makes real model calls and the unit suite must not.** Phase 1's exit gate is
 *"`pytest tests/unit` green, no network, under 2 seconds"*, so the SDK half of `adapter.py`
@@ -13,14 +13,19 @@ It asserts the four things that would each fail silently:
    *unprefixed* name, so `Environment.make_tool_call()` can find it.
 4. The cost is the SDK's measured `total_cost_usd`, not litellm's price table (7e-05 against a
    measured 0.0040 on the probe that settled this — docs/00 §3).
+5. 🆕 **The `touchstone.llm` span reached the store with the model call's numbers on it** —
+   D-073. `doctor`'s round trip proves the store works; this proves the *adapter's own* span
+   goes into it, which is a different claim and the one v1–v5 all rest on. Until P1.2 the span
+   was written against a no-op tracer, and no assertion here would have noticed.
 """
 
 import sys
 
-from touchstone import adapter, config
+from touchstone import adapter, config, telemetry
 
 
 def main() -> int:
+    print(f"telemetry.install() -> {telemetry.install()}")
     patched = adapter.install()
     print(f"install() rebound {patched} references")
     assert patched > 1, "patched only the home module — every role still holds upstream's generate"
@@ -64,7 +69,26 @@ def main() -> int:
     assert reply.cost and reply.cost > 0, "cost is not the SDK's measured total_cost_usd"
     assert reply.usage and reply.usage["prompt_tokens"] > 0
 
-    print("\n✓ the seam holds")
+    import mlflow
+
+    telemetry.flush()
+    spans = [
+        s
+        for t in mlflow.search_traces(return_type="list", max_results=5)
+        for s in t.data.spans
+        if s.name == "touchstone.llm"
+    ]
+    assert spans, "the model call left no touchstone.llm span — D-073's whole point"
+    attrs = spans[0].attributes
+    print(f"span        {attrs.get('llm.model_name')} "
+          f"{attrs.get('llm.token_count.prompt')}/{attrs.get('llm.token_count.completion')} tok "
+          f"${attrs.get('touchstone.cost_usd')} {attrs.get('touchstone.tool_call')}")
+    assert attrs.get("llm.model_name") == config.MODEL
+    assert attrs.get("llm.token_count.prompt") == reply.usage["prompt_tokens"]
+    assert attrs.get("touchstone.cost_usd") == reply.cost
+    assert attrs.get("touchstone.tool_call") == call.name
+
+    print("\n✓ the seam holds, and it is instrumented")
     return 0
 
 

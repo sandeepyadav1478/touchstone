@@ -171,6 +171,83 @@ def _tau2_data() -> Check:
     )
 
 
+def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
+    """Compare a marker written into the trace store against the one read back out — P1.2.
+
+    ⛔ **A round trip, not an import.** Three emitters in this project were assumed live for
+    days because installing them raised nothing (DEF-052), and the trace store had the same
+    shape available to it: `mlflow.start_span()` succeeds whether or not anything persists,
+    and the export is asynchronous, so even a correct write is unreadable for a moment after
+    the block closes. Neither failure has a symptom until a run finishes with no evidence.
+
+    ⚠️ **Split from `_tracing` for the same reason as `specimen_check`** — the I/O half imports
+    MLflow, which costs **0.53 s** measured, and phase 1's gate is the whole unit suite under
+    2 s.
+
+    Args:
+        wrote: The marker put on the probe span.
+        read_back: The marker found on the most recent probe trace, or None if there was none.
+        uri: The tracking URI the store actually resolved to, for the operator to read.
+
+    Returns:
+        A pass only when the store returned the exact marker this process wrote.
+    """
+    where = uri.removeprefix("file://")
+    if read_back is None:
+        return Check(
+            "fail", "tracing", f"wrote a span to {where}, read none back",
+            "the run would score fine and leave no evidence — MLFLOW_ALLOW_FILE_STORE",
+        )
+    if read_back != wrote:
+        return Check(
+            "fail", "tracing", f"read back {read_back}, wrote {wrote}",
+            "the newest trace is not this one — something else is writing to this store",
+        )
+    return Check("pass", "tracing", f"span round-tripped to {where}")
+
+
+def _tracing() -> Check:
+    """Write one span, flush, read it back — P1.2, and it replaces the check D-077 removed.
+
+    🔴 **The default configuration RAISES on the installed version.** `mlflow-skinny` 3.15.1
+    refuses the filesystem tracking backend outright — *"in maintenance mode"* — unless
+    `MLFLOW_ALLOW_FILE_STORE=true` is set, which `telemetry.install()` does. D-074 chose the
+    file store precisely *because* it needs no service, so this fires on the design's happy
+    path rather than on a misconfiguration.
+
+    ⚠️ **The probe writes to its own experiment.** A doctor span in the experiment the version
+    table reads is noise in the evidence, and `search_traces` is scoped to whatever
+    `set_experiment` last named — so the separate experiment is also what makes "the newest
+    trace" mean "ours".
+
+    Returns:
+        A pass only when the marker survives the write → flush → read cycle.
+    """
+    import uuid
+
+    import mlflow
+
+    from . import telemetry
+
+    marker = uuid.uuid4().hex[:12]
+    try:
+        uri = telemetry.install()
+        mlflow.set_experiment(f"{config.EXPERIMENT}-doctor")
+        with mlflow.start_span("touchstone.doctor") as span:
+            span.set_attribute("touchstone.probe", marker)
+        telemetry.flush()
+        traces = mlflow.search_traces(return_type="list", max_results=1)
+    except Exception as exc:  # noqa: BLE001 — every failure here is the same finding
+        return Check(
+            "fail", "tracing", f"{type(exc).__name__}: {exc}".split("\n")[0][:110],
+            f"no trace store means no evidence — {config.TRACKING_URI}",
+        )
+
+    spans = traces[0].data.spans if traces else []
+    found = next((s.attributes.get("touchstone.probe") for s in spans), None)
+    return tracing_check(marker, found, uri)
+
+
 def _cerebras() -> Check:
     """Report the Cerebras key, with the polarity D-067 requires.
 
@@ -304,10 +381,11 @@ def run(probe: bool = True) -> int:
         _cerebras(),
         # ⛔ Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
         _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "a diagnostic — never a model source"),
-        # D-077: no trace-server check. MLflow autologs LangGraph in-process and
-        # writes to `mlruns/` on disk, so there is no service to be up or down.
-        # A tracking-store check belongs in the P1.0 doctor pass, designed, not
-        # bolted on here.
+        # D-077 removed the trace-SERVER check and this is not it coming back — there is
+        # still no service. What it replaces is the sentence D-077 left behind: *"writes to
+        # `mlruns/` on disk, so there is no service to be up or down"* is true about the
+        # architecture and false about the call, which raises by default (P1.2).
+        _tracing(),
         _tau2_data(),
         _lockfile(),
     ]

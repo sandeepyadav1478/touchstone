@@ -193,7 +193,14 @@ on a dependency upgrade.
 
 ## 4. Exporters, and the swap that proves the point
 
-- **MLflow local tracking store** by default — a directory, no service, no container. 🔴 **Was
+- **MLflow local tracking store** by default — a directory, no service, no container. 🔴 **And
+  it RAISES on that default, measured 2026-08-26 against the installed `mlflow-skinny` 3.15.1:**
+  *"The filesystem tracking backend is in maintenance mode"*, unless `MLFLOW_ALLOW_FILE_STORE=true`
+  is in the environment — which `telemetry.py` sets. ⛔ **The alternative that error message names,
+  `sqlite:///`, is not registered in skinny at all** (supported schemes: `'' file databricks
+  databricks-uc uc http https`), so taking its advice costs the full `mlflow` package. ⚠️ **"No
+  service" is still true and was never the claim at risk** — what was wrong is that a directory
+  needs no argument. 🔴 **Was
   `OTLP → Phoenix` on `6006`/`4317` behind `docker compose up` until D-074.** ⚠️ **The
   persistence warning outlived the backend and is the reason the row is worth reading:** the
   Phoenix version needed `PHOENIX_SQL_DATABASE_URL` or `PHOENIX_WORKING_DIR` + a volume or

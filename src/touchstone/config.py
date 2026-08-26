@@ -21,6 +21,18 @@ RESULTS = ROOT / "results"
 PROMPTS = ROOT / "prompts"
 DIAGRAMS = ROOT / "diagrams"
 
+# The trace store — P1.2. D-074 made MLflow the spine with NO service, so this is a directory
+# in the checkout rather than a URL. ⚠️ `.as_uri()` rather than an f-string: MLflow dispatches
+# on the URI SCHEME, and a bare path resolves to the file store by a different route that skips
+# the check below.
+MLRUNS = ROOT / "mlruns"
+TRACKING_URI = MLRUNS.as_uri()
+
+# One experiment, not one per run. A run is an MLflow *run* inside it; splitting experiments per
+# version would put the version table's rows in separate namespaces and make `search_traces`
+# across them the caller's problem.
+EXPERIMENT = "touchstone"
+
 # The CLI's own checkpointer. ⛔ Not shared with the container's — docs/06 §3.
 CHECKPOINTS = ROOT / ".touchstone" / "checkpoints.db"
 

@@ -8,7 +8,7 @@ model as a failed pin (D-035). These two cases are that bug, frozen.
 import pytest
 
 from touchstone import config
-from touchstone.doctor import _cerebras, model_check, specimen_check
+from touchstone.doctor import _cerebras, model_check, specimen_check, tracing_check
 
 HOUSEKEEPING = "claude-haiku-4-5-20251001"
 
@@ -62,3 +62,27 @@ def test_a_different_task_count_fails() -> None:
 
 def test_an_edited_policy_fails() -> None:
     assert specimen_check(config.TAU2_RETAIL_TASKS, 6698).status == "fail"
+
+
+URI = "file:///tmp/mlruns"
+
+
+def test_a_span_that_round_trips_passes() -> None:
+    assert tracing_check("abc123", "abc123", URI).status == "pass"
+
+
+def test_nothing_read_back_fails() -> None:
+    # The failure that has no symptom: the run scores, the store stays empty. On
+    # mlflow-skinny 3.15.1 the file store is refused unless MLFLOW_ALLOW_FILE_STORE is
+    # set, and the export is async on top of that — two ways to write nothing quietly.
+    check = tracing_check("abc123", None, URI)
+    assert check.status == "fail"
+    assert "MLFLOW_ALLOW_FILE_STORE" in check.note
+
+
+def test_someone_elses_trace_is_not_ours() -> None:
+    # `search_traces(max_results=1)` returns the NEWEST trace, which is only ours because
+    # we just wrote it. Comparing the marker is what turns that assumption into a check.
+    check = tracing_check("abc123", "def456", URI)
+    assert check.status == "fail"
+    assert "abc123" in check.detail and "def456" in check.detail

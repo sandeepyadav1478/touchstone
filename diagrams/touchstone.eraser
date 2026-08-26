@@ -251,7 +251,7 @@ BudgetFlag [shape: document, color: red, icon: dollar-sign, label: "budget_excee
 Orch > BudgetFlag: orthogonal to where the attempt lands
 
 // ── 5 · telemetry. This is the edge D-063 got wrong, and the picture says so.
-TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2\ntouchstone.* — NEVER gen_ai.* (D-017)\n🆕 the span is opened by adapter.py ITSELF (D-073) — no instrumentor can emit it"]
+TelemetryPy [color: blue, icon: activity, label: "5 · telemetry.py — P1.2 ✅ shipped\ntouchstone.* — NEVER gen_ai.* (D-017)\nthe span is opened by adapter.py ITSELF (D-073) — no instrumentor can emit it\nmlflow.start_span, NOT the OTel SDK — D-074 deleted it and the first cut of the seam used it anyway\nD-096: NO provider and NO exporter — the row said otherwise and described the pre-D-074 stack"]
 D063 [shape: document, color: purple, icon: help-circle, label: "D-063 assumed litellm's OTel callback\nP1.1 ✅ shipped and killed it — generate() is replaced whole, so litellm never runs for these roles"]
 D063 --> TelemetryPy
 Adapter > TelemetryPy: one span per model call, all four roles

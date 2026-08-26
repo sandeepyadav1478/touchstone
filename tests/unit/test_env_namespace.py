@@ -18,7 +18,11 @@ SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "touchstone"
 ASSERTED_ABSENT = {"ANTHROPIC_API_KEY", "CEREBRAS_API_KEY"}
 
 # Written, not read — a third party's own opt-out, whose name is not ours to choose.
-WRITTEN_NOT_READ = {"DEEPEVAL_TELEMETRY_OPT_OUT"}
+# ⚠️ `MLFLOW_ALLOW_FILE_STORE` is not an opt-out of telemetry but an opt-IN to a backend
+# MLflow deprecates: `mlflow-skinny` 3.15.1 refuses the file store without it, and its
+# suggested alternative (`sqlite:///`) is not registered in skinny at all. Same category
+# for this guard's purpose — a vendor's spelling, set by us, read by them.
+WRITTEN_NOT_READ = {"DEEPEVAL_TELEMETRY_OPT_OUT", "MLFLOW_ALLOW_FILE_STORE"}
 
 
 def _env_names_read() -> set[tuple[str, str]]:

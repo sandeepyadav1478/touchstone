@@ -241,11 +241,15 @@ let the patch float. 🆕 **There is no container any more** — D-074 deleted
 the only one, so every package on this page is a declared dependency.
 
 *(Cross-foot, **recounted 2026-08-21 from `pyproject.toml` itself, not stepped by hand**:
-**14** declared — **9** runtime, **1** in the `diagnostics` extra, **4** dev — and **no container**.
+**15** declared — **9** runtime, **1** in the `diagnostics` extra, **5** dev — and **no container**.
 Was 29 including the container on 2026-08-20; D-074 removed 7 packages
 and the container, D-076 added 1. ⚠️ **A manifest that states its own
 size has to recount when it changes**, and nothing here does that automatically — this is the
-second recount, and the previous one was off by one in the direction that hides a package.)*
+third recount, and 🔴 **the previous two were BOTH off by one, both in the direction that hides a
+package.** It read 14/9/1/4 against a measured 15/9/1/5 on 2026-08-26; the dev group had gained
+`mypy` and `pillow` and the prose had been stepped by hand. ⛔ **Stop stepping it** —
+`doctor`'s `uv.lock` row derives the same total from `pyproject.toml` on every run and printed
+**15** while this line said 14.)*
 
 🔴 **Existence is not the property that matters, and checking it was the wrong check.** Every
 package below resolved on PyPI and two of them still cannot do the job the table gives them —
@@ -256,13 +260,13 @@ duplicates a judge τ² already ships. **Ask what fires, not what installs.**
 
 | Package | Version | Job | ⛔ Not for |
 |---|---|---|---|
-| `langgraph` | `1.2.11` | The graph, state, `max_hops`. ⛔ **Not `interrupt()`** — no node waits (D-040) | — |
-| `langgraph-checkpoint-sqlite` | `3.1.1` | Run state for a process that dies mid-run. A separate package — forgetting it is the classic phase-1 stall. ⚠️ **It lost its original justification with D-040** and is kept pending a phase-1 answer on whether anything reads it back | — |
-| `langchain-core` | `1.5.4` | Messages, `@tool` schemas, the `BaseChatModel` interface the wrapper implements | ⛔ not the orchestrator |
-| `claude-agent-sdk` | `0.2.137` | **Path A — the subscription-backed model** | — |
+| `langgraph` | `1.2.9` | The graph, state, `max_hops`. ⛔ **Not `interrupt()`** — no node waits (D-040) | — |
+| ~~`langgraph-checkpoint-sqlite`~~ | 🔴 **NEVER INSTALLED** | ⛔ **Struck 2026-08-26 — the phase-1 answer, and it is not the one the question expected.** The row asked *"does anything read the checkpointer back?"* for eleven days. Measured: it is **not in `[project.dependencies]`**, **not in `uv.lock`** (only `langgraph-checkpoint`, langgraph's own transitive, is there) and **not importable** — `PackageNotFoundError`. Nothing could have read it back, and a version cell that resolves on PyPI reads exactly like one that is installed. 🎯 **The question was answerable by one command for the whole time it was open, and asking about the design instead is what kept it open.** ⚠️ **This is not a `uv remove`** — there is nothing to remove; the phase-0 `uv add` line names it and the package did not land. Re-add it at **P3.4**, where `loop/mine.py` is the first LangGraph graph, and only if something resumes one |
+| `langchain-core` | `1.6.0` | Messages, `@tool` schemas, the `BaseChatModel` interface the wrapper implements | ⛔ not the orchestrator |
+| `claude-agent-sdk` | `0.2.142` | **Path A — the subscription-backed model** | — |
 | `pydantic` | `2.13.4` | ⚠️ **Ours no longer define the domain** (D-062) — τ²'s `Task`, `RewardInfo` and `TerminationReason` are pydantic and come with the package. We use it for the results file and the gate predicates | — |
 | `typer` | `0.27.1` | The CLI — the primary surface | — |
-| `rich` | `15.0.0` | The compare table. `touchstone compare` output is read by a human | ⛔ never in the results JSON |
+| `rich` | `14.3.4` | The compare table. `touchstone compare` output is read by a human | ⛔ never in the results JSON |
 
 ### Observability — phase 2
 

@@ -26,9 +26,16 @@ state to drift from τ²'s.
 
 **It also opens `touchstone.llm`** — D-073. ⛔ **P1.1 is not done without the span**: it is the
 only point every version shares, and no instrumentor can emit it (the SDK shells out to the CLI,
-so there is no in-process client to wrap). ⚠️ The provider that makes the span *go somewhere* is
-P1.2; until then this writes to the no-op tracer, which is exactly the silent-success shape
-DEF-052 is about — `doctor` gains the assertion when the provider lands.
+so there is no in-process client to wrap).
+
+🔴 **The span is `mlflow.start_span()`, not the OTel SDK, and P1.1 shipped with that wrong.**
+D-074 deleted `opentelemetry-sdk` and the OTLP exporter; `opentelemetry-api` survives only as one
+of MLflow's own transitives, so `trace.get_tracer()` resolved, returned a **no-op**, and every
+attribute set below went nowhere. It looked exactly like *"correct code waiting for its provider"*
+— which is what the paragraph here used to claim — and both readings predict an empty store, so
+nothing distinguished them until the store was measured. ⚠️ **A dependency you did not declare
+answering your import is not the same as your dependency being present** (DEF-052 again, third
+time). `telemetry.install()` is what makes this land, and `doctor` round-trips it.
 """
 
 from __future__ import annotations
@@ -39,11 +46,10 @@ import sys
 import time
 from typing import Any
 
-from opentelemetry import trace
+import mlflow
+from mlflow.entities import SpanType
 
 from touchstone import config
-
-_TRACER = trace.get_tracer("touchstone")
 
 # The SDK namespaces in-process MCP tools as ``mcp__<server>__<name>``. τ²'s tool names have to
 # round-trip through that, so the prefix is stripped on the way back rather than guessed at.
@@ -222,7 +228,7 @@ def generate(
                          "the one the version table claims")
 
     system, prompt = render(messages)
-    with _TRACER.start_as_current_span("touchstone.llm") as span:
+    with mlflow.start_span("touchstone.llm", span_type=SpanType.LLM) as span:
         # ⚠️ OpenInference names, not `gen_ai.*` — docs/04 §2. v5's instrumentor-emitted spans
         # land in the same shape, so the scorer has one vocabulary rather than two.
         span.set_attribute("llm.model_name", model)
