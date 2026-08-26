@@ -415,8 +415,8 @@ def run(probe: bool = True) -> int:
         # Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
         _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "a diagnostic — never a model source"),
         # D-077 removed the trace-SERVER check and this is not it coming back — there is
-        # still no service. What it replaces is the sentence D-077 left behind: *"writes to
-        # `mlruns/` on disk, so there is no service to be up or down"* is true about the
+        # still no service. What it replaces is the sentence D-077 left behind: "writes to
+        # `mlruns/` on disk, so there is no service to be up or down" is true about the
         # architecture and false about the call, which raises by default (P1.2).
         _tracing(),
         _tau2_data(),

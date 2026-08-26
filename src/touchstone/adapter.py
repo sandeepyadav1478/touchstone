@@ -5,22 +5,24 @@ role passes through — agent, user simulator, NL-assertion evaluator, hallucina
 one adapter dispatching on `model` covers all four. No fork of τ²: the pin stays readable as
 upstream, which is what makes "we did not write the benchmark" checkable by a stranger.
 
-The seam is `generate()`, not the litellm import at `llm_utils.py:15`. Replacing `completion`
-leaves more of τ² running, but `generate()` then overwrites cost via `get_response_cost()` —
-measured 7e-05 against the SDK's 0.0040 for the same call, a factor of 58 and wrong in the
-flattering direction, because prompt caching is invisible to arithmetic. docs/00 §3 requires
-cost to be measured, so the seam sits above the line that recomputes it.
+Three things about this seam that are not obvious from the code at it:
 
-Stateless, as a stated ceiling: τ² passes the whole history every call, so each call is one
-fresh SDK session with the transcript rendered into the prompt. The SDK's defer→resume path
-does not take a caller-supplied `tool_result` back. Cost: no native assistant/tool turns.
-Buys: nothing to key sessions on, and no way for adapter state to drift from τ²'s.
-
-P1.1 is not done without the span (D-073) — the only point every version shares, and no
-instrumentor can emit it, since the SDK shells out to the CLI. It is `mlflow.start_span()`, not
-the OTel SDK: D-074 deleted the OTel SDK, so `trace.get_tracer()` still resolves via MLflow's
-transitive `opentelemetry-api` and returns a silent no-op (DEF-052). `telemetry.install()` is
-what makes it land; `doctor` round-trips it.
+    where   `generate()`, not the litellm import at `llm_utils.py:15`. Replacing `completion`
+            leaves more of τ² running, but `generate()` then overwrites cost via
+            `get_response_cost()` — measured 7e-05 against the SDK's 0.0040 for the same call,
+            a factor of 58 and wrong in the flattering direction, because prompt caching is
+            invisible to arithmetic. docs/00 §3 requires cost to be measured, so the seam sits
+            above the line that recomputes it.
+    state   stateless, as a stated ceiling. τ² passes the whole history every call, so each
+            call is one fresh SDK session with the transcript rendered into the prompt; the
+            SDK's defer→resume path does not take a caller-supplied `tool_result` back. Costs
+            native assistant/tool turns, buys nothing to key sessions on and no way for
+            adapter state to drift from τ²'s.
+    span    P1.1 is not done without it (D-073) — the only point every version shares, and no
+            instrumentor can emit it, since the SDK shells out to the CLI. `mlflow.start_span()`
+            rather than the OTel SDK: D-074 deleted the OTel SDK, so `trace.get_tracer()` still
+            resolves via MLflow's transitive `opentelemetry-api` and returns a silent no-op
+            (DEF-052). `telemetry.install()` makes it land; `doctor` round-trips it.
 """
 
 from __future__ import annotations

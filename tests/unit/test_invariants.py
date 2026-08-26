@@ -37,28 +37,46 @@ MODULES = {
 assert len(MODULES) == len(list(SRC.rglob("*.py"))), "a module was swallowed by a key collision"
 
 
-def test_no_comment_block_is_longer_than_six_lines() -> None:
+def test_no_comment_block_buries_its_argument_in_a_paragraph() -> None:
     """The argument goes to the ledger; the comment says what you need at the line — D-101.
 
-    A rule nobody checks is a rule that rots — this repo's own defect log is mostly that. The
-    cap is on runs of `#` lines, not on docstrings, which carry the contract.
+    Two caps, because one is evadable and the other is the thing that actually rots:
+
+        lead    at most 6 unstructured lines before the first indented point. A paragraph
+                is what nobody re-reads and what silently goes stale.
+        run     at most 14 lines total. Without this the lead cap is dodged by prefixing
+                every line with a dash.
+
+    A point is any `#` line indented three or more spaces past the marker, which covers
+    both `- like this` and the labelled form `SPLIT — like this`.
+
+    Docstrings are exempt: they carry the contract, and capping them pushes detail back
+    into comments, which is the failure this rule exists for. `scripts/` is in scope — it
+    was not on the first pass, and the three longest runs in the repo were sitting there.
+    A guard's scope is a claim about where the rule holds, so an unlisted directory reads
+    as exempt.
     """
-    long_runs = []
-    for path in sorted((SRC.parent.parent / "src").rglob("*.py")) + sorted(
-        (SRC.parent.parent / "tests").rglob("*.py")
-    ):
-        lines, i = path.read_text().splitlines(), 0
-        while i < len(lines):
-            if lines[i].strip().startswith("#"):
+    lead_cap, run_cap = 6, 14
+    bad = []
+    for d in ("src", "tests", "scripts"):
+        for path in sorted((SRC.parent.parent / d).rglob("*.py")):
+            lines, i = path.read_text().splitlines(), 0
+            while i < len(lines):
+                if not lines[i].strip().startswith("#"):
+                    i += 1
+                    continue
                 j = i
                 while j < len(lines) and lines[j].strip().startswith("#"):
                     j += 1
-                if j - i > 6:
-                    long_runs.append(f"{path.name}:{i + 1} ({j - i} lines)")
+                block = lines[i:j]
+                points = [k for k, b in enumerate(block) if b.strip()[1:].startswith("   ")]
+                lead = points[0] if points else len(block)
+                if lead > lead_cap:
+                    bad.append(f"{path.name}:{i + 1} lead {lead} > {lead_cap}")
+                elif len(block) > run_cap:
+                    bad.append(f"{path.name}:{i + 1} run {len(block)} > {run_cap}")
                 i = j
-            else:
-                i += 1
-    assert not long_runs, f"move the argument to DECISIONS.md and cite it: {long_runs}"
+    assert not bad, f"lead with the point, then list; the argument goes to a ledger: {bad}"
 
 
 # Emoji and the marker glyphs, not the arrows and rules: `->` and box-drawing are typography.
@@ -69,7 +87,12 @@ MARKUP = re.compile(
 
 
 def _prose(path: Path) -> Iterator[tuple[int, str]]:
-    """Yield (lineno, text) for every comment line and every docstring line in `path`.
+    """Yield (lineno, text) for each run of prose in `path` — a docstring, or a comment block.
+
+    Runs, not lines, because an italic span that wraps a line is invisible to a per-line
+    match: the opening `*` and its partner sit on different lines and neither looks like
+    markup alone. Found in `check-diagram.py`'s own module docstring, where the guard had
+    been green over it.
 
     Real string literals are excluded on purpose: `doctor.MARK` and `check-diagram.BAR_GLYPHS`
     are glyphs the program prints, not prose about the program.
@@ -91,9 +114,15 @@ def _prose(path: Path) -> Iterator[tuple[int, str]]:
         for t in tokenize.generate_tokens(io.StringIO(src).readline)
         if t.type == tokenize.COMMENT
     }
-    for i, line in enumerate(src.splitlines(), 1):
+    run: list[str] = []
+    start = 0
+    for i, line in enumerate([*src.splitlines(), ""], 1):
         if i in docstring_lines or i in comments:
-            yield i, line
+            start = start or i
+            run.append(line)
+        elif run:
+            yield start, " ".join(run)
+            run, start = [], 0
 
 
 def test_no_comment_or_docstring_carries_markdown_or_emoji() -> None:

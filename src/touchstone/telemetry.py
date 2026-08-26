@@ -7,8 +7,8 @@ lines of configuration and one flush — `mlflow.start_span()` owns the tracer a
 Three assumptions about that store, all wrong on `mlflow-skinny` 3.15.1. Measured
 2026-08-26, not read from documentation:
 
-1. `mlruns/` on disk raises by default — *"filesystem tracking backend is in maintenance
-   mode"* — unless `MLFLOW_ALLOW_FILE_STORE=true` is set.
+1. `mlruns/` on disk raises by default ("filesystem tracking backend is in maintenance
+   mode") unless `MLFLOW_ALLOW_FILE_STORE=true` is set.
 2. `sqlite:///`, the migration MLflow's own error suggests, is not registered in
    `mlflow-skinny`; the SQLAlchemy store ships in full `mlflow`. Do not "fix" item 1 by
    switching to sqlite without that dependency — it fails at `set_experiment`, not first write.
