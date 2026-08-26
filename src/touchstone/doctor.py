@@ -194,7 +194,7 @@ def metric_check(disagreements: list[str]) -> Check:
             "fail", "metrics", f"{len(disagreements)} disagreement(s): {disagreements[0]}",
             "loop/score.py copies upstream's metrics (D-099) — the copy has drifted from the pin",
         )
-    return Check("pass", "metrics", "pass_hat_k and is_successful agree with the pin")
+    return Check("pass", "metrics", "metrics and termination vocabulary agree with the pin")
 
 
 def _metrics() -> Check:
@@ -209,6 +209,7 @@ def _metrics() -> Check:
         A pass only when every grid point and every tolerance point matches.
     """
     try:
+        from tau2.data_model.simulation import TerminationReason
         from tau2.metrics.agent_metrics import is_successful as up_successful
         from tau2.metrics.agent_metrics import pass_hat_k as up_pass_hat_k
     except ImportError as exc:
@@ -217,7 +218,7 @@ def _metrics() -> Check:
             "the specimen is pinned in pyproject's [tool.uv.sources]",
         )
 
-    from touchstone.loop.score import is_successful, pass_hat_k
+    from touchstone.loop.score import TERMINATION_REASONS, is_successful, pass_hat_k
 
     bad: list[str] = []
     for trials in range(1, 6):
@@ -231,6 +232,17 @@ def _metrics() -> Check:
     for reward in (0.0, 0.5, 0.9999, 1 - 1e-7, 1.0, 1 + 1e-7, 1.001):
         if is_successful(reward) != up_successful(reward):
             bad.append(f"is_successful({reward}) disagrees")
+
+    # ⚠️ **The termination vocabulary is a copy too, and it is the one a typo survives.**
+    # `TERMINATION_REASONS` is derived from the `TerminationReasons` TypedDict's own keys, so
+    # `mypy` guarantees the results file declares exactly the ten this project believes in — and
+    # guarantees nothing about whether those ten are SPELLED the way τ² spells them. A misspelt
+    # key would report a reason that never fires and hide one that does, and every test would
+    # still pass. Only upstream's enum settles it.
+    mine, upstream = set(TERMINATION_REASONS), {r.value for r in TerminationReason}
+    if mine != upstream:
+        bad.append(f"termination reasons differ: ours-only {sorted(mine - upstream)}, "
+                   f"upstream-only {sorted(upstream - mine)}")
     return metric_check(bad)
 
 
@@ -344,8 +356,11 @@ def _http(url: str, name: str, hint: str) -> Check:
 def model_check(usage_by_model: dict[str, Any], total_cost_usd: float) -> Check:
     """Which model actually answered — matched by name, never by position.
 
-    ⛔ The id is a KEY of `model_usage`; there is no `canonicalModel` field in the Python SDK
-    (D-033). And there can be **more than one key**: in isolation mode the CLI makes its own
+    ⛔ The id is a KEY of `model_usage`. ⚠️ *Not* because the SDK lacks a name field — it grew
+    one: `ModelUsage.canonicalModel` at `claude_agent_sdk/types.py:1308`, `NotRequired`, so it
+    may or may not arrive. **The key is the half that is always there**, which is why the match
+    stays on it (D-033, restated 2026-08-26 against SDK 0.2.142).
+    And there can be **more than one key**: in isolation mode the CLI makes its own
     housekeeping call on haiku, and that key sorts *first*. `next(iter(...))` therefore reads a
     model the agent never used — which is how this check failed on its first run against a
     correctly pinned model (D-035).

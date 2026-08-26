@@ -17,6 +17,12 @@ MANIFEST = json.loads((ROOT / "suite" / "benchmark" / "manifest.json").read_text
 _spec = importlib.util.spec_from_file_location(
     "freeze_benchmark", ROOT / "scripts" / "freeze-benchmark.py"
 )
+# ⛔ Both `None` branches are real: `spec_from_file_location` returns `None` when the path does
+# not exist, and `spec.loader` is `None` for a namespace package. An unguarded `.loader` would
+# surface a renamed script as `AttributeError: 'NoneType'` at collection time — a message that
+# names the wrong thing. Two asserts, not one composite, so the failure says which half.
+assert _spec is not None, "scripts/freeze-benchmark.py is not where this test expects it"
+assert _spec.loader is not None, "scripts/freeze-benchmark.py resolved without a loader"
 freeze = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(freeze)
 

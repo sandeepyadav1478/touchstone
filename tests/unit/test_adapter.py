@@ -14,12 +14,21 @@ from touchstone.adapter import _PREFIX, rebind, render, tool_name, usage_of
 class Msg:
     """A stand-in for a τ² message — only the fields `render` reads."""
 
-    def __init__(self, role, content=None, tool_calls=None, id=None):
+    def __init__(
+        self,
+        role: str,
+        content: str | None = None,
+        tool_calls: list["Call"] | None = None,
+        id: str | None = None,  # noqa: A002
+    ) -> None:
         self.role, self.content, self.tool_calls, self.id = role, content, tool_calls, id
 
 
 class Call:
-    def __init__(self, id, name, arguments):
+    # `id` shadows a builtin (A002) in both signatures below, and stays: these mirror τ²'s
+    # message fields, which `render` reads by name. Renaming the parameter would make the
+    # fixture disagree with the schema it stands in for.
+    def __init__(self, id: str, name: str, arguments: dict[str, object]) -> None:  # noqa: A002
         self.id, self.name, self.arguments = id, name, arguments
 
 
@@ -82,14 +91,18 @@ def test_rebind_reaches_the_modules_that_imported_the_function() -> None:
     def ours() -> str:
         return "ours"
 
+    # ⛔ `setattr`, not `mod.generate = …` — same spelling as `adapter.rebind`, and for the same
+    # reason: `ModuleType` declares no `generate`, so the assignment form is a type error while
+    # the *read* below is not (typeshed gives `ModuleType.__getattr__` an `Any` return). Writing
+    # the fixture the way the code under test writes it keeps the two from drifting.
     home = types.ModuleType("tau2.utils.llm_utils")
-    home.generate = upstream
+    setattr(home, "generate", upstream)  # noqa: B010
     role = types.ModuleType("tau2.agent.llm_agent")
-    role.generate = upstream
+    setattr(role, "generate", upstream)  # noqa: B010
     bystander = types.ModuleType("tau2.runner.batch")
-    bystander.generate = lambda: "someone else's generate"
+    setattr(bystander, "generate", lambda: "someone else's generate")  # noqa: B010
     outsider = types.ModuleType("elsewhere.thing")
-    outsider.generate = upstream
+    setattr(outsider, "generate", upstream)  # noqa: B010
 
     added = {m.__name__: m for m in (home, role, bystander, outsider)}
     sys.modules.update(added)

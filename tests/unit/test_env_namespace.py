@@ -72,13 +72,18 @@ def test_the_detector_reads_the_receiver_not_the_method_name() -> None:
     import textwrap
 
     def names(src: str) -> set[str]:
+        # ⚠️ Same narrowing as `_env_names_read`, deliberately — a probe that accepts a
+        # non-`str` constant would pass on input the real guard drops, and then agree with it
+        # for the wrong reason.
         found = set()
         for node in ast.walk(ast.parse(textwrap.dedent(src))):
+            literal: ast.expr | None = None
             if isinstance(node, ast.Subscript) and _is_environ(node.value):
-                if isinstance(node.slice, ast.Constant):
-                    found.add(node.slice.value)
+                literal = node.slice
             elif isinstance(node, ast.Call) and node.args and _reads_env(node.func):
-                found.add(node.args[0].value)
+                literal = node.args[0]
+            if isinstance(literal, ast.Constant) and isinstance(literal.value, str):
+                found.add(literal.value)
         return found
 
     assert names('breakdown.get("DB")') == set(), "a dict is not the environment"

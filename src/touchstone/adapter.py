@@ -44,19 +44,37 @@ import asyncio
 import json
 import sys
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import mlflow
 from mlflow.entities import SpanType
 
 from touchstone import config
 
+if TYPE_CHECKING:
+    # ⚠️ **Type-only, and the invariant test knows the difference.** `if TYPE_CHECKING:` never
+    # executes, so this is not the runtime SDK reach that `test_invariants` polices — it is the
+    # SDK's own hook contract, used so `_defer` is checked against the signature the SDK will
+    # actually call it with rather than against `Any`. The union is ten input types wide; naming
+    # it `Any` was hiding a real mismatch, not simplifying one.
+    from claude_agent_sdk import HookContext, HookInput, HookJSONOutput
+
+    # ⛔ `SyncHookJSONOutput` is NOT re-exported from the package root — only from `.types`.
+    # Three of the four names sit at the root and the fourth does not, which is the kind of
+    # asymmetry a `TYPE_CHECKING` block hides until the checker runs.
+    from claude_agent_sdk.types import SyncHookJSONOutput
+
 # The SDK namespaces in-process MCP tools as ``mcp__<server>__<name>``. τ²'s tool names have to
 # round-trip through that, so the prefix is stripped on the way back rather than guessed at.
 _SERVER = "tau2"
 _PREFIX = f"mcp__{_SERVER}__"
 
-_DEFER = {
+# ⚠️ **Annotated, so the SDK's own `Literal`s check it.** As a bare dict literal this was
+# `dict[str, dict[str, str]]` and nothing verified the two strings that matter: `hookEventName`
+# must be exactly `"PreToolUse"` and `permissionDecision` must be one of four values — `"defer"`
+# is one of them (`types.py:420`), which is the answer to the obvious question about this payload.
+# A typo in either would have reached the SDK at runtime as a silently ignored hook.
+_DEFER: SyncHookJSONOutput = {
     "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "defer",
@@ -145,7 +163,7 @@ def _sdk_tools(tools: list[Any] | None) -> list[Any]:
     return out
 
 
-async def _defer(_input: dict[str, Any], _tool_use_id: str | None, _ctx: Any) -> dict[str, Any]:
+async def _defer(_input: HookInput, _tool_use_id: str | None, _ctx: HookContext) -> HookJSONOutput:
     return _DEFER
 
 
@@ -292,7 +310,11 @@ def rebind(home: Any, replacement: Any) -> int:
     patched = 1
     for name, mod in list(sys.modules.items()):
         if name.startswith("tau2.") and getattr(mod, "generate", None) is upstream:
-            mod.generate = replacement
+            # ⚠️ `setattr`, not `mod.generate = …`: `ModuleType` declares no such attribute, so
+            # the assignment form is a type error rather than a style choice. Rebinding a name in
+            # someone else's already-imported module is dynamic by nature; this is the spelling
+            # that says so.
+            setattr(mod, "generate", replacement)  # noqa: B010
             patched += 1
     return patched
 

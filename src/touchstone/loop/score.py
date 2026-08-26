@@ -24,16 +24,84 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from typing import Any
+from typing import Any, Literal, TypedDict, cast
 
-# ⛔ ALL TEN, ALWAYS, EVEN AT ZERO. `tau2/data_model/simulation.py:1254`, in declaration order.
-# A key that appears only when it fires cannot be read as "never fired" — the reader cannot
-# tell it from "not recorded", and the two mean opposite things about a run.
-TERMINATION_REASONS = (
-    "user_stop", "agent_stop", "max_steps", "timeout", "too_many_errors",
-    "agent_error", "user_error", "infrastructure_error", "context_window_exceeded",
-    "unexpected_error",
-)
+
+class TerminationReasons(TypedDict):
+    """⛔ ALL TEN, ALWAYS, EVEN AT ZERO — `tau2/data_model/simulation.py:1254`, declaration order.
+
+    A key that appears only when it fires cannot be read as *"never fired"*: the reader cannot
+    tell it from *"not recorded"*, and the two mean opposite things about a run.
+
+    ⚠️ **A total `TypedDict` is why that is now a type error rather than a convention.** Omit one
+    and `mypy` refuses the construction — the rule moved out of this docstring and into the
+    checker. **The tuple below is derived from these annotations**, so there is one list of ten
+    in the project and no way for a key to exist in one place and not the other.
+    """
+
+    user_stop: int
+    agent_stop: int
+    max_steps: int
+    timeout: int
+    too_many_errors: int
+    agent_error: int
+    user_error: int
+    infrastructure_error: int
+    context_window_exceeded: int
+    unexpected_error: int
+
+
+TERMINATION_REASONS = tuple(TerminationReasons.__annotations__)
+
+
+class Case(TypedDict):
+    """One task's row — docs/05 §6 `cases[]`.
+
+    ⚠️ `db_scored` is a **separate denominator** from `trials`: a simulation that died before the
+    evaluator ran is a trial that happened and a DB check that did not.
+    """
+
+    id: str
+    trials: int
+    success_k: int
+    db_passed: int
+    db_scored: int
+
+
+class Aggregate(TypedDict):
+    """The arithmetic half of docs/05 §6 `aggregate`.
+
+    ⛔ **The span-derived keys are deliberately absent from this type, not optional in it.**
+    `cost_per_success_usd`, `tool_calls_mean`, `p95_latency_s`, `budget_exceeded` and
+    `void_attempts` have no producer until `touchstone run` exists (P1.6). Declaring them
+    `NotRequired` would let a caller read a key that nothing has ever written.
+    """
+
+    k: int
+    trials: int
+    tasks: int
+    reward_mean: float
+    pass_hat_1: float
+    pass_hat_k: float
+    reward_breakdown_zeroed: dict[str, int]
+    #: ⛔ A `Literal`, so the other published convention cannot be written here by accident.
+    infra_error_convention: Literal["counted_as_failed"]
+    infra_errors: int
+    undersampled_tasks: list[str]
+    termination_reasons: TerminationReasons
+
+
+class Scored(TypedDict):
+    """What `score()` returns — the two halves of the results file it can fill on its own.
+
+    ⚠️ **Not the whole file.** `benchmark_hash`, `domain` and `tau2_commit` come from
+    `suite/benchmark/manifest.json`, and `model`/`provider`/`auth` are facts about a run, so the
+    envelope is assembled by the `touchstone score` command. A scorer that reaches for a manifest
+    is a scorer that cannot be tested without one.
+    """
+
+    aggregate: Aggregate
+    cases: list[Case]
 
 #: The one τ² counts as "the run never happened". ⚠️ We count it as a FAILED trial — see `score`.
 INFRA = "infrastructure_error"
@@ -85,7 +153,7 @@ def db_component(sim: dict[str, Any]) -> float | None:
     return ((sim.get("reward_info") or {}).get("reward_breakdown") or {}).get("DB")
 
 
-def score(simulations: list[dict[str, Any]], k: int) -> dict[str, Any]:
+def score(simulations: list[dict[str, Any]], k: int) -> Scored:
     """Aggregate one τ² results file's simulations. Pure, deterministic, no I/O, no model.
 
     ⚠️ **Infrastructure errors are counted as FAILED trials, and that is a choice between two
@@ -127,7 +195,10 @@ def score(simulations: list[dict[str, Any]], k: int) -> dict[str, Any]:
             if value == 0.0:
                 zeroed[name] += 1
 
-    cases, hat_k, hat_1, undersampled = [], [], [], []
+    cases: list[Case] = []
+    hat_k: list[float] = []
+    hat_1: list[float] = []
+    undersampled: list[str] = []
     # ⚠️ **Length-then-lexicographic, NOT `key=int` — and the asymmetry with
     # `scripts/freeze-benchmark.py` is deliberate.** Only `airline` and `retail` have all-digit
     # task ids; `telecom`'s look like `[mobile_data_issue]user_abroad_…[PERSONA:Hard]`. The
@@ -165,7 +236,12 @@ def score(simulations: list[dict[str, Any]], k: int) -> dict[str, Any]:
             "infra_error_convention": "counted_as_failed",
             "infra_errors": terminations.get(INFRA, 0),
             "undersampled_tasks": undersampled,
-            "termination_reasons": {r: terminations.get(r, 0) for r in TERMINATION_REASONS},
+            # The one `cast` here, and it is safe by construction rather than by assertion:
+            # `TERMINATION_REASONS` IS this TypedDict's key list, so the comprehension cannot
+            # produce a key the type does not declare or miss one it does.
+            "termination_reasons": cast(
+                "TerminationReasons", {r: terminations.get(r, 0) for r in TERMINATION_REASONS}
+            ),
         },
         "cases": cases,
     }

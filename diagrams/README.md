@@ -64,7 +64,11 @@ rather than found after it.
 P1.3 shipped `suite/benchmark/manifest.json`, so `touchstone.eraser:263`'s `Bench` node now says
 `P1.3 ✅ shipped` and carries D-098's selection rule. **P1.5 then shipped `loop/score.py`, and
 `ScorePy` (`:275`) took its shipped marker and D-099 the same day — exactly as the paragraph below
-predicted it would.** **The hosted flowchart and `loop.png` are two labels behind as of
+predicted it would**, and **the same label grew two more lines the same day for D-100** (the
+payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
+⚠️ **That is one label edited three times, not three labels — the drift count is a count of
+labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
+six-node one. **The hosted flowchart and `loop.png` are two labels behind as of
 2026-08-26.** ⛔ **The sequence diagram is NOT affected** — it has neither node — so only one of
 the two is stale, and re-exporting both would be the reflex, not the fix.
 

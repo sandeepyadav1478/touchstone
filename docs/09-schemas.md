@@ -503,7 +503,12 @@ src/touchstone/
     run.py             suite runner, k attempts, --resume, attempt cache (D-015)
     score.py           🆕 **P1.5** — τ² `RewardInfo` → `aggregate` + `cases` (§6). PURE: no
                        I/O, no τ² import (1.56s against a 2s gate), no model. ⛔ The span half
-                       of §6 waits for `touchstone run`; those keys are ABSENT, not zeroed
+                       of §6 waits for `touchstone run`; those keys are ABSENT, not zeroed.
+                       🆕 **The payload is TYPED** — `Scored` / `Aggregate` / `Case` /
+                       `TerminationReasons`, four `TypedDict`s, ⛔ not pydantic (D-100):
+                       nothing crosses a trust boundary between `score()` and `json.dump`,
+                       so validation would buy a second representation to keep in step
+                       with this file and nothing else
     compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
     mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]

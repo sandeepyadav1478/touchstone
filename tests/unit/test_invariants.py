@@ -22,6 +22,7 @@ Coverage of §6 from here, stated so the gaps are visible rather than implied:
 """
 
 import ast
+from collections.abc import Iterator
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "touchstone"
@@ -40,7 +41,7 @@ MODULES = {
 assert len(MODULES) == len(list(SRC.rglob("*.py"))), "a module was swallowed by a key collision"
 
 
-def _runtime_nodes(node: ast.AST):
+def _runtime_nodes(node: ast.AST) -> Iterator[ast.AST]:
     """Walk `node`, skipping the body of any `if TYPE_CHECKING:` block.
 
     ⛔ **A `TYPE_CHECKING` import is not a reach.** `config.py` names `SettingSource` under one,
