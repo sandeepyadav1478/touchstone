@@ -68,11 +68,22 @@ predicted it would**, and **the same label grew two more lines the same day for 
 payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
 ⚠️ **That is one label edited three times, not three labels — the drift count is a count of
 labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
-six-node one. 🆕 **Seven labels behind as of 2026-08-26**, not two, and the number is
-**derived rather than stepped**: `git diff <the commit that last wrote loop.png> -- touchstone.eraser`
-names `Adapter`, `Bench`, `CliPy`, `Doctor`, `ReportPy`, `RunPy`, `ScorePy`. ⚠️ **A hand-incremented
-drift count is the one number in this file that decays silently**, so re-run that command before
-quoting it.
+six-node one. 🆕 **Eight labels behind as of 2026-08-26**, not two, and the number is
+**derived rather than stepped** — `Adapter`, `Bench`, `Clean`, `CliPy`, `Doctor`, `ReportPy`,
+`RunPy`, `ScorePy`, from:
+
+```bash
+git diff "$(git log -1 --format=%H -- diagrams/loop.png)" -- diagrams/touchstone.eraser \
+  | grep -E '^\+' | grep -E '\[(shape|color|icon|label)' \
+  | sed -E 's/^\+[[:space:]]*([A-Za-z0-9_]+)[[:space:]]*\[.*/\1/' | sort -u
+```
+
+⚠️ **The pipeline is written out because the first version of it under-counted and the number was
+wrong for it.** A narrower pattern — one that required a single space before the `[` — matched
+four of the eight and looked like a clean answer. 🔴 **A derived number is only as reproducible as
+the command recorded beside it** (`CLAUDE.md` rule 11), which is the whole reason this
+is a fenced block rather than a description of one. ⚠️ **A hand-incremented drift count is the one
+number in this file that decays silently**, so re-run it before quoting it.
 
 D-102 accounted for three of them by splitting three files. `Doctor` was the load-bearing one — its
 label read `doctor.py`, and milestone 4 **failed on it**, because `docs/09 §9` had already been

@@ -339,7 +339,7 @@ Feed [color: pink, icon: filter, label: "8a · the feed — D-080 · τ²'s OWN 
   Corpus [color: grey, icon: archive, label: "1,712 simulations τ²-bench SHIPS — data/tau2/results/final/\n107 of 114 tasks — the 7 whose gold actions moved are EXCLUDED, not repaired"]
   Signals [shape: document, color: grey, icon: key, label: "τ²'s OWN signals — the UNION of THREE, and since D-082 §B the ANSWER KEY rather than the selector\n⚠ NOT reward_breakdown[DB] == 0 alone · free: already in the shipped result JSONs"]
   Anom [color: orange, icon: alert-circle, label: "834 ANOMALOUS\n407 the DB check failed · +371 DB PASSED and an action_check failed · +56 a WRITE nobody confirmed"]
-  Clean [color: green, icon: check-circle, label: "THE CONTROL SET — 878 clean by τ²'s three signals, PLUS every session the router SKIPPED (D-082 §A)\na gate that fires here is a FALSE POSITIVE · ⚠ the 878 is mechanical, the skips are not — which is what Cal exists to price"]
+  Clean [color: green, icon: check-circle, label: "THE CONTROL SET — 878 clean by τ²'s three signals, PLUS every session the router SKIPPED (D-082 §A)\na gate that fires here is a FALSE POSITIVE · ⚠ the 878 is mechanical, the skips are not — which is what Cal exists to price\n⚠ 7 of the 878 are task 105, clean because its ONLY gold action raises and evaluator_env.py swallows it — DEF-075\nKEPT, not removed: 878 is a published denominator and 0.8% cannot move a verdict — D-104 §C"]
 }
 Corpus > Signals
 Signals > Anom

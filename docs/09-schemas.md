@@ -563,6 +563,13 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        RENDER, 8 greps the DSL for a `[` — which Eraser eats the message for,
                        10 fails on a decision drawn nowhere. ⚠️ This cell said **9** until
                        2026-08-26; milestone 10 landed with D-089 and nothing walks back here
+  check-determinism.py 🆕 P1.6 — calls `score()` twice over the 1,824 shipped simulations and
+                       diffs the two `json.dumps(sort_keys=True)`, then again on the list
+                       REVERSED, with `socket.socket` replaced by a raise. ⛔ A script and not a
+                       CLI flag: the only input worth checking is τ²'s corpus, and a
+                       `--results <path>` on `score` would let four third-party models' numbers
+                       be published under one of our version labels — D-080 ceiling 1. It never
+                       touches results/ or `write()`
   check-links.py       every markdown link resolves — against git, not the working tree
   freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
                        the live specimen against it. ⛔ The SAME function does both, so the

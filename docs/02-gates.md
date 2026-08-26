@@ -280,6 +280,15 @@ Trying to gate capability is exactly how a suite fills with cases that punish co
 (§4) — and `TEST` is where that is caught, mechanically, because a predicate that fires on any of
 the 878 clean sessions is rejected.
 
+⚠️ **7 of those 878 are clean because their task is impossible, not because the session was good —
+`DEFECTS.md` DEF-075.** Task 105's single gold action raises inside the *gold* environment
+(`Insufficient gift card balance`), which `evaluator_env.py:105-114` swallows, so its target
+database is the initial database and doing nothing scores `DB == 1`. Seven of its simulations pass
+`action_checks` as well and land here. 🔴 **A correct predicate firing on one of them would be
+rejected as a false positive** — the same shape as the 371 above, at 1/53rd the size. **0.8% is
+below any threshold we would set and it is written down anyway**, because the cost of meeting it
+later without a name is an afternoon spent doubting a rule that was right.
+
 🔴 **A scope filter stood here until 2026-08-22 and it is deleted — `D-081`,
 `DEF-056`.** It asked *"does this trace break a rule someone wrote down?"*,
 routed a `no` to a second terminal, and **this paragraph used to call it mechanical.** It named no
