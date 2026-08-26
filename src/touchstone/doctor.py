@@ -8,9 +8,9 @@ It stops the two failures that each cost an evening (docs/00 §6).
                                  loaded into the agent under test. The scores then describe
                                  this machine, not the agent.
 
-⚠️ Failure 2 is asserted **by measurement, not by reading the constant**: the SDK reports
-which memory files it loaded, so `doctor` asks it. A config value that *says* isolation and
-a session that *is* isolated are different claims (D-034).
+Failure 2 is asserted by measurement, not by reading the constant: the SDK reports
+which memory files it loaded, so `doctor` asks it. A config value that says isolation and
+a session that is isolated are different claims (D-034).
 """
 
 from __future__ import annotations
@@ -73,7 +73,7 @@ def _subscription_auth() -> Check:
 
 
 def _api_key_absent() -> Check:
-    """⛔ The one check this command exists for."""
+    """The one check this command exists for."""
     if os.environ.get(config.API_KEY_ENV):
         return Check(
             "fail",
@@ -104,7 +104,7 @@ def _lockfile() -> Check:
 def specimen_check(tasks: int, policy_bytes: int) -> Check:
     """Compare a resolved specimen against the measured pin — the logic half of P1.0.
 
-    ⚠️ Split from `_tau2_data` so it tests without τ²'s 1.71 s import. The convention through
+    Split from `_tau2_data` so it tests without τ²'s 1.71 s import. The convention through
     this module: I/O in the private wrapper, the decision here.
 
     Args:
@@ -127,7 +127,7 @@ def specimen_check(tasks: int, policy_bytes: int) -> Check:
 def _tau2_data() -> Check:
     """Assert the specimen a run would actually load — P1.0.
 
-    ⛔ Reads τ²'s own constants rather than re-deriving the path — τ² resolves its data
+    Reads τ²'s own constants rather than re-deriving the path — τ² resolves its data
     directory once at import and only warns, and the default fallback is broken under a venv
     install (DEF-051). The import is local so `doctor` can report that it failed.
 
@@ -157,9 +157,9 @@ def _tau2_data() -> Check:
 def metric_check(disagreements: list[str]) -> Check:
     """Report whether our copied metrics still agree with upstream's — the logic half of D-099.
 
-    ⚠️ `loop/score.py` copies the two metrics rather than importing them (D-099); this is what
+    `loop/score.py` copies the two metrics rather than importing them (D-099); this is what
     notices the copy drifting, and it costs nothing because `doctor` imports τ² anyway.
-    ⛔ Agreement is checked by BEHAVIOUR — matching source text can hide changed arithmetic.
+    Agreement is checked by behaviour — matching source text can hide changed arithmetic.
 
     Args:
         disagreements: One string per input where the two implementations differ.
@@ -178,9 +178,9 @@ def metric_check(disagreements: list[str]) -> Check:
 def _metrics() -> Check:
     """Run our copies against τ²'s over a small exhaustive grid — D-099.
 
-    ⛔ **Exhaustive over the shape, not a sample of it.** Every `(trials, successes, k)` with
+    Exhaustive over the shape, not a sample of it. Every `(trials, successes, k)` with
     `trials ≤ 5` is checked, which includes the `k < num_trials` rows where the plausible
-    re-derivation (*"passed every attempt"*) diverges — the corpus we develop against has 4
+    re-derivation ("passed every attempt") diverges — the corpus we develop against has 4
     trials on every task, so a spot check at `k == num_trials` would agree with a wrong copy.
 
     Returns:
@@ -205,7 +205,7 @@ def _metrics() -> Check:
                 ours, theirs = pass_hat_k(trials, successes, k), up_pass_hat_k(trials, successes, k)
                 if ours != theirs:
                     bad.append(f"pass_hat_k({trials},{successes},{k}) {ours} != {theirs}")
-    # ⚠️ The tolerance is the whole content of `is_successful`, so the points that matter are the
+    # The tolerance is the whole content of `is_successful`, so the points that matter are the
     # ones just inside and just outside it — 1.0 alone would agree with a bare `== 1.0`.
     for reward in (0.0, 0.5, 0.9999, 1 - 1e-7, 1.0, 1 + 1e-7, 1.001):
         if is_successful(reward) != up_successful(reward):
@@ -222,7 +222,7 @@ def _metrics() -> Check:
 def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
     """Compare a marker written into the trace store against the one read back out — P1.2.
 
-    ⛔ A round trip, not an import: `start_span()` succeeds whether or not anything persists,
+    A round trip, not an import: `start_span()` succeeds whether or not anything persists,
     and the failure has no symptom until a run ends with no evidence (DEF-052). Split from
     `_tracing` so the logic is testable without MLflow's 0.53 s import.
 
@@ -251,8 +251,8 @@ def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
 def _tracing() -> Check:
     """Write one span, flush, read it back — P1.2, and it replaces the check D-077 removed.
 
-    🔴 `mlflow-skinny` 3.15.1 refuses the file store unless `MLFLOW_ALLOW_FILE_STORE=true`, so
-    this fires on D-074's happy path, not on a misconfiguration. ⚠️ The probe writes to its own
+    `mlflow-skinny` 3.15.1 refuses the file store unless `MLFLOW_ALLOW_FILE_STORE=true`, so
+    this fires on D-074's happy path, not on a misconfiguration. The probe writes to its own
     experiment: doctor spans are noise in the version table, and it makes "newest" mean ours.
 
     Returns:
@@ -286,7 +286,7 @@ def _tracing() -> Check:
 def _cerebras() -> Check:
     """Report the Cerebras key, with the polarity D-067 requires.
 
-    ⛔ Absent is the CORRECT state and reads as a pass: under D-067 every role is Anthropic and
+    Absent is the correct state and reads as a pass: under D-067 every role is Anthropic and
     Cerebras is a diagnostic, never a model source. The polarity was inverted before that.
 
     Returns:
@@ -311,12 +311,12 @@ def _http(url: str, name: str, hint: str) -> Check:
 def model_check(usage_by_model: dict[str, Any], total_cost_usd: float) -> Check:
     """Which model actually answered — matched by name, never by position.
 
-    ⛔ The id is a KEY of `model_usage`. ⚠️ *Not* because the SDK lacks a name field — it grew
+    The id is a KEY of `model_usage`. Not because the SDK lacks a name field — it grew
     one: `ModelUsage.canonicalModel` at `claude_agent_sdk/types.py:1308`, `NotRequired`, so it
-    may or may not arrive. **The key is the half that is always there**, which is why the match
+    may or may not arrive. The key is the half that is always there, which is why the match
     stays on it (D-033, restated 2026-08-26 against SDK 0.2.142).
-    And there can be **more than one key**: in isolation mode the CLI makes its own
-    housekeeping call on haiku, and that key sorts *first*. `next(iter(...))` therefore reads a
+    And there can be more than one key: in isolation mode the CLI makes its own
+    housekeeping call on haiku, and that key sorts first. `next(iter(...))` therefore reads a
     model the agent never used — which is how this check failed on its first run against a
     correctly pinned model (D-035).
     """
@@ -339,14 +339,14 @@ def model_check(usage_by_model: dict[str, Any], total_cost_usd: float) -> Check:
 async def _probe() -> list[Check]:
     """One live call. It settles the model id AND whether the session is isolated.
 
-    ⚠️ `max_turns` is not a count of model calls — with `output_format` the structured-output
+    `max_turns` is not a count of model calls — with `output_format` the structured-output
     step spends one of its own (D-032). Nothing here uses output_format, so 2 is ample.
     """
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient, ResultMessage
 
     options = ClaudeAgentOptions(
-        setting_sources=config.SETTING_SOURCES,  # ⛔ [] — see config.py
-        model=config.MODEL,  # ⛔ pinned; the probe exists to prove it resolves
+        setting_sources=config.SETTING_SOURCES,  # [] — see config.py
+        model=config.MODEL,  # pinned; the probe exists to prove it resolves
         allowed_tools=[],
         max_turns=2,
         max_budget_usd=0.10,
@@ -412,7 +412,7 @@ def run(probe: bool = True) -> int:
         ))
     checks += [
         _cerebras(),
-        # ⛔ Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
+        # Unreachable is fine: D-067 makes ollama a diagnostic, never a model source.
         _http(f"{config.OLLAMA_URL}/api/tags", "ollama", "a diagnostic — never a model source"),
         # D-077 removed the trace-SERVER check and this is not it coming back — there is
         # still no service. What it replaces is the sentence D-077 left behind: *"writes to

@@ -1,22 +1,22 @@
-"""Turn a τ² results file into `results/<version>.json` — P1.5, with ⛔ **no model call**.
+"""Turn a τ² results file into `results/<version>.json` — P1.5, with no model call.
 
 [D-007] is unchanged; what changed is whose answer key it reads. τ²'s evaluator is mechanical —
 a database diff and a replayed action sequence — so scoring is arithmetic over a file someone
 else's orchestrator wrote, and arithmetic is reproducible in a way a judge is not.
 
-⛔ **Two success definitions, reported side by side, and conflating them is the whole risk.**
+Two success definitions, reported side by side, and conflating them is the whole risk.
 
-- `reward` is τ²'s **composite**, and we publish it **unmodified** (invariant 16). On today's
+- `reward` is τ²'s composite, and we publish it unmodified (invariant 16). On today's
   retail tasks it legitimately contains an `NL_ASSERTION` judge — 112 of 114 declare one.
-- `reward_breakdown["DB"]` is the **mechanical** component and the only thing touchstone gates
+- `reward_breakdown["DB"]` is the mechanical component and the only thing touchstone gates
   on ([D-069]). It is written on every task by `evaluator_env.py:153`.
 
-**We gate on a component; we do not get to publish a different headline.**
+We gate on a component; we do not get to publish a different headline.
 
-⚠️ **Nothing here imports τ².** The package costs 1.56 s to import — its `__init__` chain builds
+Nothing here imports τ². The package costs 1.56 s to import — its `__init__` chain builds
 the whole registry — and phase 1's gate is the unit suite under 2 s. The two upstream functions
-this needs are four lines between them and are **copied with their file and line**, which
-`doctor`'s `metric_check` then asserts still agree with the pin. ⛔ Re-deriving a metric is how
+this needs are four lines between them and are copied with their file and line, which
+`doctor`'s `metric_check` then asserts still agree with the pin. Re-deriving a metric is how
 two projects end up publishing the same word for different arithmetic.
 """
 
@@ -28,14 +28,14 @@ from typing import Any, Literal, TypedDict, cast
 
 
 class TerminationReasons(TypedDict):
-    """⛔ ALL TEN, ALWAYS, EVEN AT ZERO — `tau2/data_model/simulation.py:1254`, declaration order.
+    """all ten, always, even AT zero — `tau2/data_model/simulation.py:1254`, declaration order.
 
-    A key that appears only when it fires cannot be read as *"never fired"*: the reader cannot
-    tell it from *"not recorded"*, and the two mean opposite things about a run.
+    A key that appears only when it fires cannot be read as "never fired": the reader cannot
+    tell it from "not recorded", and the two mean opposite things about a run.
 
-    ⚠️ **A total `TypedDict` is why that is now a type error rather than a convention.** Omit one
+    A total `TypedDict` is why that is now a type error rather than a convention. Omit one
     and `mypy` refuses the construction — the rule moved out of this docstring and into the
-    checker. **The tuple below is derived from these annotations**, so there is one list of ten
+    checker. The tuple below is derived from these annotations, so there is one list of ten
     in the project and no way for a key to exist in one place and not the other.
     """
 
@@ -57,7 +57,7 @@ TERMINATION_REASONS = tuple(TerminationReasons.__annotations__)
 class Case(TypedDict):
     """One task's row — docs/05 §6 `cases[]`.
 
-    ⚠️ `db_scored` is a **separate denominator** from `trials`: a simulation that died before the
+    `db_scored` is a separate denominator from `trials`: a simulation that died before the
     evaluator ran is a trial that happened and a DB check that did not.
     """
 
@@ -71,7 +71,7 @@ class Case(TypedDict):
 class Aggregate(TypedDict):
     """The arithmetic half of docs/05 §6 `aggregate`.
 
-    ⛔ **The span-derived keys are deliberately absent from this type, not optional in it.**
+    The span-derived keys are deliberately absent from this type, not optional in it.
     `cost_per_success_usd`, `tool_calls_mean`, `p95_latency_s`, `budget_exceeded` and
     `void_attempts` have no producer until `touchstone run` exists (P1.6). Declaring them
     `NotRequired` would let a caller read a key that nothing has ever written.
@@ -84,7 +84,7 @@ class Aggregate(TypedDict):
     pass_hat_1: float
     pass_hat_k: float
     reward_breakdown_zeroed: dict[str, int]
-    #: ⛔ A `Literal`, so the other published convention cannot be written here by accident.
+    #: A `Literal`, so the other published convention cannot be written here by accident.
     infra_error_convention: Literal["counted_as_failed"]
     infra_errors: int
     undersampled_tasks: list[str]
@@ -94,7 +94,7 @@ class Aggregate(TypedDict):
 class Scored(TypedDict):
     """What `score()` returns — the two halves of the results file it can fill on its own.
 
-    ⚠️ **Not the whole file.** `benchmark_hash`, `domain` and `tau2_commit` come from
+    Not the whole file. `benchmark_hash`, `domain` and `tau2_commit` come from
     `suite/benchmark/manifest.json`, and `model`/`provider`/`auth` are facts about a run, so the
     envelope is assembled by the `touchstone score` command. A scorer that reaches for a manifest
     is a scorer that cannot be tested without one.
@@ -103,14 +103,14 @@ class Scored(TypedDict):
     aggregate: Aggregate
     cases: list[Case]
 
-#: The one τ² counts as "the run never happened". ⚠️ We count it as a FAILED trial — see `score`.
+#: The one τ² counts as "the run never happened". We count it as a failed trial — see `score`.
 INFRA = "infrastructure_error"
 
 
 def is_successful(reward: float) -> bool:
     """Copied verbatim from `tau2/metrics/agent_metrics.py:12`.
 
-    ⚠️ **The tolerance is upstream's and it is not decoration.** `reward` is a product of
+    The tolerance is upstream's and it is not decoration. `reward` is a product of
     component floats, so an exactly-1.0 comparison fails on rounding that no one can see.
     """
     return (1 - 1e-6) <= reward <= (1 + 1e-6)
@@ -119,9 +119,9 @@ def is_successful(reward: float) -> bool:
 def pass_hat_k(num_trials: int, success_count: int, k: int) -> float:
     """Copied verbatim from `tau2/metrics/agent_metrics.py:113` (arXiv 2406.12045).
 
-    ⛔ Not "the fraction that passed every attempt" — it is the probability that k trials drawn
-    *without replacement* all pass; the two coincide only at `k == num_trials` (D-099).
-    ⛔ `pass^k`, never `pass@k`: the familiar name means *at least one of k*, a weaker gate.
+    Not "the fraction that passed every attempt" — it is the probability that k trials drawn
+    without replacement all pass; the two coincide only at `k == num_trials` (D-099).
+    `pass^k`, never `pass@k`: the familiar name means at least one of k, a weaker gate.
 
     Args:
         num_trials: Trials actually run for one task.
@@ -142,10 +142,10 @@ def pass_hat_k(num_trials: int, success_count: int, k: int) -> float:
 def db_component(sim: dict[str, Any]) -> float | None:
     """The mechanical component, or `None` when the simulation carries no breakdown at all.
 
-    ⛔ **`None` is not 0.0.** A missing breakdown means the evaluator did not run — an infra
+    `None` is not 0.0. A missing breakdown means the evaluator did not run — an infra
     error, a crash — and scoring that as a failed DB check would blame the agent for the
-    harness. It is counted as a failed *trial* (that is the leaderboard convention) but never
-    as a failed *DB check*, and the two counts are reported separately.
+    harness. It is counted as a failed trial (that is the leaderboard convention) but never
+    as a failed DB check, and the two counts are reported separately.
     """
     return ((sim.get("reward_info") or {}).get("reward_breakdown") or {}).get("DB")
 
@@ -153,10 +153,10 @@ def db_component(sim: dict[str, Any]) -> float | None:
 def score(simulations: list[dict[str, Any]], k: int) -> Scored:
     """Aggregate one τ² results file's simulations. Pure, deterministic, no I/O, no model.
 
-    ⚠️ Infra errors count as FAILED — the leaderboard convention, the opposite of τ²'s own
+    Infra errors count as failed — the leaderboard convention, the opposite of τ²'s own
     `get_metrics_df` (`agent_metrics.py:145`). `infra_error_convention` records which, in the
     results file, because a number without its convention is not comparable.
-    ⚠️ `k` is never inferred per task; undersampled tasks are named, not averaged in at a
+    `k` is never inferred per task; undersampled tasks are named, not averaged in at a
     different strictness.
 
     Args:
@@ -173,7 +173,7 @@ def score(simulations: list[dict[str, Any]], k: int) -> Scored:
     rewards = [float((s.get("reward_info") or {}).get("reward") or 0.0) for s in simulations]
     terminations = Counter(str(s.get("termination_reason")) for s in simulations)
 
-    # ⛔ Which component killed the reward — counted only where the composite actually failed.
+    # Which component killed the reward — counted only where the composite actually failed.
     # A component at 0.0 on a run that still scored 1.0 is arithmetically impossible (the
     # composite is a product), so this cannot double-count; it can only stay honest if the
     # guard is here rather than assumed.
@@ -190,10 +190,10 @@ def score(simulations: list[dict[str, Any]], k: int) -> Scored:
     hat_k: list[float] = []
     hat_1: list[float] = []
     undersampled: list[str] = []
-    # ⚠️ **Length-then-lexicographic, NOT `key=int` — and the asymmetry with
-    # `scripts/freeze-benchmark.py` is deliberate.** Only `airline` and `retail` have all-digit
+    # Length-then-lexicographic, not `key=int` — and the asymmetry with
+    # `scripts/freeze-benchmark.py` is deliberate. Only `airline` and `retail` have all-digit
     # task ids; `telecom`'s look like `[mobile_data_issue]user_abroad_…[PERSONA:Hard]`. The
-    # freezer *must* crash on those, because a different sort there is a silently different
+    # freezer must crash on those, because a different sort there is a silently different
     # benchmark. Ordering a results table is presentation, so it must not crash — and on decimal
     # ids this key agrees with numeric order, which is what the manifest froze.
     for task_id in sorted(by_task, key=lambda t: (len(t), t)):
@@ -239,10 +239,10 @@ def score(simulations: list[dict[str, Any]], k: int) -> Scored:
 
 
 def _mean(values: list[float]) -> float:
-    """⛔ An empty mean is `0.0`, not a crash and not `None` — but see the caller.
+    """An empty mean is `0.0`, not a crash and not `None` — but see the caller.
 
-    ⚠️ It reads as a real zero in the results file, which is why `trials`, `tasks` and
-    `undersampled_tasks` sit beside every mean here: **a rate with no denominator visible is
-    the failure this project has paid for most often.**
+    It reads as a real zero in the results file, which is why `trials`, `tasks` and
+    `undersampled_tasks` sit beside every mean here: a rate with no denominator visible is
+    the failure this project has paid for most often.
     """
     return sum(values) / len(values) if values else 0.0

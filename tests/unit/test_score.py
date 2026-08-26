@@ -1,12 +1,12 @@
 """P1.5 — the scorer, checked against arithmetic rather than against itself.
 
-⚠️ **Nothing here imports τ².** `from tau2.metrics.agent_metrics import pass_hat_k` costs
+Nothing here imports τ². `from tau2.metrics.agent_metrics import pass_hat_k` costs
 1.563 s measured, against a 2-second gate for the whole suite. The two copied functions are
-checked here against **hand-computed combinatorics**; that they still match *upstream* is
+checked here against hand-computed combinatorics; that they still match upstream is
 `doctor`'s job, which already pays the import once.
 
-⛔ **The corpus this was developed against has binary rewards, so `reward_mean` and `pass_hat_1`
-came out equal to sixteen digits.** That is an identity of *that* data — every reward 0.0 or 1.0,
+The corpus this was developed against has binary rewards, so `reward_mean` and `pass_hat_1`
+came out equal to sixteen digits. That is an identity of that data — every reward 0.0 or 1.0,
 every task at 4 trials — not of the metrics, and a test that only ever saw that corpus would not
 notice the two being swapped. The fixtures below are therefore fractional and ragged on purpose.
 """
@@ -58,8 +58,8 @@ def test_pass_hat_k_is_a_hypergeometric_draw_not_an_all_passed_fraction() -> Non
 
 
 def test_pass_hat_k_refuses_a_k_it_cannot_draw() -> None:
-    # ⛔ Upstream raises rather than clamping, and we keep that: a silently clamped k reports a
-    # *different, easier* metric under the same column name.
+    # Upstream raises rather than clamping, and we keep that: a silently clamped k reports a
+    # different, easier metric under the same column name.
     with pytest.raises(ValueError, match="less than k"):
         pass_hat_k(2, 1, 3)
 
@@ -73,7 +73,7 @@ def test_success_uses_upstreams_tolerance() -> None:
 
 
 def test_infrastructure_errors_count_as_failed_trials_and_say_so() -> None:
-    """⚠️ The convention is the finding. τ²'s own `get_metrics_df` *filters* these out."""
+    """The convention is the finding. τ²'s own `get_metrics_df` filters these out."""
     sims = [sim("1", 1.0), sim("1", 0.0, termination="infrastructure_error", info=False)]
     agg = score(sims, k=1)["aggregate"]
     assert agg["trials"] == 2, "a filtered infra error would leave 1 — that is the other convention"
@@ -83,7 +83,7 @@ def test_infrastructure_errors_count_as_failed_trials_and_say_so() -> None:
 
 
 def test_a_missing_breakdown_is_not_a_failed_db_check() -> None:
-    """⛔ `None` is not 0.0. The evaluator not running is not the agent corrupting the database."""
+    """`None` is not 0.0. The evaluator not running is not the agent corrupting the database."""
     crashed = sim("1", 0.0, termination="infrastructure_error", info=False)
     assert db_component(crashed) is None
     case = score([sim("1", 1.0), crashed], k=1)["cases"][0]

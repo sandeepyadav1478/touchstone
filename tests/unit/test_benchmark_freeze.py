@@ -1,6 +1,6 @@
 """The frozen benchmark tier — invariant 7's half that runs without importing τ².
 
-⛔ **No τ² import here.** Resolving the specimen costs 1.71 s and phase 1's exit gate is the
+No τ² import here. Resolving the specimen costs 1.71 s and phase 1's exit gate is the
 whole unit suite under 2 s, so the live comparison lives in
 `scripts/freeze-benchmark.py --check` (CI) and this file asserts the two things that can be
 checked from the committed manifest alone: the collation, and that the manifest describes the
@@ -26,7 +26,7 @@ _spec.loader.exec_module(freeze)
 
 def test_the_ids_are_ordered_numerically_not_as_strings() -> None:
     # The whole point: a hash over a list is a hash over its order, and these ids are
-    # DECIMAL STRINGS. String sort gives 0, 1, 10, 100 — a different ten tasks.
+    # decimal strings. String sort gives 0, 1, 10, 100 — a different ten tasks.
     picked = freeze.select(["9", "10", "5", "100", "12"], n=4)
     assert picked == ["5", "9", "10", "12"]
     assert picked != sorted(["9", "10", "5", "100", "12"])[:4]

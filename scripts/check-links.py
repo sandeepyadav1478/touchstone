@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check every relative markdown link in the *tracked* files, against git rather than disk.
+"""Check every relative markdown link in the tracked files, against git rather than disk.
 
 The distinction is the whole point. A link audit that asks the filesystem passes on a
 target that is gitignored, because the file is right there — and then 404s for every
@@ -8,13 +8,13 @@ reader of the public repo, who never receives it. `DECISIONS.md`, `DEFECTS.md` a
 
 That failure was introduced and caught on 2026-08-16 in one sitting. Three links to
 `../DECISIONS.md` and `../DEFECTS.md` were written into `docs/05-scoring.md`, an ad-hoc
-`Path.exists()` audit reported *0 broken links*, and the convention every other tracked
+`Path.exists()` audit reported 0 broken links, and the convention every other tracked
 doc already followed — cite those three as plain backticked text, never as a link — is
 what showed the audit was answering a different question.
 
 Two phases:
 
-  1. Every `](relative/path)` in a tracked .md resolves to another *tracked* file.
+  1. Every `](relative/path)` in a tracked .md resolves to another tracked file.
   2. No tracked .md links to a file git is ignoring, which is phase 1's failure mode
      stated in the direction that explains it.
 
@@ -38,7 +38,7 @@ LINK = re.compile(r"\]\(([^)]+)\)")
 def git(*args: str) -> list[str]:
     """Run git in the repo root and return its stdout, whitespace-split.
 
-    ⛔ Every path this script checks comes from here rather than from the filesystem,
+    Every path this script checks comes from here rather than from the filesystem,
     and that is the whole point of the script: an empty directory passes an `ls` and
     404s in public. Checking git means checking what a stranger can actually clone.
     """

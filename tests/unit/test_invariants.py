@@ -1,33 +1,34 @@
 """The invariants of [docs/01] §6 that can be asserted without running anything — P1.4.
 
-⛔ **Static, and deliberately so.** The invariants that need a run (3, 8, 15, 16) need machinery
+Static, and deliberately so. The invariants that need a run (3, 8, 15, 16) need machinery
 that does not exist yet, and a test that imports τ² costs 1.71 s against a 2-second gate for the
-whole suite. What is here instead is the half that a *source* can answer: **which module is
-allowed to reach a model, and which fields our code may never read.** Both fail on the edit that
+whole suite. What is here instead is the half that a source can answer: which module is
+allowed to reach a model, and which fields our code may never read. Both fail on the edit that
 would break them rather than on the run that would reveal it.
 
-⚠️ **`ast`, never `grep`.** A substring is not a symbol — `evaluation_criteria` appears in this
+`ast`, never `grep`. A substring is not a symbol — `evaluation_criteria` appears in this
 docstring, and a text scan would flag the file that enforces the rule. The parser sees names.
 
 Coverage of §6 from here, stated so the gaps are visible rather than implied:
 
-| invariant | here? |
-|---|---|
-| 1 — the agent never sees the answer key | ✅ at *our* boundary — `test_no_module_reads_the_answer_key` |
-| 7 — the task file is never modified | ⛔ elsewhere: `scripts/freeze-benchmark.py --check`, plus `test_benchmark_freeze.py` |
-| 3, 8, 15, 16 | ⛔ need a run; they land with `loop/score.py` (P1.5) and the gates (phase 2) |
-| 11, 12 | ⛔ vacuous — the regression manifest is empty until the gauntlet (D-030) |
-| 13, 14 | ⛔ need specialist spans; un-retired by D-071, not yet buildable |
-| **new** — no model appears in any gating path | ✅ `test_only_the_seam_and_the_doctor_may_reach_a_model` |
+    1           covered at our boundary, by test_no_module_reads_the_answer_key
+    7           covered elsewhere: scripts/freeze-benchmark.py --check, test_benchmark_freeze.py
+    3, 8, 15, 16    need a run; they land with loop/score.py (P1.5) and the gates (phase 2)
+    11, 12      vacuous until the gauntlet fills the regression manifest (D-030)
+    13, 14      need specialist spans; un-retired by D-071, not yet buildable
+    new         no model in any gating path, by test_only_the_seam_and_the_doctor_may_reach_a_model
 """
 
 import ast
+import io
+import re
+import tokenize
 from collections.abc import Iterator
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "touchstone"
 
-# ⛔ rglob, not `SRC.glob`, and keyed on the dotted path, not `p.stem`: two `__init__.py` files
+# rglob, not `SRC.glob`, and keyed on the dotted path, not `p.stem`: two `__init__.py` files
 # share a stem, so a dict keyed on it silently dropped a module from every assertion (DEF-069).
 MODULES = {
     str(p.relative_to(SRC).with_suffix("")).replace("/", "."): ast.parse(p.read_text(), p.name)
@@ -39,8 +40,8 @@ assert len(MODULES) == len(list(SRC.rglob("*.py"))), "a module was swallowed by 
 def test_no_comment_block_is_longer_than_six_lines() -> None:
     """The argument goes to the ledger; the comment says what you need at the line — D-101.
 
-    ⛔ A rule nobody checks is a rule that rots — this repo's own defect log is mostly that. The
-    cap is on *runs of `#` lines*, not on docstrings, which carry the contract.
+    A rule nobody checks is a rule that rots — this repo's own defect log is mostly that. The
+    cap is on runs of `#` lines, not on docstrings, which carry the contract.
     """
     long_runs = []
     for path in sorted((SRC.parent.parent / "src").rglob("*.py")) + sorted(
@@ -60,13 +61,65 @@ def test_no_comment_block_is_longer_than_six_lines() -> None:
     assert not long_runs, f"move the argument to DECISIONS.md and cite it: {long_runs}"
 
 
+# Emoji and the marker glyphs, not the arrows and rules: `->` and box-drawing are typography.
+MARKUP = re.compile(
+    r"[\U0001F300-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F]"
+    r"|\*\*|(?<![\w*`])\*[^*\s][^*]*\*(?![\w*`])"
+)
+
+
+def _prose(path: Path) -> Iterator[tuple[int, str]]:
+    """Yield (lineno, text) for every comment line and every docstring line in `path`.
+
+    Real string literals are excluded on purpose: `doctor.MARK` and `check-diagram.BAR_GLYPHS`
+    are glyphs the program prints, not prose about the program.
+    """
+    src = path.read_text()
+    docstring_lines: set[int] = set()
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            first = node.body[0] if node.body else None
+            if (
+                isinstance(first, ast.Expr)
+                and isinstance(first.value, ast.Constant)
+                and isinstance(first.value.value, str)
+                and first.value.end_lineno is not None
+            ):
+                docstring_lines.update(range(first.value.lineno, first.value.end_lineno + 1))
+    comments = {
+        t.start[0]
+        for t in tokenize.generate_tokens(io.StringIO(src).readline)
+        if t.type == tokenize.COMMENT
+    }
+    for i, line in enumerate(src.splitlines(), 1):
+        if i in docstring_lines or i in comments:
+            yield i, line
+
+
+def test_no_comment_or_docstring_carries_markdown_or_emoji() -> None:
+    """Python prose is plain sentences, not rendered markup — D-101.
+
+    The markdown here came from the files this code is documented in, where it renders; in a
+    `.py` it renders nowhere and costs a reader the decoding. Emoji and the bold and italic
+    markers are the three that recur.
+    """
+    styled = [
+        f"{path.name}:{n}: {line.strip()[:60]}"
+        for d in ("src", "tests", "scripts")
+        for path in sorted((SRC.parent.parent / d).rglob("*.py"))
+        for n, line in _prose(path)
+        if MARKUP.search(line)
+    ]
+    assert not styled, f"plain prose, no markup: {styled}"
+
+
 def _runtime_nodes(node: ast.AST) -> Iterator[ast.AST]:
     """Walk `node`, skipping the body of any `if TYPE_CHECKING:` block.
 
-    ⛔ **A `TYPE_CHECKING` import is not a reach.** `config.py` names `SettingSource` under one,
+    A `TYPE_CHECKING` import is not a reach. `config.py` names `SettingSource` under one,
     and that block never executes — the annotation is a string at runtime. Adding `config` to the
-    allowed set below would have made this test pass and would have been a **false statement about
-    the design**: config would then be permitted a real SDK import forever, silently. ⚠️ The
+    allowed set below would have made this test pass and would have been a false statement about
+    the design: config would then be permitted a real SDK import forever, silently. The
     cheapest way to fix a failing invariant is to widen it, which is the one repair that cannot be
     detected later.
     """
@@ -80,9 +133,9 @@ def _runtime_nodes(node: ast.AST) -> Iterator[ast.AST]:
 
 
 def imported(tree: ast.AST) -> set[str]:
-    """Every top-level package name this module imports **at runtime**.
+    """Every top-level package name this module imports at runtime.
 
-    ⚠️ **The walk matters.** Both places that reach the SDK do it *inside a function* — deferred
+    The walk matters. Both places that reach the SDK do it inside a function — deferred
     so `doctor` can report that the import itself failed, and so the 1.7 s is not paid at
     startup. A check that read only module-scope imports would pass on every one of them.
 
@@ -112,7 +165,7 @@ def strings(tree: ast.AST) -> set[str]:
 
 
 def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
-    """The invariant the specimen swap created — ⛔ no model appears in any gating path.
+    """The invariant the specimen swap created — no model appears in any gating path.
 
     Set equality, not a subset check: a third module reaching the SDK fails here and has to be
     argued for out loud. `adapter` is the single seam (D-095); `doctor` asserts the pin took,
@@ -128,7 +181,7 @@ def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
 def test_the_model_pins_live_in_config_and_nowhere_else() -> None:
     """One place to change a pin, and one place to read one off.
 
-    ⚠️ A hardcoded model *string* is the version of the failure above that no import check sees:
+    A hardcoded model string is the version of the failure above that no import check sees:
     it needs no new import, because the module that calls the SDK is already allowed to.
     """
     for name, tree in MODULES.items():
@@ -141,8 +194,8 @@ def test_the_model_pins_live_in_config_and_nowhere_else() -> None:
 def test_no_module_reads_the_answer_key() -> None:
     """Invariant 1, asserted where we can actually break it.
 
-    ⛔ Upstream already keeps the key out of the agent's context; what this repo can do wrong is
-    *merge* them — read a task's grading fields and let them reach a prompt. τ² hands our seam
+    Upstream already keeps the key out of the agent's context; what this repo can do wrong is
+    merge them — read a task's grading fields and let them reach a prompt. τ² hands our seam
     `messages`, so any code here touching these names has gone and fetched the key.
     """
     banned = {"evaluation_criteria", "user_scenario", "reward_basis"}
@@ -153,7 +206,7 @@ def test_no_module_reads_the_answer_key() -> None:
 
 
 def test_the_answer_key_check_can_fail() -> None:
-    """⛔ A check nobody has watched fail is a check nobody has watched.
+    """A check nobody has watched fail is a check nobody has watched.
 
     Two of the four tests above are absence assertions, and an absence assertion passes just as
     happily when the thing that would detect the presence is broken. This runs the detector

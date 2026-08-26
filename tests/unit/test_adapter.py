@@ -1,7 +1,7 @@
 """The parts of the seam that are logic rather than an SDK call.
 
 Everything here runs without importing τ² (1.71 s) or reaching the network, because phase 1's
-exit gate is *"`pytest tests/unit` green, no network, under 2 seconds"*. The SDK call itself is
+exit gate is "`pytest tests/unit` green, no network, under 2 seconds". The SDK call itself is
 covered by the live smoke check, not from here.
 """
 
@@ -65,7 +65,7 @@ def test_the_mcp_prefix_round_trips() -> None:
 
 
 def test_prompt_tokens_include_the_cached_prefix() -> None:
-    """⚠️ The SDK reports `input_tokens` net of cache reads. Passing that through would make a
+    """The SDK reports `input_tokens` net of cache reads. Passing that through would make a
     re-run of the same task look cheaper than its first run for no reason but caching."""
     usage = usage_of({
         "input_tokens": 2,
@@ -81,7 +81,7 @@ def test_no_usage_is_none_not_zero() -> None:
 
 
 def test_rebind_reaches_the_modules_that_imported_the_function() -> None:
-    """⛔ The ten-module trap: patching the home module alone leaves every role on upstream."""
+    """The ten-module trap: patching the home module alone leaves every role on upstream."""
 
     def upstream() -> str:
         return "upstream"

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Freeze the benchmark tier — the task IDs and the hash they were read at (P1.3).
 
-⛔ **IDs and a hash, never task bytes.** Vendoring the corpus would make this repo its
+IDs and a hash, never task bytes. Vendoring the corpus would make this repo its
 owner again, which is what [D-062] exists to stop. The tasks stay upstream at the pinned
-commit; `suite/benchmark/manifest.json` records *which* ones and *what the file said* when
+commit; `suite/benchmark/manifest.json` records which ones and what the file said when
 they were chosen.
 
 Two modes and they share one function, so the check cannot drift from the generator:
@@ -11,7 +11,7 @@ Two modes and they share one function, so the check cannot drift from the genera
     uv run python scripts/freeze-benchmark.py            # write the manifest
     uv run python scripts/freeze-benchmark.py --check    # invariant 7, for CI
 
-⚠️ **`--check` is invariant 7** ([docs/01] §6): *the task file is never modified*. It
+`--check` is invariant 7 ([docs/01] §6): the task file is never modified. It
 guards a file we do not own, so a silent upstream update fails here rather than quietly
 moving what the version table measures.
 """
@@ -29,7 +29,7 @@ MANIFEST = ROOT / "suite" / "benchmark" / "manifest.json"
 #
 #   SPLIT — τ²'s own held-out set, read by `retail/environment.py:49 get_tasks_split()`,
 #   which `get_tasks()` filters on. It is live upstream code, not stranded data, so the
-#   subset is traceable to a function a run actually calls. ⛔ The DEFAULT split is
+#   subset is traceable to a function a run actually calls. The DEFAULT split is
 #   `base`, which is `train + test` CONCATENATED — all 114 in a different order from
 #   tasks.json. A reader who takes "base" for "the whole file" gets the right ids in the
 #   wrong order, and a hash over a list is a hash over its order.
@@ -44,12 +44,12 @@ N = 10
 def select(split_ids: list[str], n: int = N) -> list[str]:
     """Pick the frozen subset: the first `n` of the split, numerically ordered.
 
-    ⛔ **A prefix, not a sample.** No seed to remember, no judgement to defend, and one
+    A prefix, not a sample. No seed to remember, no judgement to defend, and one
     line re-derives it from the pin. A difficulty-weighted or hand-picked subset would be
     the cherry-pick the freeze exists to prevent — and it could not be checked by a
     stranger, which is the only property that makes "frozen" mean anything.
 
-    ⚠️ **Sorted here rather than trusted.** The split file happens to be in numeric order
+    Sorted here rather than trusted. The split file happens to be in numeric order
     today; `sorted(key=int)` says what the order IS instead of inheriting whatever the
     next upstream edit leaves behind. String sort would give 0, 1, 10, 100 — the ids are
     decimal strings, so the collation has to be pinned with the hash.
@@ -67,7 +67,7 @@ def select(split_ids: list[str], n: int = N) -> list[str]:
 def build() -> dict:
     """Read the live specimen and produce the manifest that would freeze it.
 
-    ⚠️ **It reads τ²'s own path constants**, the same reason `doctor._tau2_data` does: a
+    It reads τ²'s own path constants, the same reason `doctor._tau2_data` does: a
     re-derived path gives a check that can pass while the run fails. The import is local
     because it costs ~1.7 s and runs τ²'s data resolution as a side effect.
 

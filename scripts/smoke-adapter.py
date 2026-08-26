@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """One live pass through the seam — P1.1's runnable check, extended by P1.2.
 
-⚠️ **This makes real model calls and the unit suite must not.** Phase 1's exit gate is
-*"`pytest tests/unit` green, no network, under 2 seconds"*, so the SDK half of `adapter.py`
+This makes real model calls and the unit suite must not. Phase 1's exit gate is
+"`pytest tests/unit` green, no network, under 2 seconds", so the SDK half of `adapter.py`
 is checked here instead: `uv run python scripts/smoke-adapter.py`.
 
 It asserts the four things that would each fail silently:
@@ -10,11 +10,11 @@ It asserts the four things that would each fail silently:
 1. `install()` reached more than the home module — the ten-module trap.
 2. The role modules' own `generate` is ours, not upstream's.
 3. A retail tool schema survives the round trip and comes back as a τ² `ToolCall` under its
-   *unprefixed* name, so `Environment.make_tool_call()` can find it.
+   unprefixed name, so `Environment.make_tool_call()` can find it.
 4. The cost is the SDK's measured `total_cost_usd`, not litellm's price table (7e-05 against a
    measured 0.0040 on the probe that settled this — docs/00 §3).
-5. 🆕 **The `touchstone.llm` span reached the store with the model call's numbers on it** —
-   D-073. `doctor`'s round trip proves the store works; this proves the *adapter's own* span
+5. The `touchstone.llm` span reached the store with the model call's numbers on it —
+   D-073. `doctor`'s round trip proves the store works; this proves the adapter's own span
    goes into it, which is a different claim and the one v1–v5 all rest on. Until P1.2 the span
    was written against a no-op tracer, and no assertion here would have noticed.
 """

@@ -1,7 +1,7 @@
 """The one piece of `doctor` that is logic rather than I/O — and the one that had the bug.
 
 `model_usage` can carry more than one model, and in isolation mode the CLI's housekeeping
-call on haiku sorts *first*. Reading position instead of name reported a correctly pinned
+call on haiku sorts first. Reading position instead of name reported a correctly pinned
 model as a failed pin (D-035). These two cases are that bug, frozen.
 """
 
@@ -81,7 +81,7 @@ def test_nothing_read_back_fails() -> None:
 
 
 def test_someone_elses_trace_is_not_ours() -> None:
-    # `search_traces(max_results=1)` returns the NEWEST trace, which is only ours because
+    # `search_traces(max_results=1)` returns the newest trace, which is only ours because
     # we just wrote it. Comparing the marker is what turns that assumption into a check.
     check = tracing_check("abc123", "def456", URI)
     assert check.status == "fail"

@@ -2,21 +2,21 @@
 
 `tau2.utils.llm_utils.generate()` (`llm_utils.py:355`) is the one chokepoint every live τ² model
 role passes through — agent, user simulator, NL-assertion evaluator, hallucination reviewer — so
-one adapter dispatching on `model` covers all four. ⛔ No fork of τ²: the pin stays readable as
-upstream, which is what makes *"we did not write the benchmark"* checkable by a stranger.
+one adapter dispatching on `model` covers all four. No fork of τ²: the pin stays readable as
+upstream, which is what makes "we did not write the benchmark" checkable by a stranger.
 
-🔴 The seam is `generate()`, NOT the litellm import at `llm_utils.py:15`. Replacing `completion`
+The seam is `generate()`, not the litellm import at `llm_utils.py:15`. Replacing `completion`
 leaves more of τ² running, but `generate()` then overwrites cost via `get_response_cost()` —
 measured 7e-05 against the SDK's 0.0040 for the same call, a factor of 58 and wrong in the
 flattering direction, because prompt caching is invisible to arithmetic. docs/00 §3 requires
 cost to be measured, so the seam sits above the line that recomputes it.
 
-⚠️ Stateless, as a stated ceiling: τ² passes the whole history every call, so each call is one
+Stateless, as a stated ceiling: τ² passes the whole history every call, so each call is one
 fresh SDK session with the transcript rendered into the prompt. The SDK's defer→resume path
 does not take a caller-supplied `tool_result` back. Cost: no native assistant/tool turns.
 Buys: nothing to key sessions on, and no way for adapter state to drift from τ²'s.
 
-⛔ P1.1 is not done without the span (D-073) — the only point every version shares, and no
+P1.1 is not done without the span (D-073) — the only point every version shares, and no
 instrumentor can emit it, since the SDK shells out to the CLI. It is `mlflow.start_span()`, not
 the OTel SDK: D-074 deleted the OTel SDK, so `trace.get_tracer()` still resolves via MLflow's
 transitive `opentelemetry-api` and returns a silent no-op (DEF-052). `telemetry.install()` is
@@ -37,14 +37,14 @@ from mlflow.entities import SpanType
 from touchstone import config
 
 if TYPE_CHECKING:
-    # ⚠️ **Type-only, and the invariant test knows the difference.** `if TYPE_CHECKING:` never
+    # Type-only, and the invariant test knows the difference. `if TYPE_CHECKING:` never
     # executes, so this is not the runtime SDK reach that `test_invariants` polices — it is the
     # SDK's own hook contract, used so `_defer` is checked against the signature the SDK will
     # actually call it with rather than against `Any`. The union is ten input types wide; naming
     # it `Any` was hiding a real mismatch, not simplifying one.
     from claude_agent_sdk import HookContext, HookInput, HookJSONOutput
 
-    # ⛔ `SyncHookJSONOutput` is NOT re-exported from the package root — only from `.types`.
+    # `SyncHookJSONOutput` is not re-exported from the package root — only from `.types`.
     # Three of the four names sit at the root and the fourth does not, which is the kind of
     # asymmetry a `TYPE_CHECKING` block hides until the checker runs.
     from claude_agent_sdk.types import SyncHookJSONOutput
@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 _SERVER = "tau2"
 _PREFIX = f"mcp__{_SERVER}__"
 
-# ⚠️ **Annotated, so the SDK's own `Literal`s check it.** As a bare dict literal this was
+# Annotated, so the SDK's own `Literal`s check it. As a bare dict literal this was
 # `dict[str, dict[str, str]]` and nothing verified the two strings that matter: `hookEventName`
 # must be exactly `"PreToolUse"` and `permissionDecision` must be one of four values — `"defer"`
 # is one of them (`types.py:420`), which is the answer to the obvious question about this payload.
@@ -75,7 +75,7 @@ def render(messages: list[Any]) -> tuple[str, str]:
     """Split τ²'s history into an SDK ``system_prompt`` and one rendered transcript.
 
     Tool calls and their results are rendered as tags rather than dropped: τ²'s agent loop is
-    *about* tool use, and a transcript that loses the results asks the model to answer from a
+    about tool use, and a transcript that loses the results asks the model to answer from a
     conversation it cannot see.
     """
     system: list[str] = []
@@ -109,7 +109,7 @@ def tool_name(sdk_name: str) -> str:
 def usage_of(raw: dict[str, Any] | None) -> dict[str, int] | None:
     """The two counts τ²'s `get_response_usage()` returns, from the SDK's usage dict.
 
-    ⚠️ **`prompt_tokens` folds the cache reads back in.** The SDK reports `input_tokens` net of
+    `prompt_tokens` folds the cache reads back in. The SDK reports `input_tokens` net of
     them, and a prompt-token count that silently excludes a cached prefix is not comparable
     between a first run and a re-run of the same task.
     """
@@ -168,17 +168,17 @@ async def _ask(model: str, system: str, prompt: str, tools: list[Any] | None) ->
     opts = ClaudeAgentOptions(
         model=model,
         system_prompt=system or None,
-        # ⛔ Built-ins off. Measured: with the default set the model reaches for `ToolSearch`
+        # Built-ins off. Measured: with the default set the model reaches for `ToolSearch`
         # first and the τ² tools sit behind an indirection, so the run is about a different
-        # agent. `allowed_tools=[]` does NOT do this — `tools` is what restricts availability.
+        # agent. `allowed_tools=[]` does not do this — `tools` is what restricts availability.
         tools=[],
         allowed_tools=[_PREFIX + d.name for d in decls],
         mcp_servers={_SERVER: create_sdk_mcp_server(_SERVER, tools=decls)} if decls else {},
-        # ⛔ [] is isolation; None loads this machine's CLAUDE.md, skills, MCP servers and the
+        # [] is isolation; None loads this machine's CLAUDE.md, skills, MCP servers and the
         # model out of ~/.claude/settings.json — D-034.
         setting_sources=[],
         max_turns=config.MAX_SDK_TURNS,
-        # ⚠️ A PreToolUse hook, not `can_use_tool`: an `allowed_tools` entry auto-approves the
+        # A PreToolUse hook, not `can_use_tool`: an `allowed_tools` entry auto-approves the
         # call before that callback is consulted, and the SDK says so itself
         # (`CanUseToolShadowedWarning`). The hook runs either way.
         hooks={"PreToolUse": [HookMatcher(matcher=None, hooks=[_defer])]},
@@ -193,7 +193,7 @@ async def _ask(model: str, system: str, prompt: str, tools: list[Any] | None) ->
             elif isinstance(msg, ResultMessage):
                 result = msg
     except Exception:
-        # ⚠️ Running out of turns is a *result*, and the SDK reports it twice: it yields a
+        # Running out of turns is a result, and the SDK reports it twice: it yields a
         # ResultMessage with `subtype=error_max_turns` and then raises. Keeping the message
         # turns "the agent did not finish" into a scored row rather than a dead suite; a
         # failure with no ResultMessage is a real one and still propagates.
@@ -217,7 +217,7 @@ def generate(
 ) -> Any:
     """Drop-in for `tau2.utils.llm_utils.generate()`, backed by the Claude Agent SDK.
 
-    ⚠️ `tool_choice` and `**kwargs` are accepted and ignored. τ² passes litellm knobs
+    `tool_choice` and `kwargs` are accepted and ignored. τ² passes litellm knobs
     (`num_retries`, `temperature`) that the CLI does not take, and dropping them silently is
     wrong in the other direction — so the ones that would change a measured number are asserted
     against here rather than swallowed.
@@ -232,7 +232,7 @@ def generate(
 
     system, prompt = render(messages)
     with mlflow.start_span("touchstone.llm", span_type=SpanType.LLM) as span:
-        # ⚠️ OpenInference names, not `gen_ai.*` — docs/04 §2. v5's instrumentor-emitted spans
+        # OpenInference names, not `gen_ai.*` — docs/04 §2. v5's instrumentor-emitted spans
         # land in the same shape, so the scorer has one vocabulary rather than two.
         span.set_attribute("llm.model_name", model)
         span.set_attribute("touchstone.call_name", call_name or "")
@@ -245,7 +245,7 @@ def generate(
         if usage:
             span.set_attribute("llm.token_count.prompt", usage["prompt_tokens"])
             span.set_attribute("llm.token_count.completion", usage["completion_tokens"])
-        # 🔴 Measured, never arithmetic — the SDK bills the call, we do not price it.
+        # Measured, never arithmetic — the SDK bills the call, we do not price it.
         span.set_attribute("touchstone.cost_usd", result.total_cost_usd or 0.0)
         span.set_attribute("touchstone.terminal_reason", result.terminal_reason or "")
         span.set_attribute("touchstone.tool_call", tool_name(deferred.name) if deferred else "")
@@ -275,12 +275,12 @@ def generate(
 def rebind(home: Any, replacement: Any) -> int:
     """Bind `replacement` over `home.generate` and every `tau2.*` module already holding it.
 
-    ⛔ Patching `home.generate` alone is a silent no-op for ten modules: they each did
+    Patching `home.generate` alone is a silent no-op for ten modules: they each did
     `from tau2.utils.llm_utils import generate` at import and hold their own reference. Both
     halves are needed — the assignment catches modules imported after this, the sweep catches
-    the ones already loaded. ⚠️ The returned count is a floor on what is bound, not a census.
+    the ones already loaded. The returned count is a floor on what is bound, not a census.
 
-    ⚠️ **Split from `install()` so it can be tested without importing τ².** Same reason as
+    Split from `install()` so it can be tested without importing τ². Same reason as
     `doctor.specimen_check` — that import costs 1.71 s against phase 1's two-second gate — and the
     same shape: the logic takes values, the wrapper does the I/O.
     """
@@ -289,7 +289,7 @@ def rebind(home: Any, replacement: Any) -> int:
     patched = 1
     for name, mod in list(sys.modules.items()):
         if name.startswith("tau2.") and getattr(mod, "generate", None) is upstream:
-            # ⚠️ `setattr`, not `mod.generate = …`: `ModuleType` declares no such attribute, so
+            # `setattr`, not `mod.generate = …`: `ModuleType` declares no such attribute, so
             # the assignment form is a type error rather than a style choice. Rebinding a name in
             # someone else's already-imported module is dynamic by nature; this is the spelling
             # that says so.
@@ -301,7 +301,7 @@ def rebind(home: Any, replacement: Any) -> int:
 def install() -> int:
     """Put this adapter behind every τ² model role. Returns how many references it replaced.
 
-    The count comes back so a caller can assert a *value* rather than the absence of an
+    The count comes back so a caller can assert a value rather than the absence of an
     exception (DEF-052) — an installer that patches nothing raises nothing.
     """
     import tau2.utils.llm_utils as llm_utils
