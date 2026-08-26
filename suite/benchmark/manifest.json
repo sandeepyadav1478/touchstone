@@ -1,0 +1,63 @@
+{
+  "tier": "benchmark",
+  "domain": "retail",
+  "tau2_commit": "a2c024725189",
+  "source": "data/tau2/domains/retail/tasks.json",
+  "selection": "sorted(split_tasks.json['test'], key=int)[:10]",
+  "tasks_sha256": "8e03ebce7901bd6218e7a7dc3105faa9324091a68058f7fe61c65262868812e8",
+  "tasks_total": 114,
+  "split_total": 40,
+  "task_ids": [
+    "5",
+    "9",
+    "12",
+    "17",
+    "18",
+    "26",
+    "27",
+    "32",
+    "33",
+    "36"
+  ],
+  "reward_basis": {
+    "5": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "9": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "12": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "17": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "18": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "26": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "27": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "32": [
+      "DB",
+      "NL_ASSERTION"
+    ],
+    "33": [
+      "DB"
+    ],
+    "36": [
+      "DB",
+      "NL_ASSERTION"
+    ]
+  }
+}

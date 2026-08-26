@@ -60,6 +60,28 @@ stale. Same shape as the 🔴 row above — *a perfectly-rendered picture of the
 every instrument in this repo* — with the difference that this one was recorded before the fact
 rather than found after it.
 
+🔴 **AND IT IS OPEN AGAIN, same day, one label — read the trigger before adding a second one.**
+P1.3 shipped `suite/benchmark/manifest.json`, so `touchstone.eraser:263`'s `Bench` node now says
+`P1.3 ✅ shipped` and carries D-098's selection rule. **The hosted flowchart and `loop.png` are one
+label behind as of 2026-08-26.** ⛔ **The sequence diagram is NOT affected** — it has no benchmark
+node — so only one of the two is stale, and re-exporting both would be the reflex, not the fix.
+
+**Trigger: the phase-1 exit gate.** Not "the next build row", and the reason is arithmetic
+rather than convenience: **two more rows flip a label on this same flowchart.** `CliPy` (`:269`)
+says *"P1.6 adds run · score · suite"* — a future-tense claim P1.6 falsifies outright — and
+`ScorePy` (`:275`) will need a shipped marker the moment `loop/score.py` is on disk, because
+milestone 5 demands one for every `src/` file a label names. ⚠️ **P1.4 flips nothing**: checked,
+`tests/unit/test_invariants.py` appears only in a `//` comment at `:55`, and comments do not
+render. So the count is **two**, not three — the first draft of this paragraph said three and was
+reading a comment as a node. One rebuild at the gate costs one create-then-delete cycle; three
+rebuilds cost three, and every intermediate render is stale the moment the next row lands. ⚠️ **The previous deferral made exactly
+this argument and was honoured, which is the only evidence that this shape works here.**
+
+⛔ **What makes this a deferral rather than a skip, restated because the last block says the
+distinction is the whole file:** the trigger is a named event, the stale label is named by file and
+line, and the diff is one node. **A reader who needs the current picture has it in three lines
+above** — which is what the departure has to buy to be worth taking.
+
 **What the looking has found — and not one of these by a guard:**
 
 - 🔴 **A perfectly-rendered picture of the wrong system passes every instrument in this repo.**

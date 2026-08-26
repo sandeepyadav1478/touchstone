@@ -510,20 +510,28 @@ src/touchstone/
     record.py          → the README table                                          [phase 2]
 
 suite/                 benchmark/ · regression/ · proposed/ · CHANGELOG.md
-                       ⛔ **The benchmark tier is now the 114 upstream retail tasks**, read
-                       from `data/tau2/domains/retail/tasks.json` and never copied here.
+                       ⛔ **The benchmark tier is read from the upstream retail tasks**,
+                       `data/tau2/domains/retail/tasks.json`, and never copied here.
                        `suite/benchmark/manifest.json` records the hash it was read at —
-                       invariant 7 — rather than the cases themselves
+                       invariant 7 — rather than the cases themselves. 🆕 **Written P1.3**:
+                       10 ids, a sha256, and each one's `reward_basis`. ⚠️ It is 10 of the
+                       held-out 40, not of 114 — D-098, and the two denominators are
+                       different populations
 results/               one json per version + index.json + negative-control.md
 diagrams/              the D-021 artifacts, committed before their implementation.
                        `diagrams/README.md` is the index — docs/07 §5
 tests/unit/            the invariants of docs/01 §6, zero model calls, under 2s
 tests/evals/           judged dimension only — never gates
 scripts/               🆕 tooling that checks the OTHER files — not imported by anything
-  check-diagram.py     the D-021 guard: 9 milestones over diagrams/*.eraser — 4 reads THIS
+  check-diagram.py     the D-021 guard: 10 milestones over diagrams/*.eraser — 4 reads THIS
                        section, 4a hashes the 8 upstream files we attach to, 7 reads the
-                       RENDER, 8 greps the DSL for a `[` — which Eraser eats the message for
+                       RENDER, 8 greps the DSL for a `[` — which Eraser eats the message for,
+                       10 fails on a decision drawn nowhere. ⚠️ This cell said **9** until
+                       2026-08-26; milestone 10 landed with D-089 and nothing walks back here
   check-links.py       every markdown link resolves — against git, not the working tree
+  freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
+                       the live specimen against it. ⛔ The SAME function does both, so the
+                       check cannot drift from the generator (D-098)
   p0-deps.sh           the phase 0 install, one command
   p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
 .github/workflows/

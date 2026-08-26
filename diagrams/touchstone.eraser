@@ -260,7 +260,7 @@ Reward > TelemetryPy: the label, joined at end-of-simulation on session_id
 
 Stores [color: blue, icon: hard-drive, label: "6 · what survives the process"] {
   Spans [shape: cylinder, icon: file-text, label: "results/spans/(version).jsonl\nthe scorer's ONLY input"]
-  Bench [shape: document, color: blue, icon: lock, label: "suite/benchmark/ — P1.3 · task IDS and a hash\nNEVER task bytes — vendoring makes us the corpus's owner again"]
+  Bench [shape: document, color: blue, icon: lock, label: "suite/benchmark/manifest.json — P1.3 ✅ shipped · task IDS and a hash\nNEVER task bytes — vendoring makes us the corpus's owner again\nthe 10 are a numeric-sorted PREFIX of τ²'s OWN held-out test split, not a sample and not hand-picked (D-098)\ncollation is pinned WITH the hash — the ids are decimal strings, so string sort is a different ten tasks"]
 }
 TelemetryPy > Spans
 Bench > Orch: which tasks — the ids only
