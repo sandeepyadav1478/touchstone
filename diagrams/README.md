@@ -60,11 +60,19 @@ stale. Same shape as the 🔴 row above — *a perfectly-rendered picture of the
 every instrument in this repo* — with the difference that this one was recorded before the fact
 rather than found after it.
 
-🔴 **AND IT IS OPEN AGAIN, same day, one label — read the trigger before adding a second one.**
+🔴 **AND IT IS OPEN AGAIN, same day, now TWO labels — read the trigger before adding a third.**
 P1.3 shipped `suite/benchmark/manifest.json`, so `touchstone.eraser:263`'s `Bench` node now says
-`P1.3 ✅ shipped` and carries D-098's selection rule. **The hosted flowchart and `loop.png` are one
-label behind as of 2026-08-26.** ⛔ **The sequence diagram is NOT affected** — it has no benchmark
-node — so only one of the two is stale, and re-exporting both would be the reflex, not the fix.
+`P1.3 ✅ shipped` and carries D-098's selection rule. **P1.5 then shipped `loop/score.py`, and
+`ScorePy` (`:275`) took its shipped marker and D-099 the same day — exactly as the paragraph below
+predicted it would.** **The hosted flowchart and `loop.png` are two labels behind as of
+2026-08-26.** ⛔ **The sequence diagram is NOT affected** — it has neither node — so only one of
+the two is stale, and re-exporting both would be the reflex, not the fix.
+
+⚠️ **The prediction landing is what makes the deferral cheap, and it is worth naming.** The
+trigger below was chosen because two named rows were going to move two named labels. One of them
+has now moved, on the day forecast, at the line number forecast — so the batch is doing what it
+was defended as doing, rather than quietly becoming an excuse. **One row remains**: `CliPy`
+(`:269`) at P1.6.
 
 **Trigger: the phase-1 exit gate.** Not "the next build row", and the reason is arithmetic
 rather than convenience: **two more rows flip a label on this same flowchart.** `CliPy` (`:269`)

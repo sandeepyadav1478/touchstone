@@ -341,6 +341,25 @@ that mistake is worth more than the metric was.**
 files ([docs/02](02-gates.md) §2.6). Per-attempt records and the four `status` values:
 [docs/09](09-schemas.md) §6.
 
+🆕 **P1.5 shipped `loop/score.py`, and it fills the arithmetic half of `aggregate` only** —
+`reward_mean`, `pass_hat_1`, `pass_hat_k`, `reward_breakdown_zeroed`, `infra_error_convention`,
+`termination_reasons`, and the `cases` rows. ⛔ **`cost_per_success_usd`, `tool_calls_mean`,
+`p95_latency_s`, `budget_exceeded` and `void_attempts` are span-derived and have no producer
+until `touchstone run` exists (P1.6)** — they are *absent*, not `null` and not zero. A key
+emitted as `0` before anything can measure it is a published number that nothing computed.
+
+⚠️ **`score()` returns `aggregate` and `cases`; it does not assemble the envelope.**
+`benchmark_hash`, `domain` and `tau2_commit` are read from `suite/benchmark/manifest.json`
+(P1.3) and `model`/`provider`/`auth` are facts about a run, so the file is assembled by the
+`touchstone score` command rather than by the pure function. **A scorer that reaches for a
+manifest is a scorer that cannot be tested without one.**
+
+🆕 **Five keys the implementation added, each because a ratio needs its denominator visible:**
+`trials`, `tasks`, `infra_errors`, `undersampled_tasks`, and `k` echoed into `aggregate`.
+⛔ **`undersampled_tasks` is the load-bearing one.** `k` is `config.K` for the whole table, never
+inferred per task, so a task with fewer than `k` trials is *named and excluded* rather than
+averaged in at a softer strictness — which would report one column under two definitions.
+
 🎯 **`diagnostics` is a boundary, not a heading (D-045).** Both things inside it are opinions about
 *how* an answer was produced — a judge's read of the reasoning, and upstream's hallucination
 reviewer's read of the transcript — and §5 promises, in prose, never to gate on them. **A promise in prose is

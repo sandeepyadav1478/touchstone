@@ -171,6 +171,69 @@ def _tau2_data() -> Check:
     )
 
 
+def metric_check(disagreements: list[str]) -> Check:
+    """Report whether our copied metrics still agree with upstream's — the logic half of D-099.
+
+    ⚠️ **`loop/score.py` COPIES `pass_hat_k` and `is_successful` instead of importing them**, so
+    that the unit suite never pays τ²'s 1.56 s import. A copy is only safe while something
+    notices it drifting, and this is that something: `doctor` imports τ² anyway, so the agreement
+    check costs nothing that is not already spent.
+
+    ⛔ **Agreement is checked by BEHAVIOUR, not by comparing source text.** A reformatted upstream
+    would fail a text comparison while computing the same number, and — far worse — a rewritten
+    one could keep the same source shape while changing the arithmetic.
+
+    Args:
+        disagreements: One string per input where the two implementations differ.
+
+    Returns:
+        A pass only when every sampled input agrees.
+    """
+    if disagreements:
+        return Check(
+            "fail", "metrics", f"{len(disagreements)} disagreement(s): {disagreements[0]}",
+            "loop/score.py copies upstream's metrics (D-099) — the copy has drifted from the pin",
+        )
+    return Check("pass", "metrics", "pass_hat_k and is_successful agree with the pin")
+
+
+def _metrics() -> Check:
+    """Run our copies against τ²'s over a small exhaustive grid — D-099.
+
+    ⛔ **Exhaustive over the shape, not a sample of it.** Every `(trials, successes, k)` with
+    `trials ≤ 5` is checked, which includes the `k < num_trials` rows where the plausible
+    re-derivation (*"passed every attempt"*) diverges — the corpus we develop against has 4
+    trials on every task, so a spot check at `k == num_trials` would agree with a wrong copy.
+
+    Returns:
+        A pass only when every grid point and every tolerance point matches.
+    """
+    try:
+        from tau2.metrics.agent_metrics import is_successful as up_successful
+        from tau2.metrics.agent_metrics import pass_hat_k as up_pass_hat_k
+    except ImportError as exc:
+        return Check(
+            "fail", "metrics", f"tau2 not importable — {exc}",
+            "the specimen is pinned in pyproject's [tool.uv.sources]",
+        )
+
+    from touchstone.loop.score import is_successful, pass_hat_k
+
+    bad: list[str] = []
+    for trials in range(1, 6):
+        for successes in range(trials + 1):
+            for k in range(1, trials + 1):
+                ours, theirs = pass_hat_k(trials, successes, k), up_pass_hat_k(trials, successes, k)
+                if ours != theirs:
+                    bad.append(f"pass_hat_k({trials},{successes},{k}) {ours} != {theirs}")
+    # ⚠️ The tolerance is the whole content of `is_successful`, so the points that matter are the
+    # ones just inside and just outside it — 1.0 alone would agree with a bare `== 1.0`.
+    for reward in (0.0, 0.5, 0.9999, 1 - 1e-7, 1.0, 1 + 1e-7, 1.001):
+        if is_successful(reward) != up_successful(reward):
+            bad.append(f"is_successful({reward}) disagrees")
+    return metric_check(bad)
+
+
 def tracing_check(wrote: str, read_back: str | None, uri: str) -> Check:
     """Compare a marker written into the trace store against the one read back out — P1.2.
 
@@ -387,6 +450,7 @@ def run(probe: bool = True) -> int:
         # architecture and false about the call, which raises by default (P1.2).
         _tracing(),
         _tau2_data(),
+        _metrics(),
         _lockfile(),
     ]
 

@@ -26,8 +26,18 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "touchstone"
 
-# ⛔ rglob, not `SRC.glob("*.py")` — a glob is not a tree, and `loop/` arrives in P1.5.
-MODULES = {p.stem: ast.parse(p.read_text(), p.name) for p in sorted(SRC.rglob("*.py"))}
+# ⛔ rglob, not `SRC.glob("*.py")` — a glob is not a tree, and `loop/` arrived in P1.5.
+#
+# 🔴 **Keyed on the dotted path, not `p.stem` — the stem collided the day `loop/` landed**
+# (DEF-069). Two `__init__.py` files have the same stem, so a dict keyed on it silently kept one
+# and dropped the other: 8 files on disk, 7 keys, and every assertion below simply stopped seeing
+# a module. **A dict comprehension over a tree is a silent deduplicator**, and the count check on
+# the next line is the cheap thing that would have caught it on day one.
+MODULES = {
+    str(p.relative_to(SRC).with_suffix("")).replace("/", "."): ast.parse(p.read_text(), p.name)
+    for p in sorted(SRC.rglob("*.py"))
+}
+assert len(MODULES) == len(list(SRC.rglob("*.py"))), "a module was swallowed by a key collision"
 
 
 def _runtime_nodes(node: ast.AST):

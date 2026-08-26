@@ -501,7 +501,9 @@ src/touchstone/
                        `Environment.make_tool_call()` (D-065)                      [P3.1]
   loop/
     run.py             suite runner, k attempts, --resume, attempt cache (D-015)
-    score.py           spans + τ² `RewardInfo` → results/*.json (§6)
+    score.py           🆕 **P1.5** — τ² `RewardInfo` → `aggregate` + `cases` (§6). PURE: no
+                       I/O, no τ² import (1.56s against a 2s gate), no model. ⛔ The span half
+                       of §6 waits for `touchstone run`; those keys are ABSENT, not zeroed
     compare.py         the acceptance conditions — docs/02 §1                      [phase 2]
     promote.py         results/index.json, open → locked
     mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]

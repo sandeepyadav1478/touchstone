@@ -25,23 +25,66 @@ ASSERTED_ABSENT = {"ANTHROPIC_API_KEY", "CEREBRAS_API_KEY"}
 WRITTEN_NOT_READ = {"DEEPEVAL_TELEMETRY_OPT_OUT", "MLFLOW_ALLOW_FILE_STORE"}
 
 
+def _is_environ(node: ast.AST) -> bool:
+    """`os.environ` or a bare `environ` — the RECEIVER, not just the method name.
+
+    🔴 **This check was missing until 2026-08-26 and the detector matched any `.get("UPPER")`**
+    (DEF-070). `loop/score.py`'s `reward_breakdown.get("DB")` is a dict read, and the guard
+    reported it as an un-namespaced environment variable. ⚠️ **A method name is not a call to
+    a particular object** — same shape as *a substring is not a symbol*, one level up the tree.
+    """
+    return (isinstance(node, ast.Attribute) and node.attr == "environ") or (
+        isinstance(node, ast.Name) and node.id == "environ"
+    )
+
+
+def _reads_env(fn: ast.AST) -> bool:
+    """True when this call target actually reads the environment."""
+    if isinstance(fn, ast.Attribute) and fn.attr in {"get", "setdefault"}:
+        return _is_environ(fn.value)
+    if isinstance(fn, ast.Attribute) and fn.attr == "getenv":
+        return isinstance(fn.value, ast.Name) and fn.value.id == "os"
+    return isinstance(fn, ast.Name) and fn.id == "getenv"
+
+
 def _env_names_read() -> set[tuple[str, str]]:
-    """(file, var) for every literal name passed to os.environ.get / os.getenv."""
+    """(file, var) for every literal name read from the environment, by any of its spellings.
+
+    ⚠️ **`os.environ["X"]` is covered too** — it was not before, and it is the commonest form.
+    The old `arg.isupper()` filter is gone with it: it was standing in for the receiver check,
+    and it would have let a lowercase read through in the one direction a guard must not fail.
+    """
     found = set()
     for path in SRC.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text())):
-            if not isinstance(node, ast.Call) or not node.args:
-                continue
-            fn = node.func
-            name = (
-                fn.attr if isinstance(fn, ast.Attribute)
-                else fn.id if isinstance(fn, ast.Name) else ""
-            )
-            if name in {"get", "getenv", "setdefault"} and isinstance(node.args[0], ast.Constant):
-                arg = node.args[0].value
-                if isinstance(arg, str) and arg.isupper():
-                    found.add((path.name, arg))
+            literal = None
+            if isinstance(node, ast.Subscript) and _is_environ(node.value):
+                literal = node.slice
+            elif isinstance(node, ast.Call) and node.args and _reads_env(node.func):
+                literal = node.args[0]
+            if isinstance(literal, ast.Constant) and isinstance(literal.value, str):
+                found.add((path.name, literal.value))
     return found
+
+
+def test_the_detector_reads_the_receiver_not_the_method_name() -> None:
+    """⛔ Written after the guard flagged a dict. A check nobody has watched fail is not a check."""
+    import textwrap
+
+    def names(src: str) -> set[str]:
+        found = set()
+        for node in ast.walk(ast.parse(textwrap.dedent(src))):
+            if isinstance(node, ast.Subscript) and _is_environ(node.value):
+                if isinstance(node.slice, ast.Constant):
+                    found.add(node.slice.value)
+            elif isinstance(node, ast.Call) and node.args and _reads_env(node.func):
+                found.add(node.args[0].value)
+        return found
+
+    assert names('breakdown.get("DB")') == set(), "a dict is not the environment"
+    assert names('cfg.getenv("X")') == set(), "nor is anything else that owns a method by that name"
+    assert names('os.environ.get("A"); os.getenv("B"); os.environ["C"]') == {"A", "B", "C"}
+    assert names('environ.get("D")') == {"D"}, "the bare-import spelling still counts"
 
 
 def test_every_consumed_variable_is_namespaced() -> None:

@@ -8,7 +8,7 @@ model as a failed pin (D-035). These two cases are that bug, frozen.
 import pytest
 
 from touchstone import config
-from touchstone.doctor import _cerebras, model_check, specimen_check, tracing_check
+from touchstone.doctor import _cerebras, metric_check, model_check, specimen_check, tracing_check
 
 HOUSEKEEPING = "claude-haiku-4-5-20251001"
 
@@ -86,3 +86,11 @@ def test_someone_elses_trace_is_not_ours() -> None:
     check = tracing_check("abc123", "def456", URI)
     assert check.status == "fail"
     assert "abc123" in check.detail and "def456" in check.detail
+
+
+def test_metric_check_names_the_first_disagreement_rather_than_a_count() -> None:
+    """D-099 — the copy in `loop/score.py` is only safe while something reports it drifting."""
+    check = metric_check(["pass_hat_k(2,1,1) 0.0 != 0.5"])
+    assert check.status == "fail"
+    assert "pass_hat_k(2,1,1)" in check.detail, "a bare count leaves nowhere to start"
+    assert metric_check([]).status == "pass"
