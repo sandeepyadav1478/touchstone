@@ -80,6 +80,17 @@ REVIEW_MODEL = "claude-opus-5"
 # Quota is a rolling five-hour window and overage is rejected, not billed — it kills a run in
 # flight. The cheap pins above are that constraint's doing, not a quality judgement (D-067).
 
+# Where extract.py stops rather than running into `rejected`, which loses the attempt in
+# flight and cannot be retried until the window resets. Compared against
+# RateLimitInfo.utilization, which the SDK reports live (docs/00 §1).
+#   read alongside the SDK's own `status`, not instead of it: the vendor decides when
+#   `allowed_warning` fires and never says at what fraction, so the stop point has to be ours
+#   a budget, not a measurement — calls-per-trace is unmeasured here, and the 15% reserve
+#   covers fewer attempts than it looks like, since MAX_ATTEMPTS x (curator + critic) is a
+#   floor per trace and the real cost only runs above it
+#   read by quota_exhausted() alone, the one-reader rule MAX_ATTEMPTS already gets (D-091 §C)
+QUOTA_STOP_UTILIZATION = 0.85
+
 # ── the specimen, asserted rather than assumed ────────────────────────────────────────────
 # P1.0. τ² resolves its data directory once at import and warns rather than fails when it is
 # missing, and the fallback is broken under a normal install (DEF-051). Measured 2026-08-25
