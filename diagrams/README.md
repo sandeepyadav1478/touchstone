@@ -68,9 +68,9 @@ predicted it would**, and **the same label grew two more lines the same day for 
 payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
 ⚠️ **That is one label edited three times, not three labels — the drift count is a count of
 labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
-six-node one. 🆕 **Eight labels behind as of 2026-08-26**, not two, and the number is
+six-node one. 🆕 **Nine labels behind as of 2026-08-28**, not two, and the number is
 **derived rather than stepped** — `Adapter`, `Bench`, `Clean`, `CliPy`, `Doctor`, `ReportPy`,
-`RunPy`, `ScorePy`, from:
+`RunPy`, `ScorePy`, `Tier1`, from:
 
 ```bash
 git diff "$(git log -1 --format=%H -- diagrams/loop.png)" -- diagrams/touchstone.eraser \

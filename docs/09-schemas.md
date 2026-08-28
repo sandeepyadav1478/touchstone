@@ -506,7 +506,13 @@ src/touchstone/
                        ends with a scorer that has never read one.
   api.py               fastapi; the four endpoints in docs/06 §2 — ⚠️ its reason is open (D-040)
   gate/
-    tier1.py           the hand-written DB constraints — NO model                 [P2.1]
+    tier1.py           **P2.1 ✅ shipped** — the hand-written DB constraints, NO model. ⛔ **ONE
+                       constraint, not the five D-064 named**: the retail tools already raise on
+                       length, same-product, availability and payment-ownership, and fire 0 times
+                       on the 506 exchange calls the environment ACCEPTED. `self_swap` is the one
+                       nothing checks and `policy.md:132` states. ⚠️ **Silent on the adopted
+                       corpus** — 0 accepted firings in 1,712, all 37 live in tasks D-080
+                       excluded (D-105). Returning `[]` is the normal answer, never approval
     extract.py         the model TRANSLATES a stated policy into a predicate. ⛔ The
                        VERDICT is mechanical; it never judges "did well" (D-064)   [P2.2]
     enforce.py         REFUSES the call before it executes — the hook at
@@ -570,6 +576,13 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        `--results <path>` on `score` would let four third-party models' numbers
                        be published under one of our version labels — D-080 ceiling 1. It never
                        touches results/ or `write()`
+  measure-tier1.py     🆕 P2.1 — shadow-runs `gate/tier1.check()` over the four shipped baselines.
+                       ⛔ **Evidence, not a guard: it has NO pass condition**, so it can never go
+                       red and must never be read as one. It prints BOTH populations on every run
+                       — 1,824 sims over 114 tasks and 1,712 over D-080's 107 — because the two
+                       disagree (47/37 against 9/0) and quoting either alone misleads. Its last
+                       milestone is the false-positive count, the only figure that can disqualify
+                       a gate
   check-links.py       every markdown link resolves — against git, not the working tree
   freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
                        the live specimen against it. ⛔ The SAME function does both, so the
