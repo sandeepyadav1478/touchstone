@@ -207,8 +207,16 @@ def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
     is the same doctor and always was; a guard that has to be edited every time a file moves
     trains you to edit it, and the edit that relaxes it looks identical to the edit that
     renames a file.
+
+    `gate.extract` is the third, and it is named rather than ruled because it is an exception
+    and should read as one — D-107. It is the PROPOSING path: it translates a written rule into
+    a predicate and hands it to `predicate.evaluate()`, which decides. What kept this guard
+    honest was never the count, it was that no model reaches the decision, and that is now
+    asserted where it actually lives: `test_no_model_in_gating_path` walks `predicate.py` too.
+    Widening this without that walk would have been the edit this docstring warns about.
     """
-    allowed = {n for n in MODULES if n == "adapter" or n.split(".")[0] == "doctor"}
+    seams = {"adapter", "gate.extract"}
+    allowed = {n for n in MODULES if n in seams or n.split(".")[0] == "doctor"}
     reach = {name for name, tree in MODULES.items() if "claude_agent_sdk" in imported(tree)}
     assert reach <= allowed and "adapter" in reach, (
         f"{reach - allowed} reaches a model. The gate is mechanical — "

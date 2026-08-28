@@ -56,9 +56,17 @@ def test_no_model_in_gating_path() -> None:
     cheaper: P2.5 proves a gate CAN block, this proves the blocking path cannot consult a
     model to decide whether to. Walked through imports rather than asserted about one file,
     because the way this breaks is a helper three modules down.
+
+    Two roots, not one. `predicate.py` is the tier-2 evaluator and nothing reached it from
+    here — it imports `tier1`, so the walk ran the wrong way down the only edge between them
+    and the file that decides tier 2 was never covered. Found while widening
+    `test_only_the_seam_and_the_doctor_may_reach_a_model` for `gate.extract` (D-107): the
+    argument for letting a model propose is that nothing lets one decide, and that half was
+    unasserted.
     """
     seen: set[Path] = set()
-    queue = [ROOT / "src" / "touchstone" / "gate" / "tier1.py"]
+    gate = ROOT / "src" / "touchstone" / "gate"
+    queue = [gate / "tier1.py", gate / "predicate.py"]
     while queue:
         path = queue.pop()
         if path in seen or not path.exists():
@@ -79,4 +87,4 @@ def test_no_model_in_gating_path() -> None:
         for marker in MODEL_CALLS:
             assert marker not in path.read_text(), f"{path.name} mentions {marker}"
 
-    assert len(seen) >= 1
+    assert len(seen) >= 2

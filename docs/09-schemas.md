@@ -520,8 +520,18 @@ src/touchstone/
                        and exec'ing source would put a model on the path D-064 keeps mechanical
                        (D-106 §A). ⚠️ Reads ORDER, which is what tier 1 cannot see: the write/read
                        split comes from τ²'s `tool_mutates_state`, not a list here
-    extract.py         the model TRANSLATES a stated policy into a predicate. ⛔ The
-                       VERDICT is mechanical; it never judges "did well" (D-064)   [P2.2]
+    extract.py         **P2.2 ✅ shipped** — the model TRANSLATES a stated policy into a
+                       predicate. ⛔ The VERDICT is mechanical; it never judges "did well"
+                       (D-064). 🔴 **The third module allowed to reach a model** and the only
+                       one outside `adapter`/`doctor` — D-107, argued rather than assumed: it
+                       PROPOSES and `predicate.py` decides. ⚠️ **That widening came with a
+                       tightening** — `test_no_model_in_gating_path` walked from `tier1.py`
+                       alone, and `predicate.py` imports `tier1`, so the tier-2 evaluator was
+                       never covered; it is a second walk root now. `parse()` is PURE and
+                       TOTAL: an unknown `kind` is REFUSED, not accommodated, and an empty
+                       `source` is refused because D-106 made the citation a field.
+                       `{"kind": null}` returns `None` — a capability failure has no stated
+                       rule to translate
     enforce.py         REFUSES the call before it executes — the hook at
                        `Environment.make_tool_call()` (D-065)                      [P3.1]
   loop/
@@ -554,7 +564,18 @@ src/touchstone/
     promote.py         results/index.json, open → locked
     mine.py            THE INNER LOOP — one trace, n attempts, docs/02 §5          [phase 3]
     suite.py           show / diff / log / review / quarantine                     [phase 3]
-    budget.py          thresholds from v1's measured numbers                       [phase 2]
+    budget.py          🆕 **shipped with P2.2** — whether there is room for another model
+                       call, and the single reader of `config.QUOTA_STOP_UTILIZATION` (the
+                       one-reader rule D-091 §C gives `MAX_ATTEMPTS`). ⚠️ **`RateLimitEvent`
+                       fires on status TRANSITIONS, not per message**, so the reading is module
+                       state; ⚠️ **`utilization` is `float | None` upstream**, so a missing
+                       number falls back to the status. ⛔ Cost is NOT accumulated — docs/03
+                       asks for measured usage over a turn count, and `utilization` already is
+                       that, taken by the vendor over the window it enforces. 🔴 **This row
+                       said "thresholds from v1's measured numbers" until 2026-08-28** — a
+                       different job, and one `compare.py` two rows up already holds (docs/02
+                       §1). docs/03 names `budget.py` for the cost half explicitly, so the
+                       name went to that and the conflict is recorded rather than overwritten
     record.py          → the README table                                          [phase 2]
 
 suite/                 benchmark/ · regression/ · proposed/ · CHANGELOG.md
