@@ -15,6 +15,11 @@ Two populations, and mixing them is the whole risk:
 Both are printed, always, because tier 1's answer differs between them and a reader given one
 number would draw the wrong conclusion from it.
 
+The last line is clean on TWO signals, `db_check` and every `action_check`, which is a set of
+934 in the corpus — not docs/02's 878, which subtracts a third signal (56 unconfirmed writes)
+that no command in this repo reproduces. The two agree arithmetically, 934 = 878 + 56, and the
+wider set is the safer one to call a false positive against: it can only over-report.
+
 A firing is only interesting if the environment ACCEPTED the call. A gate that fires on a call
 the tool already refused has changed nothing — no write happened either way — so accepted and
 errored are counted apart rather than summed.
@@ -131,7 +136,7 @@ def main() -> int:
     logging.info("── milestone 3/3 · false positives, the only figure that can disqualify a gate")
     logging.info("  corpus simulations with an accepted firing : %d", n["sims_with_a_firing"])
     logging.info("    of those, db_check PASSED                : %d", n["db_passed"])
-    logging.info("    of those, in the CLEAN control set       : %d  <- false positives",
+    logging.info("    of those, clean on db + action_checks    : %d  <- false positives",
                  n["in_the_clean_set"])
     return 0
 

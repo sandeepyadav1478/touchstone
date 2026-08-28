@@ -289,6 +289,21 @@ rejected as a false positive** — the same shape as the 371 above, at 1/53rd th
 below any threshold we would set and it is written down anyway**, because the cost of meeting it
 later without a name is an afternoon spent doubting a rule that was right.
 
+🔴 **And DEF-076 is the same shape, far larger, on the rule this section most needs to mine** —
+**44 of 934** here against DEF-075's **7 of 878** above. ⚠️ The two rates are quoted with their
+own denominators and **not divided into each other**: the sets differ by the 56, so a ratio of
+them would be a number about neither. Shadow-running a hand-written confirmation predicate (`scripts/measure-predicate.py`)
+fires on **44 of the 934** corpus sessions clean on `db_check` + every `action_check`, and **≥23
+are corroborated by a second stated rule** — `policy.md:20` forbids a tool call in the same
+message as text, and those 23 do exactly that. Task 14's agent read the order, the user asked to
+return two items, and the agent **listed the details and called `return_delivered_order_items` in
+one message**. No confirmation was obtained; the final database matched anyway. ⛔ **Under the
+rule stated above — reject any predicate that fires on a clean session — a correct predicate for
+the confirmation rule is rejected.** ⚠️ **934 is not 878**: this section's control set already
+subtracts 56 unconfirmed writes and `934 = 878 + 56`, so the two agree — but **no command in this
+repo reproduces 878 or 834**, so the subtraction cannot be applied by anyone reading this. That is
+the open half of `D-106` §C, not a number to correct here.
+
 🔴 **A scope filter stood here until 2026-08-22 and it is deleted — `D-081`,
 `DEF-056`.** It asked *"does this trace break a rule someone wrote down?"*,
 routed a `no` to a second terminal, and **this paragraph used to call it mechanical.** It named no

@@ -513,6 +513,13 @@ src/touchstone/
                        nothing checks and `policy.md:132` states. ⚠️ **Silent on the adopted
                        corpus** — 0 accepted firings in 1,712, all 37 live in tasks D-080
                        excluded (D-105). Returning `[]` is the normal answer, never approval
+    predicate.py       **P2.2 ✅ shipped** — the closed set of shapes a mined rule may take,
+                       and the mechanical check of one over a whole SESSION. Three:
+                       `RequiresPriorTool`, `RequiresUserAssent`, `ArgumentIn`. ⛔ **Data, never
+                       model-authored code** — the curator emits a field (`allowed_tools=[]`),
+                       and exec'ing source would put a model on the path D-064 keeps mechanical
+                       (D-106 §A). ⚠️ Reads ORDER, which is what tier 1 cannot see: the write/read
+                       split comes from τ²'s `tool_mutates_state`, not a list here
     extract.py         the model TRANSLATES a stated policy into a predicate. ⛔ The
                        VERDICT is mechanical; it never judges "did well" (D-064)   [P2.2]
     enforce.py         REFUSES the call before it executes — the hook at
@@ -583,6 +590,12 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        disagree (47/37 against 9/0) and quoting either alone misleads. Its last
                        milestone is the false-positive count, the only figure that can disqualify
                        a gate
+  measure-predicate.py 🆕 P2.2 — shadow-runs the three retail policy rules over the same corpus,
+                       hand-written so it measures the SHAPES rather than a model. ⛔ **Evidence,
+                       no pass condition.** It is what found DEF-076: `cancel reason` fires 0
+                       times, `authentication` 1 in 1,824, and `confirmation` 44 times inside the
+                       934 sessions clean on db + action_checks — so the control set docs/02 §5
+                       tests against is not clean on the rules a predicate is written against
   check-links.py       every markdown link resolves — against git, not the working tree
   freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
                        the live specimen against it. ⛔ The SAME function does both, so the
