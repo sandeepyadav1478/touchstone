@@ -39,7 +39,7 @@ flowchart TB
     CRITIC("qa / critic agent<br/>judges it, and DECIDES — D-086 §A")
     PRED{{"run_predicate()<br/>the critic's tool — EVIDENCE, not a gate<br/>no model — D-086 §A"}}
     BUDGET{{"attempt_budget()<br/>the critic's other tool — D-089 · D-092<br/>owns config.MAX_ATTEMPTS · its reply IS the exit — D-094"}}
-    CTRL[("control set<br/>878 clean + every SKIP")]
+    CTRL[("control set<br/>934 clean + every SKIP — D-108")]
     CORPUS --> ROUTER
     ROUTER -- "enhance" --> CURATOR
     ROUTER -. "skip" .-> CTRL

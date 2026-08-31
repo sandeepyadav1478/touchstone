@@ -50,6 +50,12 @@ required confirmation and still writes the correct row scores `DB == 1`. Over th
 878 clean     = none of the three — THE SILENCE SET
 ```
 
+⚠️ **Two of those three signals rebuild from a command and the third does not.**
+`scripts/measure-control-set.py` recomputes the 407 and the 371 exactly; the 56 came from a regex
+that was never committed, so **the silence set this project actually uses is the 934 clean on the
+two reproducible signals** (`D-108`). The split above is kept as written
+because it is what the sections below were reasoned from, and `934 = 878 + 56` either way.
+
 🔴 **Those 371 are why the miner reads three signals and not one.** Selecting on `DB == 0` alone
 leaves them in the silence set — the population a new predicate must be quiet on to be cleared —
 so a predicate **correctly** catching a confirmation violation would have been thrown out as a

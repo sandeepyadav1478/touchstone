@@ -68,15 +68,19 @@ predicted it would**, and **the same label grew two more lines the same day for 
 payload is four `TypedDict`s; a *misspelt* termination reason passes mypy and every test).
 ⚠️ **That is one label edited three times, not three labels — the drift count is a count of
 labels, not of edits**, and quoting it the other way would make a two-node redraw sound like a
-six-node one. 🆕 **Ten labels behind as of 2026-08-28**, not two, and the number is
-**derived rather than stepped** — `Adapter`, `Bench`, `Clean`, `CliPy`, `Doctor`, `ReportPy`,
-`RunPy`, `ScorePy`, `Tier1`, `Tier2`, from:
+six-node one. 🆕 **Eleven labels behind as of 2026-08-31**, not two, and the number is
+**derived rather than stepped** — `Adapter`, `Anom`, `Bench`, `Clean`, `CliPy`, `Doctor`,
+`ReportPy`, `RunPy`, `ScorePy`, `Tier1`, `Tier2`, from:
 
 ```bash
 git diff "$(git log -1 --format=%H -- diagrams/loop.png)" -- diagrams/touchstone.eraser \
   | grep -E '^\+' | grep -E '\[(shape|color|icon|label)' \
   | sed -E 's/^\+[[:space:]]*([A-Za-z0-9_]+)[[:space:]]*\[.*/\1/' | sort -u
 ```
+
+⚠️ **`sequence.eraser` drifted on the same day and this count does not see it** — the pipeline
+above reads `touchstone.eraser` against `loop.png` only, so `sequence.png` needs the same command
+with both names swapped before anyone quotes a number for it. D-108 edited one message label there.
 
 ⚠️ **The pipeline is written out because the first version of it under-counted and the number was
 wrong for it.** A narrower pattern — one that required a single space before the `[` — matched

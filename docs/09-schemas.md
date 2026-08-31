@@ -617,6 +617,14 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        times, `authentication` 1 in 1,824, and `confirmation` 44 times inside the
                        934 sessions clean on db + action_checks — so the control set docs/02 §5
                        tests against is not clean on the rules a predicate is written against
+  measure-control-set.py 🆕 P2.3 — rebuilds docs/02 §5's control set from a command, which is what
+                       D-108 needed to retire the 878. ⛔ **Evidence, no pass condition** — but
+                       unlike its two siblings it DOES compare against recorded figures and prints
+                       REPRODUCED or CONFLICT per signal: 407 and 371 reproduce exactly, the 56
+                       does not reproduce at all, so **the control set is the 934**. Its third
+                       signal is `policy.md:20` and is deliberately NOT subtracted (627 of 934
+                       break it); it is there to give DEF-076's corroboration the base rate it
+                       never carried — 41 of 44 against 67.1%, a 1.39× lift
   check-links.py       every markdown link resolves — against git, not the working tree
   freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
                        the live specimen against it. ⛔ The SAME function does both, so the

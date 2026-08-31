@@ -287,22 +287,34 @@ database is the initial database and doing nothing scores `DB == 1`. Seven of it
 `action_checks` as well and land here. 🔴 **A correct predicate firing on one of them would be
 rejected as a false positive** — the same shape as the 371 above, at 1/53rd the size. **0.8% is
 below any threshold we would set and it is written down anyway**, because the cost of meeting it
-later without a name is an afternoon spent doubting a rule that was right.
+later without a name is an afternoon spent doubting a rule that was right. ⚠️ **Re-derived against
+`D-108`'s control set rather than restated: still 7, now 7 of 934 (0.75%)** — the seven are clean
+on both mechanical signals, so retiring the 878 moved the denominator and not the count.
 
 🔴 **And DEF-076 is the same shape, far larger, on the rule this section most needs to mine** —
 **44 of 934** here against DEF-075's **7 of 878** above. ⚠️ The two rates are quoted with their
 own denominators and **not divided into each other**: the sets differ by the 56, so a ratio of
 them would be a number about neither. Shadow-running a hand-written confirmation predicate (`scripts/measure-predicate.py`)
-fires on **44 of the 934** corpus sessions clean on `db_check` + every `action_check`, and **≥23
-are corroborated by a second stated rule** — `policy.md:20` forbids a tool call in the same
-message as text, and those 23 do exactly that. Task 14's agent read the order, the user asked to
+fires on **44 of the 934** corpus sessions clean on `db_check` + every `action_check`, and **41
+of the 44 (93.2%) break a second stated rule** — `policy.md:20` forbids a tool call in the same
+message as text, or more than one call at a time. 🔴 **That figure is only meaningful beside its
+base rate, and this sentence said `≥23` without one until 2026-08-31:** the same rule fires on
+**627 of the 934 (67.1%)**, so the corroboration is a **1.39× lift**, not the near-proof it read
+as (`D-108` §D, `scripts/measure-control-set.py`). ⚠️ **Rule 1 in a shape it had not taken here:
+the denominator was named and the comparison population was not.** Task 14's agent read the order, the user asked to
 return two items, and the agent **listed the details and called `return_delivered_order_items` in
 one message**. No confirmation was obtained; the final database matched anyway. ⛔ **Under the
 rule stated above — reject any predicate that fires on a clean session — a correct predicate for
-the confirmation rule is rejected.** ⚠️ **934 is not 878**: this section's control set already
-subtracts 56 unconfirmed writes and `934 = 878 + 56`, so the two agree — but **no command in this
-repo reproduces 878 or 834**, so the subtraction cannot be applied by anyone reading this. That is
-the open half of `D-106` §C, not a number to correct here.
+the confirmation rule is rejected.** ⚠️ **934 is not 878**, and `D-108` settled which one this
+project uses. `scripts/measure-control-set.py` rebuilds the first two signals **exactly** — 407
+and 371 — and cannot rebuild the third, because the regex that produced the 56 lived in a scratch
+script and was never committed. 🔴 **So the 878 is retired: not disproved, unbuildable, and the
+control set is the 934 the command prints.** `934 = 878 + 56` still holds; the arithmetic was
+never the question. ⛔ **The third signal is deliberately not replaced by `RequiresUserAssent`** —
+that would define the control set with the predicate it exists to judge — and the independent rule
+that *was* measured (`policy.md:20`) is not subtracted either: it fires on 627 of the 934, so
+subtracting it would leave 307 and measure the harness's house style instead of the agent's
+compliance.
 
 🔴 **A scope filter stood here until 2026-08-22 and it is deleted — `D-081`,
 `DEF-056`.** It asked *"does this trace break a rule someone wrote down?"*,
@@ -360,7 +372,7 @@ defence against the obvious cheat: a predicate that merely quotes the failing se
 that passes.
 
 ⚠️ **The always-pass set is the control, so it has to be earned rather than picked** — 🆕 with
-P1.7 superseded it is the **878 corpus traces that are clean on all three signals**
+P1.7 superseded it is the **934 corpus traces that are clean on the two reproducible signals**
 (`D-080`), not the sessions our v1 passed on every one of `k`. ⛔ **Clean
 means clean on the selector, which is a stronger bar than `DB == 1`** — that is the whole of §C.
 
@@ -394,7 +406,7 @@ point of the swap.
 flowchart TB
   SUITE0[("the CLEARED suite so far<br/>D-087 · exact check BEFORE any agent call:<br/>a predicate already fires ⇒ already_covered, zero attempts spent")] -.-> TRANS
   SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A · criteria in D-086 §B<br/>reads ONE session, grades 4 criteria, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
-  ROUTER -->|SKIP| CLEAN["the control set — 878 clean, plus every skip<br/>a predicate that fires here is a FALSE POSITIVE"]
+  ROUTER -->|SKIP| CLEAN["the control set — 934 clean, plus every skip — D-108<br/>a predicate that fires here is a FALSE POSITIVE"]
   KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
   ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>D-087 · reads the CLEARED SUITE first — a rule already gated is not worth mining twice<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
   TRANS --> CRIT{"1b. CRITIC — judges the curator's work, and DECIDES<br/>🔴 the loop's decision point since D-086 §A · reads the tool result and chooses<br/>ONE bounce per attempt · D-082 §C2 · ≤ config.MAX_ATTEMPTS critic calls"}

@@ -17,8 +17,9 @@ number would draw the wrong conclusion from it.
 
 The last line is clean on TWO signals, `db_check` and every `action_check`, which is a set of
 934 in the corpus — not docs/02's 878, which subtracts a third signal (56 unconfirmed writes)
-that no command in this repo reproduces. The two agree arithmetically, 934 = 878 + 56, and the
-wider set is the safer one to call a false positive against: it can only over-report.
+whose regex was never committed. `measure-control-set.py` rebuilds the other two signals exactly
+and cannot rebuild that one, which is why D-108 retired the 878 and kept this 934: the two agree
+arithmetically, 934 = 878 + 56, and the wider set can only over-report a false positive.
 
 A firing is only interesting if the environment ACCEPTED the call. A gate that fires on a call
 the tool already refused has changed nothing — no write happened either way — so accepted and

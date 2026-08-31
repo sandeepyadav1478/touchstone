@@ -164,7 +164,7 @@ Router > Router: criterion_1_agreement — the router verdict scored against τ�
 loop [label: "config.MAX_ATTEMPTS attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
   Curator > Critic: a candidate predicate, and the stated rule it claims to encode
   Critic > Pred: the critic calls its evidence tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
-  Pred > Corpus: fire it against the 878 clean sessions
+  Pred > Corpus: fire it against the 934 clean sessions — D-108 retired the 878 as unbuildable
   Corpus --> Pred: the NO half of the evidence — a hit here is a FALSE POSITIVE
   Pred --> Critic: the result returns to its CALLER, who DECIDES what it means — D-086 A
   Critic --> Curator: the SPECIFIC bad finding, never 'this seems weak' — D-086 C. ONE bounce per attempt
