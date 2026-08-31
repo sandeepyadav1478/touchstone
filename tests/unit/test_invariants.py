@@ -237,6 +237,51 @@ def test_the_model_pins_live_in_config_and_nowhere_else() -> None:
         assert not hardcoded, f"{name}.py hardcodes {hardcoded} — the pins live in config.py"
 
 
+CAP = "MAX_ATTEMPTS"
+
+
+def cap_reads(tree: ast.AST) -> int:
+    """How many times this subtree names the attempt cap, as an attribute or a bare name."""
+    return sum(
+        1
+        for n in ast.walk(tree)
+        if (isinstance(n, ast.Attribute) and n.attr == CAP)
+        or (isinstance(n, ast.Name) and n.id == CAP)
+    )
+
+
+def test_the_attempt_cap_has_exactly_one_reader() -> None:
+    """D-091 §C, and the invariant is the absence, not the presence.
+
+    That `attempts_exhausted()` exists proves nothing. What the decision asks for is that the
+    graph's loop condition and the critic's `attempt_budget` tool get the same answer, and the
+    only way to have that is for neither to know the number. So this counts reads across the
+    whole source rather than asserting anything about one function.
+
+    Stated as two claims because they fail differently: a second module reading the cap is a
+    drift, and `budget.py` reading it outside `attempts_exhausted()` is the same drift arriving
+    one file earlier. Ceiling: `import MAX_ATTEMPTS as X` would evade this. A rebinding
+    import is worth a guard when one appears; today none does, and a check that chases every
+    alias is a check nobody reads.
+    """
+    owner = "loop.budget"
+    skip = {"config", owner}
+    elsewhere = {
+        name: n for name, tree in MODULES.items() if name not in skip and (n := cap_reads(tree))
+    }
+    assert not elsewhere, f"{sorted(elsewhere)} reads {CAP}; only {owner}.attempts_exhausted may"
+
+    tree = MODULES[owner]
+    reader = next(
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.FunctionDef) and n.name == "attempts_exhausted"
+    )
+    assert cap_reads(tree) == cap_reads(reader) > 0, (
+        f"{owner} names {CAP} outside attempts_exhausted() — the cap is back in two places"
+    )
+
+
 def test_no_module_reads_the_answer_key() -> None:
     """Invariant 1, asserted where we can actually break it.
 

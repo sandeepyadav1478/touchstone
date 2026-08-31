@@ -73,3 +73,20 @@ def test_observe_is_what_the_stream_calls(monkeypatch: pytest.MonkeyPatch) -> No
     budget.observe(RateLimitInfo(status="rejected"))
     assert budget.quota_exhausted()
     assert budget.reading() is not None
+
+
+def test_a_fresh_trace_has_attempts_left() -> None:
+    assert not budget.attempts_exhausted(0)
+
+
+def test_the_last_attempt_is_still_an_attempt() -> None:
+    assert not budget.attempts_exhausted(config.MAX_ATTEMPTS - 1)
+
+
+def test_the_cap_stops_the_loop() -> None:
+    assert budget.attempts_exhausted(config.MAX_ATTEMPTS)
+
+
+def test_overshooting_the_cap_still_stops() -> None:
+    """`>=`, not `==`. A caller that counted wrong should be stopped, not waved through."""
+    assert budget.attempts_exhausted(config.MAX_ATTEMPTS + 3)
