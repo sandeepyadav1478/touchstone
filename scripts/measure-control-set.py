@@ -42,7 +42,8 @@ from touchstone.gate.predicate import evaluate  # noqa: E402
 
 # What docs/02 SS5 states, kept here so the run reports which figures it reproduced instead of
 # leaving a reader to diff two documents by eye.
-RECORDED = {"fail_db": 407, "fail_action": 371, "unconfirmed": 56, "control": 878}
+RECORDED = {"fail_db": 407, "fail_action": 371, "unconfirmed": 56,
+            "anomalous": 834, "control": 878}
 
 
 def breaks_one_call_at_a_time(
@@ -141,6 +142,11 @@ def main() -> None:
                      label, got, want, "REPRODUCED" if got == want else "CONFLICT")
     logging.info("  %-26s %5s  recorded %3d  LOST - the regex was never committed",
                  "unconfirmed write", "--", RECORDED["unconfirmed"])
+    logging.info("  %-26s %5d  recorded %3d  CONFLICT - the SAME 56, on the other side of the",
+                 "=> anomalous", n["fail_db"] + n["fail_action"], RECORDED["anomalous"])
+    logging.info("  %-26s %5s  line. Retiring the 878 retires the 834 with it: 778 + 934 = 1712,",
+                 "", "")
+    logging.info("  %-26s %5s  834 + 878 = 1712, and the 56 is what moves between them.", "", "")
     logging.info("  %-26s %5d  recorded %3d  CONFLICT - %d = %d + %d, so they agree on the",
                  "control set", clean, RECORDED["control"], clean, RECORDED["control"],
                  RECORDED["unconfirmed"])

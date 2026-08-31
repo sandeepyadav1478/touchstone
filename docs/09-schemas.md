@@ -625,6 +625,16 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        signal is `policy.md:20` and is deliberately NOT subtracted (627 of 934
                        break it); it is there to give DEF-076's corroboration the base rate it
                        never carried — 41 of 44 against 67.1%, a 1.39× lift
+  measure-shadow.py    🆕 P2.3 — the shadow score D-065 makes every gate earn: what it would
+                       have blocked, its recall over D-108's 778 anomalous, its precision over
+                       what it fired on. ⛔ **Evidence, no pass condition**, but it prints
+                       docs/02 §5's verdict per gate. 🔴 **Today no gate passes**: `confirmation`
+                       is REJECTED (44 of 934 clean), `tier 1` and `cancel reason` are UNSCORED
+                       because they fire on nothing, and `authentication` is cleared on a single
+                       firing at 0.1% recall. ⚠️ **A true positive means the session was
+                       anomalous, never that it was anomalous FOR THAT REASON** — this scores
+                       agreement with the answer key and no arrangement of these files can tell
+                       causal correctness apart from it
   check-links.py       every markdown link resolves — against git, not the working tree
   freeze-benchmark.py  🆕 P1.3 — writes suite/benchmark/manifest.json, and `--check` compares
                        the live specimen against it. ⛔ The SAME function does both, so the

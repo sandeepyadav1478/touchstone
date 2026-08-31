@@ -191,7 +191,8 @@ inner loop is what makes the number cover more.
 inner loop needed *a failing trace and a control set*, and that is the **only** thing the outer
 loop was supplying it — so it is fed from **τ²'s own shipped runs** instead of from ours: 1,712
 simulations over the 107 tasks with unchanged gold actions, split into **834** anomalous and
-**878** clean. ⛔ **The inner loop did not change. Its input did.** ⚠️ **What is genuinely lost is
+**878** clean — 🔴 **or into 778 and 934, which is the same 1,712 and the only one of the two
+pairs a command reproduces (`D-108`).** ⛔ **The inner loop did not change. Its input did.** ⚠️ **What is genuinely lost is
 the return edge** — `mine` no longer feeds a next candidate, so the picture is a pipeline until
 P2.4 ships, and calling it a loop out loud would be a claim about code that is not there.
 
@@ -262,6 +263,13 @@ union of the three signals is **834** in, **878** clean. ⚠️ **`D-082` §A re
 — a **router agent** does that job now, and this split became the **answer key** it is scored
 against (`criterion_1_agreement`, `D-082` §B). ⛔ **No result is reportable without that figure**,
 and if it comes back poor selection reverts to exactly this union.
+
+🔴 **`D-108` moved the line, because one of the three signals rebuilds from nothing.** The answer
+key a command can produce is **778 in, 934 clean** — the 407 and the 371, without the 56 whose
+regex was never committed. ⚠️ **Both pairs total 1,712 and only the 56 moves**, so this is not a
+correction to the union's *definition*; it is the observation that two thirds of the definition is
+executable and the last third is a paragraph. **Score against 778 / 934, and say which pair you
+meant whenever you quote either.**
 
 ⚠️ **Selection is not gating, and one number cannot be both.** `reward_breakdown["DB"]` remains the
 **gate's** metric (`D-069`) precisely because it is mechanical; it is a poor

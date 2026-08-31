@@ -52,9 +52,10 @@ required confirmation and still writes the correct row scores `DB == 1`. Over th
 
 ⚠️ **Two of those three signals rebuild from a command and the third does not.**
 `scripts/measure-control-set.py` recomputes the 407 and the 371 exactly; the 56 came from a regex
-that was never committed, so **the silence set this project actually uses is the 934 clean on the
-two reproducible signals** (`D-108`). The split above is kept as written
-because it is what the sections below were reasoned from, and `934 = 878 + 56` either way.
+that was never committed. So the split this project scores against is **778 anomalous / 934
+clean** (`D-108`) — the same 1,712 sessions, with the 56 on the other side of a line nobody can
+redraw. The pair above is kept as written because it is what the sections below were reasoned
+from, and it totals 1,712 either way.
 
 🔴 **Those 371 are why the miner reads three signals and not one.** Selecting on `DB == 0` alone
 leaves them in the silence set — the population a new predicate must be quiet on to be cleared —
