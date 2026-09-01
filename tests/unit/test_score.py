@@ -120,3 +120,16 @@ def test_undersampled_tasks_are_named_rather_than_scored_at_a_softer_k() -> None
 def test_cases_are_ordered_the_way_the_manifest_froze_them() -> None:
     sims = [sim(i, 1.0) for i in ("100", "9", "12", "5")]
     assert [c["id"] for c in score(sims, k=1)["cases"]] == ["5", "9", "12", "100"]
+
+
+def test_a_k_no_task_can_support_is_refused_rather_than_published_as_zero() -> None:
+    """`_mean([])` is 0.0, and nothing downstream can tell that from every trial failing.
+
+    Reachable with a typo: `score` takes its own `--k`, so `touchstone score v1 --k 5` over a
+    run made at k=3 lands here. Partial undersampling stays publishable — those tasks are named
+    in `undersampled_tasks`, which is a denominator a reader can subtract.
+    """
+    sims = [{"task_id": "1", "reward_info": {"reward": 1.0}} for _ in range(3)]
+    assert score(sims, 3)["aggregate"]["pass_hat_k"] == 1.0
+    with pytest.raises(ValueError, match="computed over nothing"):
+        score(sims, 5)

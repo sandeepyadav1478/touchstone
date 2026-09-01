@@ -375,6 +375,12 @@ model it did not use is worse than one naming none.
 ⛔ **`undersampled_tasks` is the load-bearing one.** `k` is `config.K` for the whole table, never
 inferred per task, so a task with fewer than `k` trials is *named and excluded* rather than
 averaged in at a softer strictness — which would report one column under two definitions.
+🆕 **And when *every* task is undersampled, `score()` raises instead of publishing.** `_mean([])`
+is `0.0`, so `pass_hat_k: 0.0` over an empty set is indistinguishable from every trial failing —
+the absent-not-zero rule of §6, reached by a typo, since `touchstone score` takes its own `--k`
+and `--k 5` over a `k=3` run lands exactly there. **Partial undersampling stays publishable**
+because `undersampled_tasks` gives the reader a denominator to subtract; total undersampling
+leaves no such signal, which is the whole difference.
 
 🎯 **`diagnostics` is a boundary, not a heading (D-045).** Both things inside it are opinions about
 *how* an answer was produced — a judge's read of the reasoning, and upstream's hallucination

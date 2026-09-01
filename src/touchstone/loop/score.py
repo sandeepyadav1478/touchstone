@@ -146,6 +146,18 @@ def score(simulations: list[dict[str, Any]], k: int) -> Scored:
             "db_scored": len(db_values),
         })
 
+    # Partial undersampling is published and named. TOTAL undersampling is not publishable:
+    # `_mean([])` is 0.0, and `pass_hat_k: 0.0` cannot be told from "every trial failed" by
+    # anything downstream. That is the rule `schema.Aggregate` states for the span-derived keys
+    # -- a key emitted as 0 before anything can measure it is a published number that nothing
+    # computed -- and `touchstone score v1 --k 5` over a run made at k=3 reaches it with a typo.
+    if by_task and not hat_k:
+        raise ValueError(
+            f"no task has {k} trials, so pass^{k} was computed over nothing — publishing it as "
+            f"0.0 would read as total failure. Fewest trials on any task: "
+            f"{min(len(v) for v in by_task.values())}"
+        )
+
     return {
         "aggregate": {
             "k": k,
