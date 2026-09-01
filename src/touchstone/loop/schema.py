@@ -59,8 +59,14 @@ class Aggregate(TypedDict):
 
     The span-derived keys are deliberately absent from this type, not optional in it.
     `cost_per_success_usd`, `tool_calls_mean`, `p95_latency_s`, `budget_exceeded` and
-    `void_attempts` have no producer until `touchstone run` exists (P1.6). Declaring them
+    `void_attempts` are span-derived and nothing reads spans back yet. Declaring them
     `NotRequired` would let a caller read a key that nothing has ever written.
+
+    That sentence used to say "until `touchstone run` exists (P1.6)". P1.6 shipped on
+    2026-08-26 and the keys are still absent, so the condition it named was met and the
+    conclusion did not move -- which is a hedge that has become a promise. `run` opens the
+    spans; the missing half is a reader, and `telemetry.flush()` exists only so one could be
+    written.
     """
 
     k: int
