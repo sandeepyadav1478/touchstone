@@ -646,8 +646,9 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        `check-links.py`. ⛔ **No `secrets:` block, no `env:` key, no model
                        call** (D-014); `test_ci_carries_no_credential_and_calls_no_model`
                        asserts that about the file, so the workflow does not audit itself.
-                       ⚠️ `check-diagram.py` is NOT here — its external root is an absolute
-                       path, and absent it the guard warns and passes while checking nothing
+                       ⚠️ `check-diagram.py` is NOT here and cannot be — it is gitignored,
+                       and it reads DECISIONS.md and DEFECTS.md, which are ignored as well.
+                       A clone has neither the guard nor its inputs. It stays a local gate
 ~~docker-compose.yml~~   🔴 gone — D-040 cut the API, D-074 cut the backend, nothing left
 ```
 

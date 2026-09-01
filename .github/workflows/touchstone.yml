@@ -9,12 +9,13 @@
 #
 # What is NOT here, and why, so the gap is visible rather than implied:
 #
-#   scripts/check-diagram.py    its EXTERNAL_ROOTS points at a local tau2-bench checkout. On a
-#                               runner that path is absent, which makes milestone 4a warn and
-#                               PASS while checking nothing, and makes every citation into the
-#                               upstream tree fail as unresolved. Wrong in both directions, so
-#                               it stays a local guard until the pin is resolvable from the
-#                               installed package instead of an absolute path.
+#   scripts/check-diagram.py    it is gitignored (.gitignore:61) and cannot be un-ignored: it
+#                               load()s DECISIONS.md and DEFECTS.md at lines 213 and 221, both
+#                               ignored too, and load() exits 1 on a missing path. A fresh
+#                               clone has neither the guard nor its inputs, so this is a
+#                               property of what the repo publishes rather than a path bug.
+#                               It runs locally, on every change, and its result is quoted in
+#                               commit messages instead.
 #   ruff                        18 check errors and 24 unformatted files predate this workflow.
 #                               A gate that is red on arrival is a broken build, not a gate.
 #   touchstone score            P2.7 also owes "scores committed span JSONL". No span JSONL is
