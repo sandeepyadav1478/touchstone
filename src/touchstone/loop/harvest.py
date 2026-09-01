@@ -35,7 +35,7 @@ import mlflow
 from touchstone import config, telemetry
 from touchstone.loop import agents, budget, corpus, mine
 
-__all__ = ["harvest", "mined_path"]
+__all__ = ["failed", "harvest", "mined_path"]
 
 
 def mined_path(label: str) -> Path:
@@ -83,6 +83,26 @@ def row(record: mine.Record) -> dict[str, Any]:
     }
 
 
+def failed(session: corpus.Session, error: Exception) -> dict[str, Any]:
+    """A session that raised, written down instead of taking the harvest with it.
+
+    There is no `exit_reason` for this and there deliberately is not one: D-093 SS C gives
+    that field to the graph's edge, and a session that fell over never reached an edge to be
+    decided by. So the row carries `error` and a null exit, and `harvest` counts it under
+    `failed` rather than inventing a fifth door into D-094's table.
+
+    Ceiling: this catches a bug as readily as a bad model answer, so a systematic fault becomes
+    N identical rows rather than one traceback. The error string is kept verbatim for that --
+    N rows that all say the same thing are the traceback, spread out.
+    """
+    return {
+        "session_id": session.id,
+        "exit_reason": None,
+        "error": f"{type(error).__name__}: {error}",
+        "attempts": [],
+    }
+
+
 def _work(session: corpus.Session) -> mine.Record:
     """One session, inside one span. The span is the only place the loop is observable live.
 
@@ -120,17 +140,47 @@ def harvest(label: str, limit: int, session_ids: tuple[str, ...] = ()) -> Path:
     A quota exhaustion stops the harvest and is not an error: the window rejects rather than
     bills (D-001), so the sessions already worked are paid for and throwing them away would
     mean paying twice. The file says how far it got, which is what a resume needs to know.
+
+    The two failures are not the same failure and are handled differently. The window is
+    shut for every session after it, so the harvest STOPS. Anything else is one session's
+    problem, so that session gets a `failed` row and the next one is worked -- and the money
+    behind the rows already collected is the whole reason. A malformed model answer is the
+    ordinary case here, not the exotic one: `extract.parse` and `extract.json_object` are trust
+    boundaries and RAISE by design, so before this a curator emitting one bad object on session
+    4 discarded the three sessions in front of it.
+
+    The file is rewritten after every session, for the third door out of the same argument:
+    a Ctrl-C, an OOM or a closed laptop lid does not reach either `except`, and writing once at
+    the end would lose every paid session to it. This is τ²'s `auto_resume` rule from D-015 --
+    write each unit as it completes -- applied to the loop that runs beside it.
+
+    ponytail: rewrites the whole file each time, so it is O(n^2) bytes in the session count.
+    `--limit` defaults to 5. Append a line per record if a harvest ever runs to hundreds. No
+    resume either: the file records how far it got, and nothing reads it back yet.
     """
     telemetry.install()
-    rows, stopped = [], None
+    rows: list[dict[str, Any]] = []
+    stopped = None
     for session in pick(limit, session_ids):
         try:
             rows.append(row(_work(session)))
         except budget.QuotaExhaustedError as exhausted:
             stopped = str(exhausted)
             break
+        except Exception as error:  # broad on purpose -- see `failed`; the money is spent
+            rows.append(failed(session, error))
+        _write(label, rows, stopped)
     telemetry.flush()
+    return _write(label, rows, stopped)
 
+
+def _write(label: str, rows: list[dict[str, Any]], stopped: str | None) -> Path:
+    """The harvest file as it stands. Called after every session, and once at the end.
+
+    The last call is not redundant: a harvest the quota stopped `break`s before the in-loop
+    write, and one that picked no sessions never enters the loop. Both still owe a file -- an
+    absent file and an empty harvest are different findings and would otherwise look the same.
+    """
     out = mined_path(label)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
@@ -141,7 +191,9 @@ def harvest(label: str, limit: int, session_ids: tuple[str, ...] = ()) -> Path:
                 "model": config.LOOP_MODEL,
                 "rubric_hash": agents.RUBRIC_HASH,
                 "stopped_early": stopped,
-                "exits": dict(Counter(r["exit_reason"] for r in rows)),
+                "exits": dict(Counter(
+                    "failed" if r.get("error") else r["exit_reason"] for r in rows
+                )),
                 "records": rows,
             },
             indent=2,

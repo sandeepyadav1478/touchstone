@@ -111,3 +111,65 @@ def test_the_quota_shutting_keeps_what_it_already_paid_for(
     assert [r["session_id"] for r in written["records"]] == ["a"]
     assert written["stopped_early"] == "the window is shut"
     assert written["exits"] == {"skipped": 1}
+
+
+@pytest.mark.usefixtures("three")
+def test_one_bad_model_answer_costs_its_session_and_not_the_harvest(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The quota stops the harvest; nothing else does, and the difference is where the money is.
+
+    The error raised here is the real one: `parse` is a trust boundary and RAISES on an answer
+    it cannot read, so a curator emitting one bad object is the ordinary case rather than the
+    exotic one. Before this, that on session `b` discarded `a` — which cost a five-hour window
+    that rejects rather than bills, so it could not be bought back.
+
+    `exit_reason` is null on the failed row and stays null: D-093 §C gives that field to the
+    graph's edge, and a session that fell over never reached one. It is counted under `failed`.
+    """
+    def one(s: corpus.Session) -> mine.Record:
+        if s.id == "b":
+            parse("the curator narrated instead of answering")
+        return mine.Record(session_id=s.id, exit_reason="skipped")
+
+    monkeypatch.setattr(harvest, "_work", one)
+    monkeypatch.setattr(telemetry, "install", lambda: "")
+    monkeypatch.setattr(telemetry, "flush", lambda: None)
+    monkeypatch.setattr(harvest, "mined_path", lambda label: tmp_path / f"{label}.json")
+
+    written = json.loads(harvest.harvest("t", 3).read_text())
+    assert [r["session_id"] for r in written["records"]] == ["a", "b", "c"]
+    assert written["stopped_early"] is None, "one bad answer is not the window shutting"
+    assert written["exits"] == {"skipped": 2, "failed": 1}
+
+    bad = written["records"][1]
+    assert bad["exit_reason"] is None
+    assert bad["error"].startswith("ValueError: no JSON object")
+
+
+@pytest.mark.usefixtures("three")
+def test_the_file_is_on_disk_before_the_harvest_ends(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A Ctrl-C reaches neither `except`, so writing once at the end would lose the lot.
+
+    Asserted by reading the file from inside the third session rather than by simulating a
+    kill: if `a` and `b` are already on disk while `c` is still being worked, then whatever
+    ends the process next cannot take them. Same argument as the quota test above — the
+    window rejects rather than bills, so a paid session is not re-buyable.
+    """
+    seen: list[list[str]] = []
+    out = tmp_path / "t.json"
+
+    def one(s: corpus.Session) -> mine.Record:
+        got = json.loads(out.read_text()) if out.exists() else {"records": []}
+        seen.append([r["session_id"] for r in got["records"]])
+        return mine.Record(session_id=s.id, exit_reason="skipped")
+
+    monkeypatch.setattr(harvest, "_work", one)
+    monkeypatch.setattr(telemetry, "install", lambda: "")
+    monkeypatch.setattr(telemetry, "flush", lambda: None)
+    monkeypatch.setattr(harvest, "mined_path", lambda _: out)
+
+    harvest.harvest("t", 3)
+    assert seen == [[], ["a"], ["a", "b"]]
