@@ -514,8 +514,10 @@ src/touchstone/
                        corpus** — 0 accepted firings in 1,712, all 37 live in tasks D-080
                        excluded (D-105). Returning `[]` is the normal answer, never approval
     predicate.py       **P2.2 ✅ shipped** — the closed set of shapes a mined rule may take,
-                       and the mechanical check of one over a whole SESSION. Three:
-                       `RequiresPriorTool`, `RequiresUserAssent`, `ArgumentIn`. ⛔ **Data, never
+                       and the mechanical check of one over a whole SESSION. Two:
+                       `RequiresPriorTool` and `ArgumentIn`. 🆕 **There were three** — D-109
+                       retired `RequiresUserAssent`, the only shape that matched TEXT rather
+                       than structure and the only one that was broken (DEF-076). ⛔ **Data, never
                        model-authored code** — the curator emits a field (`allowed_tools=[]`),
                        and exec'ing source would put a model on the path D-064 keeps mechanical
                        (D-106 §A). ⚠️ Reads ORDER, which is what tier 1 cannot see: the write/read
@@ -611,12 +613,22 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        disagree (47/37 against 9/0) and quoting either alone misleads. Its last
                        milestone is the false-positive count, the only figure that can disqualify
                        a gate
-  measure-predicate.py 🆕 P2.2 — shadow-runs the three retail policy rules over the same corpus,
+  measure-predicate.py 🆕 P2.2 — shadow-runs the retail policy rules over the same corpus,
                        hand-written so it measures the SHAPES rather than a model. ⛔ **Evidence,
                        no pass condition.** It is what found DEF-076: `cancel reason` fires 0
                        times, `authentication` 1 in 1,824, and `confirmation` 44 times inside the
                        934 sessions clean on db + action_checks — so the control set docs/02 §5
-                       tests against is not clean on the rules a predicate is written against
+                       tests against is not clean on the rules a predicate is written against.
+                       ⚠️ **Two rules now, not three** — D-109 retired the confirmation shape and
+                       the row went with it
+  measure-assent-window.py 🆕 **the command D-109 rests on** — sweeps the assent window at
+                       k = 1, 2, 3 and all, and tests the fourth shape's premise against its base
+                       rate. Widening never reaches 0 clean firings (44 → 15 → 8 → 8) and strips
+                       dirty ones at the same rate; the fourth shape's premise is a **1.26× lift**
+                       (64.3% clean vs 50.9% dirty), which is noise. ⛔ **Both fixes died here.**
+                       It also now OWNS the assent phrase list and the scan — `src/` has neither,
+                       and `measure-control-set.py` imports them from here so DEF-076's 44 and its
+                       41-of-44 stay reproducible after the shape went (rule 11)
   measure-control-set.py 🆕 P2.3 — rebuilds docs/02 §5's control set from a command, which is what
                        D-108 needed to retire the 878. ⛔ **Evidence, no pass condition** — but
                        unlike its two siblings it DOES compare against recorded figures and prints
@@ -628,8 +640,10 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
   measure-shadow.py    🆕 P2.3 — the shadow score D-065 makes every gate earn: what it would
                        have blocked, its recall over D-108's 778 anomalous, its precision over
                        what it fired on. ⛔ **Evidence, no pass condition**, but it prints
-                       docs/02 §5's verdict per gate. 🔴 **Today no gate passes**: `confirmation`
-                       is REJECTED (44 of 934 clean), `tier 1` and `cancel reason` are UNSCORED
+                       docs/02 §5's verdict per gate. 🔴 **Today no gate passes**, and D-109 did
+                       not change that: `confirmation` WAS REJECTED (44 of 934 clean) and is now
+                       gone rather than fixed, which removes the red mark and clears nothing.
+                       `tier 1` and `cancel reason` are UNSCORED
                        because they fire on nothing, and `authentication` is cleared on a single
                        firing at 0.1% recall. ⚠️ **A true positive means the session was
                        anomalous, never that it was anomalous FOR THAT REASON** — this scores

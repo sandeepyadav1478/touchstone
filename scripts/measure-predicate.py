@@ -13,16 +13,19 @@ measures the SHAPES rather than any model's ability to find them. What a model t
 the same policy is a separate measurement and it needs quota; this one needs none.
 
   authentication   policy.md:10 -- a user id must be located before acting for that user
-  confirmation     policy.md:16 -- a write needs explicit user confirmation first
   cancel reason    policy.md:90 -- only two reasons are acceptable
+
+policy.md:16's confirmation rule was here too, as the third row, until D-109 retired the shape
+that encoded it. `scripts/measure-assent-window.py` still measures it and is why it went.
 
 Both populations are printed, always -- 1,824 over 114 tasks and D-080's 1,712 over 107 --
 because D-105 is the worked example of the two disagreeing.
 
 The control set here is `db_match` plus every `action_check`, which is the pair
 `measure-tier1.py` uses. It deliberately does NOT include the unconfirmed-write signal docs/02
-counts as its third: that signal is what the confirmation rule below measures, and filtering
-the control set by it would test a predicate against a set defined by that same predicate.
+counts as its third: filtering the control set by a predicate is how you test a predicate
+against a set defined by that same predicate. D-109 is the harder version of that problem --
+the key cannot see confirmation at all, so no control set here can rule on it.
 
     uv run python scripts/measure-predicate.py
 """
@@ -44,7 +47,6 @@ from touchstone.gate.predicate import (  # noqa: E402
     ArgumentIn,
     Predicate,
     RequiresPriorTool,
-    RequiresUserAssent,
     evaluate,
 )
 
@@ -52,15 +54,6 @@ from touchstone.gate.predicate import (  # noqa: E402
 # a way that reports 112 of 114 as moved when it is got wrong, and a second copy of that is a
 # second thing to get wrong.
 _tier1 = importlib.import_module("measure-tier1")
-
-# policy.md:16 states the requirement and gives one word for it -- "explicit user confirmation
-# (yes)". The rest are the ordinary ways a simulated user says yes. This list is a method,
-# not a standard: docs/02's own count of unconfirmed writes came from a different regex, so the
-# two numbers are not comparable and neither is "the" answer.
-ASSENT = (
-    "yes", "yeah", "yep", "correct", "confirm", "go ahead", "please do", "sounds good",
-    "that's right", "thats right", "sure", "ok", "okay", "proceed", "do it", "let's do",
-)
 
 AUTH = ("find_user_id_by_email", "find_user_id_by_name_zip")
 
@@ -79,11 +72,6 @@ def rules(writes: list[str]) -> dict[str, list[Predicate]]:
         "authentication": [
             Predicate("a user id must be located before acting for that user",
                       "retail/policy.md:10", RequiresPriorTool(w, AUTH))
-            for w in writes
-        ],
-        "confirmation": [
-            Predicate("list the action details and obtain explicit user confirmation",
-                      "retail/policy.md:16", RequiresUserAssent(w, ASSENT))
             for w in writes
         ],
         "cancel reason": [

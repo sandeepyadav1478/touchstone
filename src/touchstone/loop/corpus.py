@@ -119,8 +119,10 @@ def is_anomalous(sim: Mapping[str, Any]) -> bool:
     where a correct predicate catching a process failure was rejected as a false positive.
 
     The third signal docs/02 names is deliberately absent, not forgotten. It is unbuildable,
-    and `RequiresUserAssent` is not allowed to stand in for it -- that would define the control
-    set with the predicate it exists to judge.
+    and the confirmation predicate was not allowed to stand in for it -- that would define the
+    control set with the predicate it exists to judge. D-109 then retired that predicate for a
+    related reason: the key cannot see confirmation, so this function is silent on it either
+    way, and a gate whose subject the key does not score cannot be cleared against it.
     """
     info = sim.get("reward_info") or {}
     return not (info.get("db_check") or {}).get("db_match") or not all(

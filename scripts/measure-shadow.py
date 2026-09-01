@@ -20,9 +20,11 @@ Two ceilings, and neither is small.
   1. A true positive here means the gate fired on a session that failed for SOME reason, not
      that it fired for THAT reason. This scores agreement with the answer key, never causal
      correctness, and no arrangement of these files can tell the two apart.
-  2. The 44 confirmation false positives are DEF-076 -- sessions clean on both mechanical
-     signals that break the stated confirmation rule anyway. They are the control set's
-     contamination, so the confirmation rule's precision is a floor and the error runs one way.
+  2. The confirmation row used to be here and used to be REJECTED, on 44 false positives, and
+     D-109 retired the shape rather than fixing it. Read what that did to this table with
+     care: no gate is rejected now, and NOT ONE was cleared by the change. Deleting the gate
+     that was failing is not the gate passing. What is left is one gate cleared on a single
+     firing and two that fire on nothing, which is the same negative result in a quieter form.
 
     uv run python scripts/measure-shadow.py
 """
@@ -128,8 +130,7 @@ def main() -> None:
         else:
             verdict = f"CLEARED by docs/02 SS5 - {tp} firing(s), none on a clean session"
         logging.info("  %-16s %s", gate, verdict)
-    logging.info("  the confirmation row's %d are DEF-076, so its precision is a floor",
-                 n["confirmation|fp"])
+    logging.info("  D-109 removed the one REJECTED row; the exit is no closer for it.")
 
 
 if __name__ == "__main__":

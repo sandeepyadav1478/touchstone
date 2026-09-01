@@ -11,7 +11,7 @@ import json
 import pytest
 
 from touchstone.gate.extract import parse
-from touchstone.gate.predicate import ArgumentIn, RequiresPriorTool, RequiresUserAssent, evaluate
+from touchstone.gate.predicate import ArgumentIn, RequiresPriorTool, evaluate
 
 
 def answer(**fields: object) -> str:
@@ -24,12 +24,6 @@ def test_a_prior_tool_answer_becomes_the_shape_it_names() -> None:
     assert got is not None
     assert got.check == RequiresPriorTool(tool="cancel", prior=("find_user_id_by_email",))
     assert got.source == "policy.md:1"
-
-
-def test_a_user_assent_answer_becomes_the_shape_it_names() -> None:
-    got = parse(answer(kind="RequiresUserAssent", tool="cancel", phrases=["yes", "confirm"]))
-    assert got is not None
-    assert got.check == RequiresUserAssent(tool="cancel", phrases=("yes", "confirm"))
 
 
 def test_an_argument_answer_becomes_the_shape_it_names() -> None:
@@ -58,10 +52,17 @@ def test_declining_to_encode_is_an_answer_not_an_error() -> None:
     assert parse('{"kind": null, "why": "the policy states no rule about this"}') is None
 
 
-def test_an_unknown_shape_is_refused_rather_than_accommodated() -> None:
-    """The set being closed is the guarantee. Waving a fourth shape through would lose it."""
+@pytest.mark.parametrize("kind", ["RequiresTwoTools", "RequiresUserAssent"])
+def test_an_unknown_shape_is_refused_rather_than_accommodated(kind: str) -> None:
+    """The set being closed is the guarantee. Waving a third shape through would lose it.
+
+    `RequiresUserAssent` is here because a RETIRED name is the one a model is most likely to
+    emit -- it was in the prompt, and D-109 took it out of the prompt and out of the code on
+    the same day. Refusing an invented kind and silently accepting a dead one would read the
+    same in every test above this line.
+    """
     with pytest.raises(ValueError, match="the set is closed"):
-        parse(answer(kind="RequiresTwoTools", tool="t"))
+        parse(answer(kind=kind, tool="t"))
 
 
 def test_a_missing_field_names_the_field() -> None:

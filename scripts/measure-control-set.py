@@ -8,11 +8,16 @@ docs/02 SS5 names the set a predicate must be silent on as 878, being 1,712 minu
 write, that regex was never committed, and nothing in this repo reproduces it -- D-106 SS C, and
 the reason P2.3 cannot report a false-positive rate against 878.
 
-The obvious replacement is circular and is not taken. Recomputing "unconfirmed write" with
-`RequiresUserAssent` would define the control set with the predicate the control set exists to
+The obvious replacement is circular and is not taken. Recomputing "unconfirmed write" with the
+confirmation predicate would define the control set with the predicate the control set exists to
 judge. So the third signal here is a DIFFERENT stated rule, picked because it reads only the
 assistant's own message and so needs no assent list and no model: `policy.md:20` forbids a tool
 call in the same message as text, and forbids more than one call at a time.
+
+D-109 has since retired that predicate, so the assent scan below comes from
+`measure-assent-window.py` rather than from `src/`. Nothing about this measurement changed --
+`fires` is still 44 and its policy.md:20 overlap still 41 -- and that unchanged pair is the
+check that the move was faithful.
 
 It does not reproduce 56 and was never going to -- it fires on 627 of the 934, so subtracting it
 would delete two thirds of the corpus over a rule the harness never enforced. What it is for is
@@ -37,8 +42,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from touchstone.gate.predicate import evaluate  # noqa: E402
 
 # What docs/02 SS5 states, kept here so the run reports which figures it reproduced instead of
 # leaving a reader to diff two documents by eye.
@@ -70,17 +73,18 @@ def census() -> Counter[str]:
     from tau2.utils.utils import DATA_DIR
 
     # Imported here rather than at module scope, and not copied. `moved_tasks` normalises gold
-    # actions in a way that reports 112 of 114 as moved when it is got wrong, and `rules` is
-    # where the confirmation predicate is already spelled out -- a second copy of either is a
-    # second thing to get wrong. Deferring them keeps importing this file free, which is what
-    # lets `test_control_set.py` check the policy rule inside the suite's 2 s budget.
+    # actions in a way that reports 112 of 114 as moved when it is got wrong, and `unconfirmed`
+    # is where the assent scan is spelled out -- a second copy of either is a second thing to
+    # get wrong. Deferring them keeps importing this file free, which is what lets
+    # `test_control_set.py` check the policy rule inside the suite's 2 s budget.
     _tier1 = importlib.import_module("measure-tier1")
     _pred = importlib.import_module("measure-predicate")
+    _win = importlib.import_module("measure-assent-window")
 
     files = _tier1.corpus_files()
     tasks = Path(DATA_DIR) / "tau2" / "domains" / "retail" / "tasks.json"
     moved = _tier1.moved_tasks(files, tasks)
-    confirmation = _pred.rules(_pred.write_tools())["confirmation"]
+    writes = set(_pred.write_tools())
     logging.info("-- milestone 1/3 - %d task(s) excluded by D-080, %d result file(s)",
                  len(moved), len(files))
 
@@ -99,7 +103,7 @@ def census() -> Counter[str]:
                 continue
             n["clean"] += 1
             text, multi = breaks_one_call_at_a_time(s["messages"])
-            fires = any(evaluate(p, s["messages"]) for p in confirmation)
+            fires = _win.unconfirmed(s["messages"], writes)
             n["fires"] += fires
             for tag, hit in (("text", text), ("multi", multi), ("either", text or multi),
                              ("both", text and multi)):
@@ -131,7 +135,8 @@ def main() -> None:
     logging.info("  docs/02 says at least 23 of them are corroborated by it; this counts %d.",
                  n["fires|either"])
     logging.info("  Neither figure carries the base rate, and the base rate is what decides")
-    logging.info("  whether corroboration by this rule means anything at all -- DEF-076.")
+    logging.info("  whether corroboration by this rule means anything at all -- and it did not:")
+    logging.info("  D-109 retired the predicate these firings came from, closing DEF-076.")
 
     logging.info("")
     logging.info("-- milestone 3/3 - what reproduces, and what does not")

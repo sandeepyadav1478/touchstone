@@ -7,11 +7,14 @@ order -- an unauthenticated lookup, a write nobody confirmed -- and docs/02 meas
 sessions that pass the DB check with a failed `action_check`, plus 56 with an unconfirmed
 write. Those are trajectory failures, so a trajectory is what a predicate reads.
 
-Three shapes, and no more until one is measured to be needed:
+Two shapes, and no more until one is measured to be needed:
 
     RequiresPriorTool    a call must follow a SUCCESSFUL call to one of these
-    RequiresUserAssent   a call must follow a user message that agrees to it
     ArgumentIn           an argument may only take one of these values
+
+There were three. `RequiresUserAssent` was retired by D-109 after being measured rather than
+argued: it was the only shape that matched TEXT rather than structure, and the only one that
+was broken. `scripts/measure-assent-window.py` carries the numbers.
 
 They are data, never code. The curator runs with `allowed_tools=[]` (docs/03 SS5) so it emits a
 field rather than calling anything, and a field that arrives as Python source would put model
@@ -46,19 +49,6 @@ class RequiresPriorTool:
 
 
 @dataclass(frozen=True)
-class RequiresUserAssent:
-    """`tool` may only be called after a user message containing one of `phrases`.
-
-    Only the most recent user message before the call is read, which is the same window
-    docs/02 SS5 measured its 56 unconfirmed writes over. A wider window would count a "yes"
-    given to an earlier, different action, and the whole rule is that assent is per-action.
-    """
-
-    tool: str
-    phrases: tuple[str, ...]
-
-
-@dataclass(frozen=True)
 class ArgumentIn:
     """`argument` of `tool` may only take a value in `allowed`.
 
@@ -72,7 +62,7 @@ class ArgumentIn:
     allowed: tuple[str, ...]
 
 
-Check = RequiresPriorTool | RequiresUserAssent | ArgumentIn
+Check = RequiresPriorTool | ArgumentIn
 
 
 @dataclass(frozen=True)
@@ -148,16 +138,6 @@ def _broken(
         }
         if earlier.isdisjoint(check.prior):
             return f"{check.tool} called with no successful {' or '.join(check.prior)} before it"
-        return None
-
-    if isinstance(check, RequiresUserAssent):
-        said = next(
-            (str(m.get("content") or "") for m in reversed(messages[:i])
-             if m.get("role") == "user"),
-            "",
-        ).lower()
-        if not any(p in said for p in check.phrases):
-            return f"{check.tool} called with no user assent in the message before it"
         return None
 
     value = (call.get("arguments") or {}).get(check.argument)

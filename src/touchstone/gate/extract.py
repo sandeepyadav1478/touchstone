@@ -25,7 +25,7 @@ from dataclasses import fields
 from typing import TYPE_CHECKING, Any
 
 from touchstone import config
-from touchstone.gate.predicate import ArgumentIn, Predicate, RequiresPriorTool, RequiresUserAssent
+from touchstone.gate.predicate import ArgumentIn, Predicate, RequiresPriorTool
 from touchstone.loop import budget
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 __all__ = ["SYSTEM", "ask", "extract", "json_object", "parse"]
 
 _SHAPES: dict[str, type[Check]] = {
-    c.__name__: c for c in (RequiresPriorTool, RequiresUserAssent, ArgumentIn)
+    c.__name__: c for c in (RequiresPriorTool, ArgumentIn)
 }
 
 SYSTEM = """You translate a written policy rule into one machine-checkable predicate.
@@ -47,9 +47,6 @@ plus that shape's own fields:
 
   RequiresPriorTool   "tool": str, "prior": [str]
       `tool` may only be called after one of `prior` returned without an error.
-
-  RequiresUserAssent  "tool": str, "phrases": [str]
-      `tool` may only be called after a user message containing one of `phrases`.
 
   ArgumentIn          "tool": str, "argument": str, "allowed": [str]
       `argument` of `tool` may only take a value in `allowed`.

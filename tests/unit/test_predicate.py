@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 
 from touchstone.gate.predicate import (
     ArgumentIn,
+    Check,
     Predicate,
     RequiresPriorTool,
-    RequiresUserAssent,
     evaluate,
 )
 
@@ -42,9 +42,9 @@ def prior(tool: str = "cancel_pending_order") -> Predicate:
     return Predicate("auth first", "retail/policy.md:10", RequiresPriorTool(tool, AUTH))
 
 
-def assent(tool: str = "cancel_pending_order") -> Predicate:
-    return Predicate("confirm first", "retail/policy.md:16",
-                     RequiresUserAssent(tool, ("yes", "go ahead")))
+def reason(tool: str = "cancel_pending_order") -> Predicate:
+    return Predicate("two reasons", "retail/policy.md:90",
+                     ArgumentIn(tool, "reason", ("no longer needed",)))
 
 
 def test_a_write_with_no_prior_lookup_fires() -> None:
@@ -74,23 +74,18 @@ def test_a_later_lookup_does_not_excuse_an_earlier_write() -> None:
     assert len(evaluate(prior(), messages)) == 1
 
 
-def test_a_write_with_no_assent_in_the_message_before_it_fires() -> None:
-    messages = [said("I want to cancel order W1"), call("cancel_pending_order")]
-    assert len(evaluate(assent(), messages)) == 1
+def test_the_shape_set_is_two_and_neither_one_reads_a_user_message() -> None:
+    """D-109: the third shape read TEXT in a user message, and it was the only broken one.
 
-
-def test_a_write_after_agreement_is_silent() -> None:
-    messages = [said("I want to cancel"), {"role": "assistant", "content": "Confirm?"},
-                said("Yes, go ahead"), call("cancel_pending_order")]
-    assert evaluate(assent(), messages) == []
-
-
-def test_only_the_most_recent_user_turn_is_read() -> None:
-    # A yes given to an earlier, different action is not assent to this one — the whole rule
-    # is that confirmation is per-action, so a wider window would silently excuse the second.
-    messages = [said("yes"), {"role": "assistant", "content": "done"},
-                said("now change my address too"), call("cancel_pending_order")]
-    assert len(evaluate(assent(), messages)) == 1
+    Asserted here rather than left to the docstring because the retirement is a claim about
+    what CANNOT be expressed, and a closed set is only closed while something checks it. Both
+    survivors are structural -- call names and order, argument values -- so a transcript with
+    no user messages at all cannot change either verdict.
+    """
+    assert set(get_args(Check)) == {RequiresPriorTool, ArgumentIn}
+    for p in (prior(), reason()):
+        messages = [call("cancel_pending_order", reason="changed my mind")]
+        assert evaluate(p, messages) == evaluate(p, [said("yes, go ahead"), *messages])
 
 
 def test_an_argument_outside_the_allowed_set_fires_and_case_does_not_matter() -> None:
@@ -124,5 +119,5 @@ def test_a_call_the_user_made_is_not_the_agents_to_answer_for() -> None:
     ],
 )
 def test_a_malformed_transcript_returns_no_opinion_rather_than_raising(messages: list) -> None:
-    for p in (prior(), assent()):
+    for p in (prior(), reason()):
         evaluate(p, messages)

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Price the two surviving DEF-076 fixes before either one is written.
+"""Price the two surviving DEF-076 fixes -- and this is why neither one was written.
+
+This ran BEFORE D-109, and D-109 is its verdict: the shape it prices was retired instead of
+fixed. The script is kept, and kept runnable, because the retirement rests on these numbers and
+a finding whose command no longer runs is prose (CLAUDE.md rule 11). It is also now the only
+place `ASSENT` and the assent scan exist -- `measure-control-set.py` imports the scan from here
+to keep DEF-076's 44 and its 41-of-44 corroboration reproducible after the shape went.
 
 DEF-076 left three candidates and the hand-labelled subset is struck: a person as the source
 of truth is the thing D-040 and docs/02 SS5's gauntlet removed. What is left is the window and
@@ -19,8 +25,9 @@ a fourth shape, and both have been argued and neither measured.
 The rarest token is derived from tau2's own tool vocabulary rather than a stop list written
 here -- a hand-typed list of "generic" words would be the same guess as lengthening ASSENT.
 
-⛔ Reads nothing from `src/`. The window sweep reimplements the assent scan locally so that
-`gate/predicate.py` stays untouched until a measurement says what to change.
+Reads nothing from `src/`. The window sweep reimplemented the assent scan locally so that
+`gate/predicate.py` stayed untouched until a measurement said what to change. It said: remove it.
+That local copy is the reason this file still runs.
 
     uv run python scripts/measure-assent-window.py
 """
@@ -41,6 +48,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 _tier1 = importlib.import_module("measure-tier1")
 _pred = importlib.import_module("measure-predicate")
 
+# policy.md:16 states the requirement and gives one word for it -- "explicit user confirmation
+# (yes)". The rest are the ordinary ways a simulated user says yes. Lived in
+# `measure-predicate.py` until D-109 retired the shape; it is kept here because this script is
+# the record of WHY it was retired, and a finding whose command no longer runs is prose.
+ASSENT = (
+    "yes", "yeah", "yep", "correct", "confirm", "go ahead", "please do", "sounds good",
+    "that's right", "thats right", "sure", "ok", "okay", "proceed", "do it", "let's do",
+)
+
 WINDOWS = (1, 2, 3, 0)  # 0 means every earlier user message
 
 
@@ -53,6 +69,25 @@ def rarest(tools: list[str]) -> dict[str, str]:
     """
     freq: Counter[str] = Counter(t for name in tools for t in set(name.split("_")))
     return {name: min(set(name.split("_")), key=lambda t: (freq[t], t)) for name in tools}
+
+
+def unconfirmed(messages: list[dict], writes: set[str], k: int = 1) -> bool:
+    """True if some write call has no ASSENT phrase in the k user messages before it.
+
+    k = 1 is what the retired `RequiresUserAssent` did, and it reproduces DEF-076's 44 firings
+    on the clean set exactly -- which is what licenses reading the other windows off the same
+    scan. Kept as one function so this file and `measure-control-set.py` cannot drift.
+    """
+    for i, m in enumerate(messages):
+        for call in m.get("tool_calls") or []:
+            if call.get("requestor", "assistant") != "assistant":
+                continue
+            if call.get("name") not in writes:
+                continue
+            said = user_before(messages, i, k)
+            if not any(p in one for one in said for p in ASSENT):
+                return True
+    return False
 
 
 def user_before(messages: list[dict], i: int, k: int) -> list[str]:
@@ -92,23 +127,17 @@ def main() -> None:
             side = "clean" if clean else "dirty"
             n[side] += 1
             messages = s["messages"]
-            fired = dict.fromkeys(WINDOWS, False)
             named = False
             for i, m in enumerate(messages):
                 for call in m.get("tool_calls") or []:
                     if call.get("requestor", "assistant") != "assistant":
                         continue
                     name = call.get("name")
-                    if name not in token:
-                        continue
-                    for k in WINDOWS:
-                        said = user_before(messages, i, k)
-                        if not any(p in one for one in said for p in _pred.ASSENT):
-                            fired[k] = True
-                    last = user_before(messages, i, 1)
-                    named = named or any(token[name] in one for one in last)
+                    if name in token:
+                        last = user_before(messages, i, 1)
+                        named = named or any(token[name] in one for one in last)
             for k in WINDOWS:
-                n[f"w{k}|{side}"] += fired[k]
+                n[f"w{k}|{side}"] += unconfirmed(messages, set(token), k)
             # Base rate: the fourth shape's test over every session carrying a write call,
             # firing or not. Without it, "26 of 44 name the action" is a numerator alone.
             if any(m.get("tool_calls") for m in messages):

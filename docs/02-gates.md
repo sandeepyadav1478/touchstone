@@ -299,6 +299,15 @@ later without a name is an afternoon spent doubting a rule that was right. ⚠�
 `D-108`'s control set rather than restated: still 7, now 7 of 934 (0.75%)** — the seven are clean
 on both mechanical signals, so retiring the 878 moved the denominator and not the count.
 
+🔴 **D-109 closed DEF-076 by deleting its subject, and this whole passage is kept as the record
+of why — read it as history, not as a live gate.** `RequiresUserAssent` no longer exists:
+`scripts/measure-assent-window.py` measured every fix that was on the table and none survived
+being priced, so the shape went instead. ⛔ **Nothing below was retracted and nothing below was
+fixed.** The 44 were real, the control set's contamination on this rule is real and unmeasured
+now, and the honest reading of the retirement is that this project cannot gate on confirmation
+at all — τ²'s `reward_breakdown` carries `DB` and `COMMUNICATE` and is blind to it, so a
+confirmation gate has no answer key to be scored against in either direction.
+
 🔴 **And DEF-076 is the same shape, far larger, on the rule this section most needs to mine** —
 **44 of 934** here against DEF-075's **7 of 878** above. ⚠️ The two rates are quoted with their
 own denominators and **not divided into each other**: the sets differ by the 56, so a ratio of
@@ -318,8 +327,8 @@ project uses. `scripts/measure-control-set.py` rebuilds the first two signals **
 and 371 — and cannot rebuild the third, because the regex that produced the 56 lived in a scratch
 script and was never committed. 🔴 **So the 878 is retired: not disproved, unbuildable, and the
 control set is the 934 the command prints.** `934 = 878 + 56` still holds; the arithmetic was
-never the question. ⛔ **The third signal is deliberately not replaced by `RequiresUserAssent`** —
-that would define the control set with the predicate it exists to judge — and the independent rule
+never the question. ⛔ **The third signal is deliberately not replaced by the confirmation
+predicate** — that would define the control set with the predicate it exists to judge — and the independent rule
 that *was* measured (`policy.md:20`) is not subtracted either: it fires on 627 of the 934, so
 subtracting it would leave 307 and measure the harness's house style instead of the agent's
 compliance.
