@@ -2,7 +2,9 @@
 
 `mine.mine()` works one session and returns a record. This is the part that picks which ones,
 binds the three agents from `agents.py` to it, and writes the records where something can read
-them. It is the only file in the loop that does I/O.
+them. It is the only file in the mining half that WRITES: `corpus` and `agents.policy` read the
+specimen's data, and `run` and `report` write on the benchmark side, so the pure half is
+`mine`, `agents` and `budget` rather than the directory.
 
 The record is the product, not the predicate. D-089 SS D says the give-up rate is the number
 that tells a correct refusal from a lazy one, and D-094 that the exit reasons only mean
@@ -50,10 +52,19 @@ def pick(limit: int, session_ids: tuple[str, ...] = ()) -> list[corpus.Session]:
     is sorted by file and then by index, so the first N are four agents' early tasks rather
     than a draw from the population. A figure over the corpus is a script's job, and it says
     so in its own header.
+
+    An id the corpus does not have raises. `--session` is repeatable and hand-typed, and a
+    filter that silently drops what it cannot match turns a typo into a harvest that finished,
+    wrote a file and worked one fewer session than it was asked for -- with nothing in the file
+    saying so. Same argument `_write` makes for writing an empty harvest rather than no file:
+    an absent thing and an empty thing are different findings.
     """
     if session_ids:
         wanted = set(session_ids)
-        return [s for s in corpus.load() if s.id in wanted]
+        picked = [s for s in corpus.load() if s.id in wanted]
+        if missing := sorted(wanted - {s.id for s in picked}):
+            raise ValueError(f"no session in the corpus has the id {missing}")
+        return picked
     return list(corpus.load()[:limit])
 
 

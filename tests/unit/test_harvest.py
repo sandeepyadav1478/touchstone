@@ -66,6 +66,18 @@ def test_named_sessions_ignore_the_limit() -> None:
     assert [s.id for s in harvest.pick(1, ("a", "c"))] == ["a", "c"]
 
 
+@pytest.mark.usefixtures("three")
+def test_an_id_the_corpus_does_not_have_is_refused_rather_than_dropped() -> None:
+    """The test above's argument, applied to the ids instead of the limit.
+
+    Both names are reported and not just the first, because `--session` is repeatable and a
+    caller who mistyped two of four should not learn that one at a time. The good ids in the
+    same call do not rescue it: a harvest that worked three of four is the failure.
+    """
+    with pytest.raises(ValueError, match=r"\['nope', 'zzz'\]"):
+        harvest.pick(1, ("a", "nope", "zzz"))
+
+
 def test_a_record_is_written_with_every_attempt_behind_it() -> None:
     """D-082 requires every attempt under an unmineable, and the shape has to survive the trip.
 
