@@ -371,6 +371,7 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
   MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
   MBudget [icon: edit-3, color: green, label: "attempt_budget() — the critic's OTHER tool, D-089\nnamed for the job and not the consequence — a name saying only 'record' invites a second owner of the cap, D-092\nowns config.MAX_ATTEMPTS: says EXIT, records a give-up, may REFUSE\n⚠ ONE function reads the cap and the graph's edge calls the same one — D-091\ntwo places that know the cap are two places that can disagree about it\nflags go to the MLflow span for a human; the loop does NOT branch on them — D-090 D"]
   MEdge [icon: alert-triangle, color: red, label: "FORCE-TERMINATE — the conditional edge, D-094\nfires ONLY when an agent is told to exit and continues anyway\ncalls attempts_exhausted(), the same function the tool calls — D-091\nexit_reason force_terminated, expected value 0\nan alarm and not a category: the safety net stays BECAUSE it should never fire"]
+  MHold [shape: diamond, color: green, icon: check-circle, label: "held() — the OTHER half of a hand-over, D-110 · mechanical, no model\nD-064 puts the model in the TRANSLATION and never in the VERDICT, and `handed_over` was decided by the critic's word ALONE until D-110\nit reads a RECORDED run_predicate() result — the one MTest already wrote — and matches on the CANDIDATE, never on attempts[-1]: the curator sends a DIFFERENT predicate each lap (D-085 §F), so the last result can belong to the previous one\n⚠ an unsupported hand-over is NOT a fifth exit_reason — the lap does not end, it costs an attempt and `waved_through` counts it. Expected value 0; non-zero is a bug report against the critic prompt (D-094 §C's pattern)"]
   MGive [shape: oval, color: grey, icon: x-circle, label: "UNMINEABLE\nevery attempt and its counterexample recorded\n⚠ a RESULT, not an error — and not retried forever"]
 }
 M0 > MT: ENHANCE — straight to the curator. There is no pre-check, and never was one that worked
@@ -449,7 +450,9 @@ Gauntlet [color: green, icon: filter, label: "10 · THE GAUNTLET — renamed fro
 }
 A1 > A4 > A5
 A5 > D3
-MCrit --> Gauntlet: the critic hands it over — D-086 A. The three gates are OUTSIDE the loop and in the BACKLOG — not deferred, they just need a finished candidate to run on (D-086 D)
+MCrit > MHold: the critic rules HAND OVER — and D-110 makes that half a decision, not the decision
+MHold > MT: the recorded check does not support it — no door. Back round the lap at the cost of an attempt, exactly like a hand-back
+MHold --> Gauntlet: the word AND the mechanical result agree — D-086 A, now gated by D-110. The three gates are OUTSIDE the loop and in the BACKLOG — not deferred, they just need a finished candidate to run on (D-086 D)
 Gauntlet --> C5: the ONLY thing condition 5 would read
 
 // ── 11 · the ladder. FIVE versions, and each one names what changed. v5 arrived with

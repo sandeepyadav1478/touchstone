@@ -391,10 +391,17 @@ supposed to leave standing.
 
 | `exit_reason` | Means | Why it is split out |
 |---|---|---|
-| `handed_over` | a candidate reached the gauntlet | the only one that can become a suite case |
+| `handed_over` | a candidate reached the gauntlet — 🆕 **the critic said so AND `run_predicate` agreed** (`D-110`) | the only one that can become a suite case |
 | `budget_exhausted` | the edge fired at `config.MAX_ATTEMPTS` | the loop tried and could not — the honest failure |
 | `gave_up` | the critic called `attempt_budget` early and it accepted | 🔴 **`D-089` §D happening.** Watch **this**, not the unmineable total — a rate you cannot decompose is not a signal |
 | `force_terminated` | ⛔ an agent was told to exit and continued anyway; the edge stopped it | 🔴 **An alarm, not a category. Expected value: 0** — non-zero is a bug report against a prompt, never a normal outcome to tally (`D-094` §C) |
+
+🆕 **`waved_through` is a count on the record, not a fifth `exit_reason`, and `D-110` is why.**
+The critic's `decision` is a model's word; `D-064` keeps the verdict mechanical, so a hand-over the
+check does not support **is not a door** — the lap goes round again and the counter rises. ⛔ **Same
+treatment as `force_terminated`: an alarm, not a category, expected value 0.** ⚠️ **It is matched on
+the CANDIDATE, never on `attempts[-1]`** — a critic may call no tool on a lap, and the previous
+candidate's result would then wave a different predicate through.
 
 ⚠️ **The MLflow span already records the tool call** (`D-090` §D) and that is enough for a human
 reading one trace. It is **not** enough for a number across a corpus: a span store is not the results

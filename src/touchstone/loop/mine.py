@@ -15,7 +15,10 @@ The exits are D-093's and D-094's, and which one fired is the number that matter
 ran out and a critic that gave up at attempt 2 produce the same artefact otherwise, and
 D-089's whole mitigation is that the give-up rate can be watched.
 
-    handed_over        a candidate reached the gauntlet
+    handed_over        a candidate reached the gauntlet -- the critic said so AND the check
+                       agreed. Both, because the critic is a model and D-064 keeps the verdict
+                       mechanical; a hand-over it cannot support is counted in `waved_through`
+                       and costs an attempt like any other bounce
     budget_exhausted   the edge fired at the cap -- the honest failure
     gave_up            the critic gave up early and the tool accepted it
     force_terminated   an agent was told to exit and continued. Expected value: 0, and a
@@ -43,6 +46,7 @@ __all__ = [
     "Ruling",
     "attempt_budget",
     "build",
+    "held",
     "mine",
     "run_predicate",
     "spend",
@@ -104,6 +108,7 @@ class Record:
     dispatches: int = 0
     told_to_exit: bool = False
     gave_up: bool = False
+    waved_through: int = 0
     rule_searched_for: str | None = None
     exit_reason: ExitReason | None = None
 
@@ -126,6 +131,23 @@ def run_predicate(predicate: Predicate, session: corpus.Session) -> Attempt:
             (s.id for s in corpus.clean() if evaluate(predicate, s.messages)), None
         ),
     )
+
+
+def held(record: Record, candidate: Predicate | None) -> bool:
+    """Did the MECHANICAL check pass this candidate? The other half of a hand-over.
+
+    The critic's `decision` is a model's word and D-064 keeps the verdict mechanical, so the
+    word alone cannot be what ends the loop. `run_predicate` already computed the answer and
+    the critic was even sent it; this is the graph reading the recorded result instead of the
+    account of it, which is the same line D-085 SS B drew for the tools.
+
+    Matched on the CANDIDATE and not on the last attempt, and that is the whole subtlety: a
+    critic is free to call no tool this lap, and `attempts[-1]` would then be the PREVIOUS
+    candidate's result. One that held would wave the current one through on evidence about a
+    different predicate. Searching by equality also covers the ordinary case where the critic
+    ran the tool and then something else.
+    """
+    return any(a.predicate == candidate and a.holds for a in record.attempts)
 
 
 def spend(record: Record, predicate: Predicate, session: corpus.Session) -> Attempt:
@@ -184,7 +206,7 @@ def _reason(state: State) -> ExitReason | None:
     record = state["record"]
     if record.gave_up:
         return "gave_up"
-    if state["decision"] == "hand_over":
+    if state["decision"] == "hand_over" and held(record, state["candidate"]):
         return "handed_over"
     if record.told_to_exit:
         return "force_terminated" if state["decision"] == "bounce" else "budget_exhausted"
@@ -219,6 +241,10 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
         # The write and the route come out of one call, which is what D-093 C means by the
         # edge owning `exit_reason`: a field written anywhere else was written by something
         # that did not decide, and the two get conflated again the first time they disagree.
+        # `waved_through` is written here for the same reason -- it is the edge disagreeing
+        # with the critic, so the edge is the only thing that can count it.
+        if state["decision"] == "hand_over" and not held(state["record"], state["candidate"]):
+            state["record"].waved_through += 1
         state["record"].exit_reason = _reason(state)
         return END if state["record"].exit_reason else "curate"
 

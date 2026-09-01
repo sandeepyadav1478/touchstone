@@ -31,7 +31,10 @@ flowchart LR
   ROUTER -. "skip" .-> CONTROL
   CRITIC <-- "its tool, and nobody else's — D-086 §A" --> TEST
   CONTROL -- "the NO half of the evidence" --> TEST
-  CRITIC -- "hands over" --> GAUNTLET
+  HELD{{"held(record, candidate) — the edge reads the RECORDED check, D-110<br/>the critic's decision is a model's word and D-064 keeps the verdict mechanical<br/>so handed_over needs BOTH: the word AND run_predicate's holds<br/>matched on the CANDIDATE, never attempts[-1] — a critic may call no tool this lap<br/>unsupported hand-over: not a door. The lap goes round, waved_through counts it<br/>EXPECTED VALUE 0, same as force_terminated"}}
+  CRITIC -- "hands over" --> HELD
+  HELD -- "the check agrees" --> GAUNTLET
+  HELD -. "it does not — costs an attempt, like a bounce" .-> CURATOR
   CRITIC <-. "may I keep going? · giving up early" .-> BUDGET
   FLAG("flags any agent raises → the MLflow span, for a human<br/>⛔ the loop does NOT branch on them — D-090 §D")
   CRITIC -. "raises" .-> FLAG

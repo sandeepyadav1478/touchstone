@@ -118,14 +118,58 @@ def test_the_router_can_end_a_trace_before_any_agent_runs() -> None:
 
 
 def test_a_hand_over_ends_the_trace() -> None:
-    """The one exit that produces a candidate. Everything else is a finding about the policy."""
+    """The one exit that produces a candidate. Everything else is a finding about the policy.
 
-    async def hand_over(_: State) -> Ruling:
+    The critic files a holding attempt first, because that is what a real one does: it calls
+    `run_predicate`, reads `holds`, and only then hands over. A hand-over with nothing behind
+    it is the next test.
+    """
+
+    async def hand_over(s: State) -> Ruling:
+        s["record"].attempts.append(Attempt(AUTH, fired_on_target=True, counterexample=None))
         return Ruling("hand_over")
 
     record = run(critic=hand_over)
     assert record.exit_reason == "handed_over"
     assert record.dispatches == 1
+    assert record.waved_through == 0
+
+
+def test_a_hand_over_the_check_does_not_support_is_not_a_door() -> None:
+    """D-064 keeps the verdict mechanical, so the critic's word alone cannot end the loop.
+
+    Here the candidate fired on the target and also on a clean session, so it does not hold,
+    and the critic hands over anyway. The lap goes round again and the count rises — the same
+    treatment `force_terminated` gets in D-094: the net stays whatever the expected value is,
+    and a non-zero count is a bug report against a prompt rather than a category.
+    """
+
+    async def waves(s: State) -> Ruling:
+        s["record"].attempts.append(Attempt(AUTH, fired_on_target=True, counterexample="other"))
+        return Ruling("hand_over")
+
+    record = run(critic=waves)
+    assert record.exit_reason == "budget_exhausted", "it ran out rather than handing over"
+    assert record.dispatches == MAX_ATTEMPTS
+    assert record.waved_through == MAX_ATTEMPTS
+
+
+def test_an_earlier_candidate_that_held_does_not_wave_the_current_one_through() -> None:
+    """The check is matched on the CANDIDATE, and this is the case that needs it.
+
+    A critic is free to call no tool this lap. Reading `attempts[-1]` would then hand over on
+    evidence about the predicate before it — a real risk here, because the curator is told
+    what its last candidate got wrong and is expected to send a different one.
+    """
+    other = Predicate(rule="something else", source="policy.md:9", check=AUTH.check)
+    record = Record(session_id="t")
+    record.attempts.append(Attempt(other, fired_on_target=True, counterexample=None))
+
+    lap = state(record, "hand_over")
+    lap["candidate"] = AUTH
+    assert mine.held(record, other), "the earlier one did hold"
+    assert not mine.held(record, AUTH), "and it says nothing about this one"
+    assert mine._reason(lap) is None
 
 
 def test_an_early_give_up_ends_the_trace_and_names_the_rule() -> None:

@@ -70,6 +70,7 @@ def row(record: mine.Record) -> dict[str, Any]:
         "dispatches": record.dispatches,
         "gave_up": record.gave_up,
         "told_to_exit": record.told_to_exit,
+        "waved_through": record.waved_through,
         "rule_searched_for": record.rule_searched_for,
         "attempts": [
             {
@@ -130,6 +131,7 @@ def _work(session: corpus.Session) -> mine.Record:
         span.set_attribute("touchstone.attempts", record.dispatches)
         span.set_attribute("touchstone.told_to_exit", record.told_to_exit)
         span.set_attribute("touchstone.gave_up", record.gave_up)
+        span.set_attribute("touchstone.waved_through", record.waved_through)
         span.set_attribute("touchstone.rule_searched_for", record.rule_searched_for or "")
         return record
 
