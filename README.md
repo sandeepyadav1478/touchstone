@@ -115,8 +115,10 @@ what the predicate should say — ⛔ **against the suite that already exists, n
 (D-087). A rule already gated is not worth mining twice, so an exact check runs the cleared
 predicates against the trace first, and the suite index goes into the curator's prompt so that two
 cases cannot encode one rule in different words. The **critic** is the only thing that judges that call, and it is
-the loop's decision point (D-086): it reads the curator's candidate, calls `run_predicate`, reads
-what comes back, and chooses — bounce, hand over, or give up. ⛔ **A bounce carries the specific
+the loop's decision point (D-086): it reads the curator's candidate, **may** call `run_predicate`
+and read what comes back, and chooses — bounce, hand over, or give up. **The run is a choice, not a
+step** (D-085 §F): a candidate that quotes a task id is refused on the reading alone, and the
+attempt that would have been spent on it is still there for a candidate worth testing. ⛔ **A bounce carries the specific
 bad finding, never *"this seems weak"*** — a vague objection costs one attempt and teaches
 the curator nothing. `unmineable` is a **result, not an error**: *the agent was not smart enough*
 has no rule to translate, and a miner that has never given up has never been pointed at a failure

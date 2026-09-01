@@ -357,7 +357,9 @@ computes, which would make it a route on an existing label rather than a judge.
      │           │         because it is producing a candidate, not a verdict.
      │           ▼
      │    1b. CRITIC ───── judges what the curator did, and DECIDES (D-086 §A).
-     │       │              It calls TEST, reads the result, and picks the branch.
+     │       │              It MAY call TEST first (D-085 §F) — a candidate that
+     │       │              quotes a task id is refused without spending a run —
+     │       │              then picks the branch.
      │       ▼
      │    2. TEST ──────── mechanical, no model. ⚠️ EVIDENCE, not the verdict —
      │                     D-086 overturned that; the critic reads this and chooses:

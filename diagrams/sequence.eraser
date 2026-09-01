@@ -105,7 +105,7 @@ Cmp [icon: filter, color: grey, label: "loop/compare.py — P2.4, decision 2\nDE
 Corpus [icon: database, color: grey, label: "tau2-bench results/final/ — 1,712 shipped simulations over 107 tasks\nD-080: the trace source. 834 anomalous, 878 clean, and the clean half is the CONTROL SET"]
 Router [icon: git-branch, color: orange, label: "router agent — D-082 §A\nrubric over ONE session: ENHANCE or SKIP. It replaced analyst, the mechanical select, and the unbuilt rubric judge"]
 Curator [icon: edit-3, color: orange, label: "curator agent — D-082\nwrites the predicate, and owns the two memories"]
-Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2, D-086 A\nthe ONLY judge of the curator's call, and the loop's DECISION POINT. It calls run_predicate, reads the result, and picks: bounce, hand over, or give up"]
+Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2, D-086 A\nthe ONLY judge of the curator's call, and the loop's DECISION POINT. It MAY call run_predicate first — D-085 F made that a choice, not a step — then picks: bounce, hand over, or give up"]
 Pred [icon: check-square, color: green, label: "run_predicate() — the CRITIC'S TOOL, D-086 A. EVIDENCE, not a gate\nno model. It fires on the trace, and must be SILENT on the control set"]
 Budget [icon: hash, color: green, label: "attempt_budget() — the CRITIC'S OTHER TOOL, D-089/D-092\nowns config.MAX_ATTEMPTS. ONE function reads it and the graph's edge calls the same one — D-091\nits reply IS the exit: everything is already recorded, nothing hands off — D-094 A"]
 Gauntlet [icon: shield, color: green, label: "the gauntlet's three gates — D-084\nreproducible, distinct, justified. Five were specified; measuring them against 1,824 shipped simulations cut two"]
@@ -163,7 +163,7 @@ Router > Router: criterion_1_agreement — the router verdict scored against τ�
 
 loop [label: "config.MAX_ATTEMPTS attempts on ONE trace — every UNMINEABLE has a run_predicate result behind it"] {
   Curator > Critic: a candidate predicate, and the stated rule it claims to encode
-  Critic > Pred: the critic calls its evidence tool — D-085 gave it, D-086 A kept it. No other node calls run_predicate
+  Critic > Pred: the critic MAY call its evidence tool — D-085 gave it and made it OPTIONAL (F), D-086 A kept it. No other node calls run_predicate, and a bounce on the argument alone skips this
   Pred > Corpus: fire it against the 934 clean sessions — D-108 retired the 878 as unbuildable
   Corpus --> Pred: the NO half of the evidence — a hit here is a FALSE POSITIVE
   Pred --> Critic: the result returns to its CALLER, who DECIDES what it means — D-086 A
