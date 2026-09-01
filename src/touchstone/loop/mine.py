@@ -40,6 +40,7 @@ from touchstone.loop.budget import attempts_exhausted
 __all__ = [
     "Attempt",
     "Record",
+    "Ruling",
     "attempt_budget",
     "build",
     "mine",
@@ -69,6 +70,24 @@ class Attempt:
     def holds(self) -> bool:
         """docs/02 section 5's stopping rule: fires on the failure, silent on what passes."""
         return self.fired_on_target and self.counterexample is None
+
+
+@dataclass(frozen=True)
+class Ruling:
+    """What the critic returns: where the lap goes, and what the curator is told.
+
+    Two fields because D-082 C2 has two hand-backs and only one of them is the counterexample.
+    The other is the critic's own objection, and it has to reach the curator or the bounce
+    costs an attempt and teaches nothing -- D-086 C's "never this seems weak" is a rule about
+    a payload that has to exist to be judged.
+
+    `argument` is None on a hand-over. The counterexample is not here: it is already in
+    `Record.attempts`, written by the tool that produced it, and copying it into the model's
+    return value would make the graph read a model's account of a mechanical result.
+    """
+
+    decision: str
+    argument: str | None = None
 
 
 @dataclass
@@ -151,7 +170,7 @@ class State(TypedDict):
 
 Router = Callable[[corpus.Session], Awaitable[bool]]
 Curator = Callable[[State], Awaitable[Predicate | None]]
-Critic = Callable[[State], Awaitable[str]]
+Critic = Callable[[State], Awaitable[Ruling]]
 
 
 def _reason(state: State) -> ExitReason | None:
@@ -193,7 +212,8 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
         return {"candidate": await curator(state)}
 
     async def criticise(state: State) -> dict[str, Any]:
-        return {"decision": await critic(state)}
+        ruling = await critic(state)
+        return {"decision": ruling.decision, "argument": ruling.argument}
 
     def settle(state: State) -> str:
         # The write and the route come out of one call, which is what D-093 C means by the

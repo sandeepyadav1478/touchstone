@@ -21,7 +21,7 @@ import pytest
 from touchstone.config import MAX_ATTEMPTS
 from touchstone.gate.predicate import Predicate, RequiresPriorTool
 from touchstone.loop import corpus, mine
-from touchstone.loop.mine import Attempt, Record, State, attempt_budget, run_predicate
+from touchstone.loop.mine import Attempt, Record, Ruling, State, attempt_budget, run_predicate
 
 AUTH = Predicate(
     rule="a lookup must follow authentication",
@@ -77,9 +77,9 @@ async def _propose(_: State) -> Predicate:
     return AUTH
 
 
-async def _bounce(_: State) -> str:
+async def _bounce(_: State) -> Ruling:
     """The critic D-091 C describes: it argues forever and never touches its tools."""
-    return "bounce"
+    return Ruling("bounce", "try again")
 
 
 def run(
@@ -120,8 +120,8 @@ def test_the_router_can_end_a_trace_before_any_agent_runs() -> None:
 def test_a_hand_over_ends_the_trace() -> None:
     """The one exit that produces a candidate. Everything else is a finding about the policy."""
 
-    async def hand_over(_: State) -> str:
-        return "hand_over"
+    async def hand_over(_: State) -> Ruling:
+        return Ruling("hand_over")
 
     record = run(critic=hand_over)
     assert record.exit_reason == "handed_over"
@@ -131,10 +131,10 @@ def test_a_hand_over_ends_the_trace() -> None:
 def test_an_early_give_up_ends_the_trace_and_names_the_rule() -> None:
     """D-089 B: giving up costs naming the rule you went looking for and did not find."""
 
-    async def gives_up(s: State) -> str:
+    async def gives_up(s: State) -> Ruling:
         s["record"].attempts.append(Attempt(AUTH, fired_on_target=False, counterexample=None))
         attempt_budget(s["record"], "a confirmation rule policy.md does not state")
-        return "bounce"
+        return Ruling("bounce", "no rule to encode")
 
     record = run(critic=gives_up)
     assert record.exit_reason == "gave_up"

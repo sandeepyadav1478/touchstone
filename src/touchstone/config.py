@@ -45,6 +45,15 @@ MAX_ATTEMPTS = 5
 # agents. Exhausting it raises `ResultError`; adapter.py turns that back into an outcome.
 MAX_SDK_TURNS = 2
 
+# Turns one loop agent may spend on one question. D-032 set a single 2 for every role and
+# D-085 SS E made that wrong: `output_format` spends a turn, and a tool call spends at least
+# one more each way. The split is tools or no tools, which is the only difference that exists
+# -- the router and the curator run with `allowed_tools=[]` (D-085 SS D) and answer in one go.
+# ponytail: 6 is a guess. Truncating the critic mid-tool-call surfaces as an empty verdict
+# rather than an error, so the first live run should read `num_turns` and pin this to it.
+AGENT_TURNS = 2
+CRITIC_TURNS = 6
+
 # [] — not None, the most misread flag in the Agent SDK (types.py:1807):
 #   None → every settings.json and CLAUDE.md on the machine is loaded
 #   []   → isolation. An agent reading the developer's CLAUDE.md is not the agent that ships.

@@ -32,7 +32,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-__all__ = ["Session", "anomalous", "clean", "files", "is_anomalous", "load", "moved_tasks"]
+__all__ = [
+    "Session",
+    "anomalous",
+    "clean",
+    "data_dir",
+    "files",
+    "is_anomalous",
+    "load",
+    "moved_tasks",
+]
 
 
 @dataclass(frozen=True)
@@ -52,7 +61,7 @@ class Session:
     messages: list[dict[str, Any]]
 
 
-def _data_dir() -> Path:
+def data_dir() -> Path:
     """Where the specimen keeps its data, resolved through its own constant.
 
     Imported inside the function: `TAU2_DATA_DIR` is read at tau2's import, which costs 1.71 s,
@@ -65,7 +74,7 @@ def _data_dir() -> Path:
 
 def files() -> list[Path]:
     """The four shipped retail baselines."""
-    return sorted((_data_dir() / "tau2" / "results" / "final").glob("*_retail_*.json"))
+    return sorted((data_dir() / "tau2" / "results" / "final").glob("*_retail_*.json"))
 
 
 def _gold(actions: list[dict[str, Any]]) -> list[tuple[str, str, str]]:
@@ -88,7 +97,7 @@ def moved_tasks() -> frozenset[str]:
     carry serialisation differences that make a plain `==` report 112 of 114 as moved, which
     is a comparison failing rather than a corpus that changed.
     """
-    tasks_json = _data_dir() / "tau2" / "domains" / "retail" / "tasks.json"
+    tasks_json = data_dir() / "tau2" / "domains" / "retail" / "tasks.json"
     today = {
         str(t["id"]): _gold((t.get("evaluation_criteria") or {}).get("actions") or [])
         for t in json.loads(tasks_json.read_text())

@@ -20,6 +20,7 @@ protects the GATING path, and this is the proposing path -- the module it hands 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import fields
 from typing import TYPE_CHECKING, Any
 
@@ -30,7 +31,7 @@ from touchstone.loop import budget
 if TYPE_CHECKING:
     from touchstone.gate.predicate import Check
 
-__all__ = ["SYSTEM", "extract", "parse"]
+__all__ = ["SYSTEM", "ask", "extract", "json_object", "parse"]
 
 _SHAPES: dict[str, type[Check]] = {
     c.__name__: c for c in (RequiresPriorTool, RequiresUserAssent, ArgumentIn)
@@ -64,8 +65,8 @@ Rules you must follow:
 """
 
 
-def _object(text: str) -> dict[str, Any]:
-    """The outermost JSON object in the answer.
+def json_object(text: str) -> dict[str, Any]:
+    """The outermost JSON object in the answer. Public because the critic answers this way too.
 
     Sliced rather than parsed whole because a model told to emit bare JSON still sometimes
     wraps it in a sentence or a fence, and that is a formatting slip rather than a refusal to
@@ -87,7 +88,7 @@ def parse(text: str) -> Predicate | None:
     half-built predicate. This is a trust boundary -- the input is model output, and the reason
     the shapes are a closed set is lost the moment an unrecognised one is waved through.
     """
-    raw = _object(text)
+    raw = json_object(text)
     kind = raw.get("kind")
     if kind is None:
         return None
@@ -111,14 +112,26 @@ def _frozen(value: Any) -> Any:
     return tuple(value) if isinstance(value, list) else value
 
 
-async def extract(
-    statement: str, source: str, counterexample: str | None = None
-) -> Predicate | None:
-    """Ask the curator to encode one policy statement. Returns None if no shape fits.
+async def ask(
+    role: str,
+    system: str,
+    prompt: str,
+    *,
+    max_turns: int,
+    allowed_tools: Sequence[str] = (),
+    servers: Mapping[str, Any] | None = None,
+) -> str:
+    """One question to one role, and the text it answered with.
 
-    `counterexample` is the session that motivated the rule, handed back on a later attempt so
-    the model can see what its last answer failed to catch. That is the loop's iteration and it
-    is P3.4's; the parameter is here because the prompt is the only place it can go.
+    Every loop agent comes through here, which is what makes the isolation flags one decision
+    instead of three. `tools=[]` is the switch that turns the SDK's own Read/Bash/Glob off and
+    `allowed_tools` is not, measured as DEF-064 -- so both are set, and `allowed_tools` grants
+    only what a caller asks for. It defaults to nothing: a role gains a tool by naming it here
+    (D-085 SS D), never by inheriting one.
+
+    A partial answer is kept. Running out of turns is reported as a `ResultMessage` and then
+    raised, and text already streamed is still an answer -- throwing it away would spend the
+    five-hour window twice for one result.
     """
     if budget.quota_exhausted():
         raise budget.QuotaExhaustedError(f"quota reading: {budget.reading()}")
@@ -134,22 +147,14 @@ async def extract(
 
     opts = ClaudeAgentOptions(
         model=config.LOOP_MODEL,
-        system_prompt=SYSTEM,
-        # `tools=[]` is the switch that turns the SDK's own Read/Bash/Glob off; `allowed_tools`
-        # is not, measured as DEF-064. Both, because the curator gets no tools at all (D-085).
+        system_prompt=system,
         tools=[],
-        allowed_tools=[],
+        allowed_tools=list(allowed_tools),
+        mcp_servers=dict(servers or {}),
         # [] is isolation; None loads this machine's CLAUDE.md and its model pin -- D-034.
-        setting_sources=[],
-        # ponytail: 2 is a guess, not a measurement -- one answer needs one turn and the spare
-        # is for a model that narrates first. The partial-answer path below is what makes it
-        # non-fatal; the first live run should read `num_turns` and pin this to it.
-        max_turns=2,
+        setting_sources=config.SETTING_SOURCES,
+        max_turns=max_turns,
     )
-
-    prompt = f"Policy statement, from {source}:\n\n{statement}\n"
-    if counterexample:
-        prompt += f"\nA session your last answer did not catch:\n\n{counterexample}\n"
 
     text: list[str] = []
     result = None
@@ -162,11 +167,23 @@ async def extract(
             elif isinstance(msg, ResultMessage):
                 result = msg
     except Exception:
-        # Same shape as the seam's: running out of turns is reported as a ResultMessage and
-        # then raised. An answer already streamed is still an answer, and throwing it away
-        # would spend the window twice for one result.
         if not text:
             raise
     if result is not None and result.is_error and not text:
-        raise RuntimeError(f"the curator failed: {result.subtype} {result.api_error_status}")
-    return parse("\n".join(t for t in text if t))
+        raise RuntimeError(f"the {role} failed: {result.subtype} {result.api_error_status}")
+    return "\n".join(t for t in text if t)
+
+
+async def extract(
+    statement: str, source: str, counterexample: str | None = None
+) -> Predicate | None:
+    """Ask the curator to encode one policy statement. Returns None if no shape fits.
+
+    `counterexample` is the session that motivated the rule, handed back on a later attempt so
+    the model can see what its last answer failed to catch. That is the loop's iteration and it
+    is P3.4's; the parameter is here because the prompt is the only place it can go.
+    """
+    prompt = f"Policy statement, from {source}:\n\n{statement}\n"
+    if counterexample:
+        prompt += f"\nA session your last answer did not catch:\n\n{counterexample}\n"
+    return parse(await ask("curator", SYSTEM, prompt, max_turns=config.AGENT_TURNS))

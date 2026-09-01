@@ -9,10 +9,12 @@ No tau2 import, so the suite's 2 s budget is untouched: every function under tes
 the simulation dict rather than fetching it.
 """
 
+from typing import Any
+
 from touchstone.loop.corpus import _gold, is_anomalous
 
 
-def sim(db: bool, actions: list[bool]) -> dict:
+def sim(db: bool, actions: list[bool]) -> dict[str, Any]:
     """One simulation's `reward_info`, reduced to the two signals D-108 kept."""
     return {
         "reward_info": {

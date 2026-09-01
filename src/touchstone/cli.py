@@ -1,7 +1,7 @@
 """The CLI. Every command in docs/06 §1 lands here.
 
 Commands arrive with the code they drive — a stub that prints "not implemented" is a command
-that looks built. Three exist: `doctor` (P0), then `run` and `score` (P1.6).
+that looks built. Four exist: `doctor` (P0), `run` and `score` (P1.6), and `mine` (P3.4).
 
 Two of the four the P1.6 row names are deliberately absent, for different reasons:
 
@@ -88,6 +88,26 @@ def score(
         raise typer.BadParameter(f"{results} does not exist — run `touchstone run {version}`")
 
     typer.echo(f"wrote {write(results, version, k)}")
+
+
+@app.command()
+def mine(
+    label: str = typer.Argument(..., help="Names the harvest — `results/mined-<label>.json`."),
+    limit: int = typer.Option(5, "--limit", help="How many sessions, in corpus order."),
+    session: list[str] = typer.Option(
+        [], "--session", help="Work these session ids instead. Repeatable."
+    ),
+) -> None:
+    """Mine sessions for eval gates — router, curator, critic, up to five attempts each.
+
+    The default limit is 5 and it is deliberately small. Every session costs a router call
+    before it can be skipped, and the quota is a five-hour window that rejects rather than
+    bills (D-001) — a harvest that runs into it stops and keeps what it paid for, but the
+    sessions after the wall are not worked at all.
+    """
+    from .loop.harvest import harvest
+
+    typer.echo(f"wrote {harvest(label, limit, tuple(session))}")
 
 
 if __name__ == "__main__":

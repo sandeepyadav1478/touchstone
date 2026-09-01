@@ -209,14 +209,17 @@ def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
     trains you to edit it, and the edit that relaxes it looks identical to the edit that
     renames a file.
 
-    `gate.extract` is the third, and it is named rather than ruled because it is an exception
-    and should read as one — D-107. It is the PROPOSING path: it translates a written rule into
-    a predicate and hands it to `predicate.evaluate()`, which decides. What kept this guard
-    honest was never the count, it was that no model reaches the decision, and that is now
+    `gate.extract` is the third and `loop.agents` the fourth, and both are named rather than
+    ruled because they are exceptions and should read as ones — D-107, and D-086 §A one level
+    along. `loop.agents` holds the router, the curator and the critic; `gate.extract.ask` is
+    the one query loop all three come through, so the pair is the proposing path entire: it
+    turns a written rule into a predicate and hands it to `predicate.evaluate()`, which
+    decides. What kept this guard honest was never the count, it was that no model reaches
+    that decision, and that is now
     asserted where it actually lives: `test_no_model_in_gating_path` walks `predicate.py` too.
     Widening this without that walk would have been the edit this docstring warns about.
     """
-    seams = {"adapter", "gate.extract"}
+    seams = {"adapter", "gate.extract", "loop.agents"}
     allowed = {n for n in MODULES if n in seams or n.split(".")[0] == "doctor"}
     reach = {name for name, tree in MODULES.items() if "claude_agent_sdk" in imported(tree)}
     assert reach <= allowed and "adapter" in reach, (
@@ -295,6 +298,60 @@ def test_no_module_reads_the_answer_key() -> None:
         assert not (found := attributes(tree) & banned), (
             f"{name}.py reads {found} — that is the answer key, and the seam is handed messages"
         )
+
+
+def _function(module: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    """One named function out of a module in `MODULES`."""
+    kinds = (ast.FunctionDef, ast.AsyncFunctionDef)
+    found = [n for n in ast.walk(MODULES[module]) if isinstance(n, kinds) and n.name == name]
+    assert len(found) == 1, f"{module}.{name} is not there once — the guard below is asserting air"
+    return found[0]
+
+
+def test_no_prompt_carries_the_answer_key() -> None:
+    """Rubric criterion 1 asks the router to derive what `Session.anomalous` already knows.
+
+    D-082 §B is the whole reason the router is allowed to be a model: its verdict is scored
+    against τ²'s own signals over the 1,712, and that disagreement rate is the only error bar
+    anything downstream has. Hand it the flag and the agreement is 1.0 by construction.
+
+    Asserted on `_transcript` rather than on the module, because `Verdict.anomalous` is the
+    router's OWN answer and banning the word everywhere would ban the thing being measured.
+    `_transcript` is the only function that turns a session into prompt text, so the reachable
+    fields are the guard: `messages`, and nothing tau2 derived from a reward.
+    """
+    render = _function("loop.agents", "_transcript")
+    read = {
+        n.attr
+        for n in ast.walk(render)
+        if isinstance(n, ast.Attribute)
+        if isinstance(n.value, ast.Name) and n.value.id == "session"
+    }
+    assert read == {"messages"}, (
+        f"the transcript reads {read - {'messages'}} off the session — `anomalous` and "
+        "`termination_reason` come from `reward_info`, and criterion_1_agreement dies on either"
+    )
+
+
+def test_only_the_critic_holds_a_tool() -> None:
+    """D-085 §D: the blanket `allowed_tools=[]` became per-role, and a grep cannot see that.
+
+    The old rule was one literal in one file. Now the router and the curator get nothing and
+    the critic gets two, which is exactly the shape DEF-056 describes — a check that keeps
+    passing while one role quietly gains a tool. So this reads the call, not the constant.
+    """
+    holders = {
+        name
+        for name in ("route", "curator", "critic")
+        for call in ast.walk(_function("loop.agents", name))
+        if isinstance(call, ast.Call)
+        for kw in call.keywords
+        if kw.arg == "allowed_tools"
+    }
+    assert holders == {"critic"}, (
+        f"{holders} pass allowed_tools. The curator testing its own candidate is the "
+        "self-review the critic exists to break (D-085 §C3)"
+    )
 
 
 def test_the_answer_key_check_can_fail() -> None:
