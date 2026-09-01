@@ -14,9 +14,11 @@ and the whole unit suite has 2 s.
 
 import asyncio
 import json
+from typing import Any
 
 import pytest
 
+from touchstone import config
 from touchstone.gate.extract import parse
 from touchstone.gate.predicate import Predicate, RequiresPriorTool
 from touchstone.loop import agents, corpus, mine
@@ -218,3 +220,100 @@ def test_giving_up_is_refused_before_anything_has_run_and_costs_no_attempt() -> 
     assert agents.asked(state, "no such rule") == mine.RECORDED
     assert record.gave_up
     assert record.rule_searched_for == "no such rule"
+
+
+def _capture(monkeypatch: pytest.MonkeyPatch, answer: str) -> list[dict[str, Any]]:
+    """Stand in for the model and keep what each role was about to send it.
+
+    `policy` and `_by_id` are stubbed with it: the first imports tau2 to find the data
+    directory (1.71 s) and the second loads the 91 MB corpus, and neither is what is being
+    checked here -- that the prompt is assembled at all, and carries what the role needs.
+    """
+    calls: list[dict[str, Any]] = []
+
+    async def ask(role: str, system: str, prompt: str, **kw: Any) -> str:
+        calls.append({"role": role, "system": system, "prompt": prompt, **kw})
+        return answer
+
+    monkeypatch.setattr(agents.extract, "ask", ask)
+    monkeypatch.setattr(agents, "policy", lambda: "   3  authenticate first")
+    monkeypatch.setattr(agents, "_by_id", lambda sid: f"<transcript of {sid}>")
+    return calls
+
+
+def test_every_role_assembles_a_prompt_that_carries_what_it_needs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The pre-flight the first live run would otherwise be.
+
+    Nothing else exercises the assembly: the other tests here check the pieces, and a missing
+    key or an unsent policy would surface only on a call that costs quota against a window
+    that rejects rather than bills (D-001). So this drives all three roles with the model
+    replaced, and asserts on what each was about to send.
+
+    The turn budgets are asserted because they are per-role for a reason (D-085 SS E): the
+    critic needs turns for its tool calls and the other two do not, and a critic truncated
+    mid-call comes back as an empty verdict rather than an error.
+    """
+    calls = _capture(
+        monkeypatch,
+        '{"criterion_1": true, "criterion_2": true, "criterion_3": '
+        'true, "criterion_4": true, "why": "ok"}',
+    )
+    verdict = asyncio.run(agents.route(lookup("t", authenticated=False)))
+
+    assert verdict.enhance
+    assert calls[0]["role"] == "router"
+    assert "authenticate first" in calls[0]["system"]
+    assert "get_order_details" in calls[0]["prompt"]
+    assert calls[0]["max_turns"] == config.AGENT_TURNS
+    assert not calls[0].get("allowed_tools")
+
+
+def test_the_curator_is_handed_the_objection_and_the_counterexample(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D-085 SS F's two hand-backs, at the point they become text.
+
+    The id alone names the failure without showing it, so the transcript of the clean session
+    has to reach the prompt. A first attempt carries neither, which is the same code path with
+    both branches unfired -- asserted so a bounce is not the only shape that works.
+
+    The stub answer is `{"kind": null}` because that is what `extract.SYSTEM` tells the model
+    to send when no shape fits, and it is the declination D-086 keeps as a real answer. Bare
+    `null` raises here, which is `parse` being a trust boundary rather than a defect.
+    """
+    calls = _capture(monkeypatch, '{"kind": null, "why": "no shape fits"}')
+    record = mine.Record(session_id="t")
+    state = _state(record)
+
+    assert asyncio.run(agents.curator(state)) is None
+    assert "sent your last candidate back" not in calls[0]["prompt"]
+
+    state["argument"] = "it keys on the task id"
+    record.attempts.append(mine.Attempt(predicate=AUTH, fired_on_target=True, counterexample="c9"))
+    asyncio.run(agents.curator(state))
+    assert "it keys on the task id" in calls[1]["prompt"]
+    assert "<transcript of c9>" in calls[1]["prompt"]
+    assert "authenticate first" in calls[1]["system"]
+
+
+def test_the_critic_is_sent_the_candidate_and_both_tools(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """What the critic argues with, and what it can reach while arguing.
+
+    The candidate goes in as `shape` rather than prose so the critic attacks the object the
+    curator emitted. The tool names are asserted against `CRITIC_TOOLS` rather than spelled
+    again: a name that disagrees with the server's is an SDK-side silent no-tool, not an error.
+    """
+    calls = _capture(monkeypatch, '{"decision": "bounce", "argument": "too narrow"}')
+    ruling = asyncio.run(agents.critic(_state(mine.Record(session_id="t"))))
+
+    assert ruling == mine.Ruling("bounce", "too narrow")
+    assert calls[0]["role"] == "critic"
+    assert "RequiresPriorTool" in calls[0]["prompt"]
+    assert AUTH.rule in calls[0]["prompt"]
+    assert calls[0]["max_turns"] == config.CRITIC_TURNS
+    assert tuple(calls[0]["allowed_tools"]) == agents.CRITIC_TOOLS
+    assert set(calls[0]["servers"]) == {"loop"}
