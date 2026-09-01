@@ -17,6 +17,7 @@ Coverage of §6 from here, stated so the gaps are visible rather than implied:
     11, 12      vacuous until the gauntlet fills the regression manifest (D-030)
     13, 14      need specialist spans; un-retired by D-071, not yet buildable
     new         no model in any gating path, by test_only_the_seam_and_the_doctor_may_reach_a_model
+    new         no credential in CI (D-014), by test_ci_carries_no_credential_and_calls_no_model
 """
 
 import ast
@@ -308,3 +309,48 @@ def test_the_answer_key_check_can_fail() -> None:
     type_only = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from claude_agent_sdk import X"
     assert imported(ast.parse(type_only)) == {"typing"}, "a TYPE_CHECKING import is not a reach"
     assert strings(ast.parse('M = "claude-opus-5"')) == {"claude-opus-5"}
+
+
+# Text, not `ast` -- a workflow is YAML, so there is no parse tree to ask for names and the
+# substring rule that governs the tests above does not apply the same way. The banned words
+# appear in this file as literals; the scan reads `.github/`, never itself.
+CI_DIR = ROOT / ".github"
+NO_CREDENTIAL = ("anthropic", "api_key", "api-key", "apikey", "secrets.", "openai", "cerebras")
+
+
+def ci_files() -> list[Path]:
+    """Every file under `.github/`, whatever its extension."""
+    return [p for p in CI_DIR.rglob("*") if p.is_file()]
+
+
+def banned_in(text: str) -> set[str]:
+    """The forbidden tokens present in `text`, case-insensitively."""
+    low = text.lower()
+    return {w for w in NO_CREDENTIAL if w in low}
+
+
+def test_ci_carries_no_credential_and_calls_no_model() -> None:
+    """D-014 — CI that needs a secret is CI nobody can fork.
+
+    The ROADMAP states this as `git grep -i 'ANTHROPIC' .github/` returning nothing. It is
+    asserted here rather than as a workflow step because a workflow grepping its own directory
+    is a check auditing itself, and it would pass in exactly the case that matters least: a
+    credential added to a second workflow the first one never reads.
+    """
+    assert CI_DIR.is_dir(), "no .github/ -- P2.7 is unbuilt, and this test would pass vacuously"
+    assert ci_files(), ".github/ exists but is empty, so the scan below reads nothing"
+    for path in ci_files():
+        found = banned_in(path.read_text(encoding="utf-8"))
+        assert not found, f"{path.relative_to(ROOT)} names {found} -- CI holds no credential"
+
+
+def test_the_credential_check_can_fail() -> None:
+    """The test above is an absence assertion over files that happen not to contain the words.
+
+    It would pass just as happily with a scanner that always returns nothing, so the scanner
+    is run against a planted positive and against the shape it must not over-match.
+    """
+    assert banned_in("      ANTHROPIC_API_KEY: ${{ secrets.KEY }}") == {
+        "anthropic", "api_key", "secrets.",
+    }
+    assert banned_in("- run: uv run pytest tests/unit -q") == set()

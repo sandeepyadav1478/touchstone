@@ -1,0 +1,56 @@
+# P2.7 — the invariants, on every push, with no credential and no model call.
+#
+# D-014 is the whole design: CI that needs a secret is CI nobody can fork, and a scorer that
+# calls a model in CI is a scorer whose result depends on the weather. Everything below runs
+# from the checkout and the lockfile. There is deliberately no `secrets:` block, no `env:`
+# carrying a key, and no step that reaches an inference endpoint --
+# `tests/unit/test_invariants.py` asserts that about this file rather than this file asserting
+# it about itself.
+#
+# What is NOT here, and why, so the gap is visible rather than implied:
+#
+#   scripts/check-diagram.py    its EXTERNAL_ROOTS points at a local tau2-bench checkout. On a
+#                               runner that path is absent, which makes milestone 4a warn and
+#                               PASS while checking nothing, and makes every citation into the
+#                               upstream tree fail as unresolved. Wrong in both directions, so
+#                               it stays a local guard until the pin is resolvable from the
+#                               installed package instead of an absolute path.
+#   ruff                        18 check errors and 24 unformatted files predate this workflow.
+#                               A gate that is red on arrival is a broken build, not a gate.
+#   touchstone score            P2.7 also owes "scores committed span JSONL". No span JSONL is
+#                               committed yet -- it is an output of the first end-to-end run.
+#                               The step lands with the data, not before it.
+
+name: touchstone
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  invariants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      # --locked, never --frozen: a lockfile that has drifted from pyproject.toml is a
+      # dependency set nobody has resolved, and tau2 is pinned here by commit (DEF-055).
+      - run: uv sync --locked
+
+      # Under 2 seconds by design (D-030) -- if this step ever takes minutes, a test has
+      # started importing tau2 at module scope.
+      - run: uv run pytest tests/unit -q
+
+      - run: uv run mypy src/
+
+      # Against git, not disk: an untracked file resolves locally and 404s for a stranger.
+      - run: uv run python scripts/check-links.py

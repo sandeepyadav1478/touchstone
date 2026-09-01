@@ -642,7 +642,12 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
   p0-deps.sh           the phase 0 install, one command
   p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
 .github/workflows/
-  touchstone.yml       CI — ⛔ calls no model (D-014). Named in ROADMAP P2.7
+  touchstone.yml       🆕 CI, P2.7 — `uv sync --locked`, `pytest tests/unit`, `mypy src/`,
+                       `check-links.py`. ⛔ **No `secrets:` block, no `env:` key, no model
+                       call** (D-014); `test_ci_carries_no_credential_and_calls_no_model`
+                       asserts that about the file, so the workflow does not audit itself.
+                       ⚠️ `check-diagram.py` is NOT here — its external root is an absolute
+                       path, and absent it the guard warns and passes while checking nothing
 ~~docker-compose.yml~~   🔴 gone — D-040 cut the API, D-074 cut the backend, nothing left
 ```
 
