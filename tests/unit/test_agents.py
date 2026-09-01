@@ -15,6 +15,8 @@ and the whole unit suite has 2 s.
 import asyncio
 import json
 
+import pytest
+
 from touchstone.gate.extract import parse
 from touchstone.gate.predicate import Predicate, RequiresPriorTool
 from touchstone.loop import agents, corpus, mine
@@ -132,3 +134,87 @@ def test_the_rubric_hash_moves_when_a_criterion_does() -> None:
     """
     assert len(agents.RUBRIC_HASH) == 12
     assert agents.RUBRIC.count("criterion_") == 4
+
+
+def lookup(sid: str, *, authenticated: bool) -> corpus.Session:
+    """A session that looks an order up, having authenticated first or not.
+
+    One call per assistant message: `RequiresPriorTool` orders on message index, so two calls
+    in one message are not ordered with respect to each other.
+    """
+    names = ["get_user_details"] if authenticated else []
+    names.append("get_order_details")
+    return corpus.Session(
+        id=sid,
+        task_id="1",
+        trial=0,
+        agent="stub",
+        anomalous=not authenticated,
+        termination_reason="user_stop",
+        messages=[
+            m
+            for n, name in enumerate(names)
+            for m in (
+                {"role": "assistant", "content": "", "tool_calls": [{"id": str(n), "name": name}]},
+                {"role": "tool", "id": str(n)},
+            )
+        ],
+    )
+
+
+def _state(record: mine.Record) -> mine.State:
+    """One lap's working set, at the point the critic has its two tools in hand."""
+    return {
+        "session": lookup("t", authenticated=False),
+        "record": record,
+        "candidate": AUTH,
+        "argument": None,
+        "decision": None,
+        "enhance": True,
+    }
+
+
+def test_running_a_predicate_files_the_result_rather_than_reporting_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The line D-085 B drew: the graph reads a recorded call, never a model's account of one.
+
+    The tool both answers the critic and appends to the record, and only the second half is
+    load-bearing -- a critic that misreports what it saw still cannot change what the edge
+    routes on. So the assertion is on the record, and the reply is checked for agreeing.
+
+    `corpus.clean` is stubbed because the real one loads 91 MB. It returns the authenticating
+    session, which is what makes the silence half of `holds` mean something here.
+    """
+    monkeypatch.setattr(corpus, "clean", lambda: (lookup("c1", authenticated=True),))
+    record = mine.Record(session_id="t")
+
+    reply = agents.ran(_state(record), AUTH)
+
+    assert len(record.attempts) == 1
+    assert record.attempts[0].holds
+    assert reply == {"fired_on_target": True, "counterexample": None, "holds": True}
+
+
+def test_giving_up_is_refused_before_anything_has_run_and_costs_no_attempt() -> None:
+    """D-082's floor, at the one place it can fire: every unmineable carries a run behind it.
+
+    Three calls, because what each does to the record is the point. The empty string must not
+    be read as a give-up -- a model that sends `""` has named no rule, and naming one is the
+    price (D-089 D) -- and the refusal must not buy an attempt back.
+
+    The attempt is filed by hand rather than run: `run_predicate` would load the corpus, and
+    what the third call turns on is only that the list is non-empty.
+    """
+    record = mine.Record(session_id="t")
+    state = _state(record)
+
+    assert agents.asked(state, "  ") == mine.CONTINUE
+    assert agents.asked(state, "no such rule") == mine.REFUSED
+    assert not record.gave_up
+    assert record.dispatches == 0
+
+    record.attempts.append(mine.Attempt(predicate=AUTH, fired_on_target=True, counterexample=None))
+    assert agents.asked(state, "no such rule") == mine.RECORDED
+    assert record.gave_up
+    assert record.rule_searched_for == "no such rule"

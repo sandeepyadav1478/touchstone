@@ -46,8 +46,10 @@ __all__ = [
     "CURATOR",
     "RUBRIC",
     "Verdict",
+    "asked",
     "critic",
     "curator",
+    "ran",
     "route",
     "router",
     "shape",
@@ -281,6 +283,33 @@ def _by_id(session_id: str) -> str:
     return next(_transcript(s) for s in corpus.load() if s.id == session_id)
 
 
+def ran(state: mine.State, candidate: Predicate) -> dict[str, Any]:
+    """The body of `run_predicate`, outside the decorator so it can be run without one.
+
+    `holds` is sent rather than left to be inferred. It is the stopping rule and it is an AND
+    of the other two fields, so a critic that reconstructed it could get it wrong in the one
+    direction that matters -- reading a fired-on-target as a pass while a counterexample sits
+    beside it.
+    """
+    attempt = mine.spend(state["record"], candidate, state["session"])
+    return {
+        "fired_on_target": attempt.fired_on_target,
+        "counterexample": attempt.counterexample,
+        "holds": attempt.holds,
+    }
+
+
+def asked(state: mine.State, rule_searched_for: str | None) -> str:
+    """The body of `attempt_budget`. An empty rule is a question, never a give-up.
+
+    The tool has one optional argument and two jobs, so the argument arriving empty is the
+    ambiguous case: a model that sends `""` has not named a rule, and D-089 SS D makes naming
+    one the price of giving up. Reading it as a give-up would let the price be paid in
+    whitespace.
+    """
+    return mine.attempt_budget(state["record"], (rule_searched_for or "").strip() or None)
+
+
 def _server(state: mine.State, candidate: Predicate) -> dict[str, Any]:
     """The critic's two tools, bound to this session's record.
 
@@ -292,16 +321,7 @@ def _server(state: mine.State, candidate: Predicate) -> dict[str, Any]:
 
     @tool("run_predicate", "Run the candidate against the target and the clean sessions.", {})
     async def run(_: dict[str, Any]) -> dict[str, Any]:
-        attempt = mine.spend(state["record"], candidate, state["session"])
-        return _said(
-            json.dumps(
-                {
-                    "fired_on_target": attempt.fired_on_target,
-                    "counterexample": attempt.counterexample,
-                    "holds": attempt.holds,
-                }
-            )
-        )
+        return _said(json.dumps(ran(state, candidate)))
 
     @tool(
         "attempt_budget",
@@ -318,8 +338,7 @@ def _server(state: mine.State, candidate: Predicate) -> dict[str, Any]:
         },
     )
     async def spend(args: dict[str, Any]) -> dict[str, Any]:
-        asked = str(args.get("rule_searched_for") or "").strip() or None
-        return _said(mine.attempt_budget(state["record"], asked))
+        return _said(asked(state, args.get("rule_searched_for")))
 
     return {"loop": create_sdk_mcp_server("loop", tools=[run, spend])}
 
