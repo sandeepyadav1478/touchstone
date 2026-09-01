@@ -110,7 +110,9 @@ You have two tools.
 
 Run the cheap refusals first. A candidate that quotes a task id, or encodes a rule the policy
 does not state, needs no run to be sent back, and a run spent on it is a run not available
-later.
+later. The policy is below and it is line-numbered: `source` names a line, so read that line
+and check it says what the candidate claims. A citation that does not support the rule is the
+same refusal as an unstated rule, and it is cheaper than either.
 
 Then answer with one JSON object and nothing else. No prose, no code fence.
 
@@ -255,6 +257,11 @@ async def critic(state: mine.State) -> mine.Ruling:
     its verdict would otherwise burn the remaining attempts and be reported as an ordinary
     exhaustion, and D-094 SS C's whole argument is that the exit reasons have to stay
     distinguishable to be worth counting.
+
+    The policy goes in for the same reason the router and the curator get it: two of the three
+    cheap refusals the prompt asks for first are judgements about what the policy says, and
+    D-106 makes `source` a required citation the critic is the only reader of. Until
+    2026-09-01 it was the one role that had to make those calls without the document.
     """
     candidate = state["candidate"]
     if candidate is None:
@@ -267,7 +274,7 @@ async def critic(state: mine.State) -> mine.Ruling:
     answer = extract.json_object(
         await extract.ask(
             "critic",
-            CRITIC,
+            f"{CRITIC}\nThe policy, line-numbered:\n\n{policy()}\n",
             prompt,
             max_turns=config.CRITIC_TURNS,
             allowed_tools=CRITIC_TOOLS,

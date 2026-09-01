@@ -311,9 +311,7 @@ def test_a_counterexample_from_an_older_candidate_is_not_shown_as_this_ones(
     calls = _capture(monkeypatch, '{"kind": null, "why": "no shape fits"}')
     record = mine.Record(session_id="t")
     older = Predicate(rule="an older rule", source="policy.md:20", check=AUTH.check)
-    record.attempts.append(
-        mine.Attempt(predicate=older, fired_on_target=True, counterexample="c9")
-    )
+    record.attempts.append(mine.Attempt(predicate=older, fired_on_target=True, counterexample="c9"))
     state = _state(record)  # `candidate` is AUTH, and the only attempt is not AUTH's
 
     asyncio.run(agents.curator(state))
@@ -328,6 +326,11 @@ def test_the_critic_is_sent_the_candidate_and_both_tools(
     The candidate goes in as `shape` rather than prose so the critic attacks the object the
     curator emitted. The tool names are asserted against `CRITIC_TOOLS` rather than spelled
     again: a name that disagrees with the server's is an SDK-side silent no-tool, not an error.
+
+    The policy is asserted here for the same reason it is asserted for the other two roles,
+    and it was missing here until 2026-09-01: the prompt asks the critic to refuse a rule the
+    policy does not state and to check the line `source` cites, and neither is answerable
+    without the document. A model sent no policy does not error -- it agrees.
     """
     calls = _capture(monkeypatch, '{"decision": "bounce", "argument": "too narrow"}')
     ruling = asyncio.run(agents.critic(_state(mine.Record(session_id="t"))))
@@ -339,3 +342,4 @@ def test_the_critic_is_sent_the_candidate_and_both_tools(
     assert calls[0]["max_turns"] == config.CRITIC_TURNS
     assert tuple(calls[0]["allowed_tools"]) == agents.CRITIC_TOOLS
     assert set(calls[0]["servers"]) == {"loop"}
+    assert "authenticate first" in calls[0]["system"]

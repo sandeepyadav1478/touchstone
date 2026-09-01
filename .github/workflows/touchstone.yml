@@ -16,8 +16,15 @@
 #                               property of what the repo publishes rather than a path bug.
 #                               It runs locally, on every change, and its result is quoted in
 #                               commit messages instead.
-#   ruff                        18 check errors and 24 unformatted files predate this workflow.
-#                               A gate that is red on arrival is a broken build, not a gate.
+#   ruff                        18 check errors predate this workflow, unchanged since it landed
+#                               and reproducible with `ruff check --force-exclude --output-
+#                               format=concise src tests scripts | wc -l`. A gate that is red on
+#                               arrival is a broken build, not a gate.
+#                               `ruff format` is not a gate either, and this line no longer
+#                               carries its count: the count was written as 24, measured 21 at
+#                               this commit, and reads 26 today. A number that was wrong when
+#                               written AND drifts with every edit is worth less than the
+#                               command that prints it -- `ruff format --check src tests scripts`.
 #   touchstone score            P2.7 also owes "scores committed span JSONL". No span JSONL is
 #                               committed yet -- it is an output of the first end-to-end run.
 #                               The step lands with the data, not before it.
