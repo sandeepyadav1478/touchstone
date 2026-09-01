@@ -329,7 +329,10 @@ Cmp > Refused: any ONE fails
 //  already computed them and they sit in the shipped result JSONs — so they cost nothing to
 //  keep, and D-082 §B spends them on `criterion_1_agreement`: the router's verdict scored
 //  against a population whose answer is already known. ⛔ NO RESULT IS REPORTABLE WITHOUT IT.
-//  ⚠ AND THE CLEAN 878 IS STILL THE SILENCE SET. That is D-080 and D-082 did not touch it.
+//  ⚠ AND A CLEAN SET IS STILL THE SILENCE SET — D-080 and D-082 did not touch that. WHICH set
+//  did change: D-108 retired the 878 as unbuildable and the silence set is the 934 a command
+//  prints. The `Clean` node and mine.py:119 both say 934; three labels here said 878 until
+//  D-110's pass and are corrected with it.
 //  ⚠ THE SKIP EDGE IS THE EXPENSIVE HALF OF §A, AND IT IS DRAWN ON PURPOSE. A router `skip`
 //  lands in the control set, so a MODEL now helps define the population a gate must be silent
 //  on — "silent on the clean traces" degrades to "silent on the traces a model called clean",
@@ -368,7 +371,7 @@ Mine [color: pink, icon: refresh-cw, label: "8b · mine — P3.4 · THE INNER LO
   M0 [shape: diamond, color: pink, icon: alert-circle, label: "1 · ROUTER — rubric, D-082 §A · reads ONE τ² session and returns ENHANCE or SKIP\nit is THE SELECTOR now — it replaced `analyst`, the mechanical `select` and the unbuilt rubric judge"]
   MT [color: orange, icon: cpu, label: "2 · CURATOR — decides WHETHER a failure is worth an eval at all, names the rule it broke, writes the predicate\nD-086 C · the loop's centre of gravity. It proposes a CANDIDATE; it never CLEARS one"]
   MCrit [color: orange, icon: eye, label: "3 · CRITIC / QA — the ONLY judge of the curator's call, and the loop's DECISION POINT · D-086 A\nit runs the predicate, reads the result, and picks: bounce, hand over, or give up\nit exists because D-040 admitted the hole: a rule can be reproducible, distinct and still measure nothing interesting"]
-  MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 878 CLEAN? must be NO"]
+  MTest [shape: diamond, color: orange, icon: check-square, label: "4 · run_predicate() — mechanical, no model. EVIDENCE, not a gate — D-086 A overturned D-081's 'only decision point'\nfires on the TARGET session? must be YES\nfires on ANY of the 934 CLEAN? must be NO — D-108's control set, the one mine.py actually reads"]
   MBudget [icon: edit-3, color: green, label: "attempt_budget() — the critic's OTHER tool, D-089\nnamed for the job and not the consequence — a name saying only 'record' invites a second owner of the cap, D-092\nowns config.MAX_ATTEMPTS: says EXIT, records a give-up, may REFUSE\n⚠ ONE function reads the cap and the graph's edge calls the same one — D-091\ntwo places that know the cap are two places that can disagree about it\nflags go to the MLflow span for a human; the loop does NOT branch on them — D-090 D"]
   MEdge [icon: alert-triangle, color: red, label: "FORCE-TERMINATE — the conditional edge, D-094\nfires ONLY when an agent is told to exit and continues anyway\ncalls attempts_exhausted(), the same function the tool calls — D-091\nexit_reason force_terminated, expected value 0\nan alarm and not a category: the safety net stays BECAUSE it should never fire"]
   MHold [shape: diamond, color: green, icon: check-circle, label: "held() — the OTHER half of a hand-over, D-110 · mechanical, no model\nD-064 puts the model in the TRANSLATION and never in the VERDICT, and `handed_over` was decided by the critic's word ALONE until D-110\nit reads a RECORDED run_predicate() result — the one MTest already wrote — and matches on the CANDIDATE, never on attempts[-1]: the curator sends a DIFFERENT predicate each lap (D-085 §F), so the last result can belong to the previous one\n⚠ an unsupported hand-over is NOT a fifth exit_reason — the lap does not end, it costs an attempt and `waved_through` counts it. Expected value 0; non-zero is a bug report against the critic prompt (D-094 §C's pattern)"]
@@ -389,8 +392,8 @@ Corpus > M0: one session at a time — ALL 1,712, because the router is what sel
 Clean > MTest: the silence set — the NO half of the evidence
 Cal [shape: document, color: red, icon: percent, label: "criterion_1_agreement — the router's verdict against τ²'s own signals, over all 1,712\nD-082 §B · NO RESULT IS REPORTABLE WITHOUT IT — a router verdict with no agreement figure is a population with no provenance\n⚠ if it comes back poor, §A REVERTS: the rubric becomes a diagnostic and selection goes back to mechanical"]
 Cal --> M0
-Anom --> Cal: the 834 the signals flagged
-Clean --> Cal: and the 878 they did not — together, the answer already known
+Anom --> Cal: the 778 the two reproducible signals flagged
+Clean --> Cal: and the 934 they did not — together, the answer already known. D-108: NOT 834/878, which needs a third signal nothing here rebuilds
 Overfit [shape: document, color: red, icon: alert-triangle, label: "SILENT ON THE PASSING SET IS A CLAIM ABOUT THE SESSIONS THAT RAN\nnever about the domain — and the SLOWER CONTROL that used to cover it is GONE\n⚠ a case arrived `open` and gated only once an ACCEPTED version was quiet on it — D-080 deleted that, so a cleared predicate rests ENTIRELY on this corpus"]
 Overfit --> MTest
 

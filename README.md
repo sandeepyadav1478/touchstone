@@ -179,7 +179,8 @@ this design: what it skips becomes the control set a candidate must not fire on.
 trace on **four criteria** (D-086 §B) — *is this anomalous · does it map to a written rule · is the
 failure visible in the process, not just the end state · is it specific enough to write a predicate
 over*. ⛔ **The first is not editable**: it duplicates τ²'s own three signals, so agreement with the
-834/878 split above **is** the router's measured error rate, and ⛔ **no result from this loop is
+778/934 answer key (`D-108`'s reproducible half of the split above) **is** the router's
+measured error rate, and ⛔ **no result from this loop is
 reportable without that figure.** If it comes back poor, the rubric drops to a diagnostic and
 selection reverts to mechanical.
 

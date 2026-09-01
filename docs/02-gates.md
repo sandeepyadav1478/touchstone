@@ -286,7 +286,9 @@ stepped over — is mineable. A failure that is only *the agent was not good eno
 point at, so no candidate survives `TEST`, and after `n` attempts it lands on **unmineable**.
 Trying to gate capability is exactly how a suite fills with cases that punish correct behaviour
 (§4) — and `TEST` is where that is caught, mechanically, because a predicate that fires on any of
-the 878 clean sessions is rejected.
+the clean sessions is rejected. ⚠️ **The set is `D-108`'s 934, not the 878 this sentence named
+until 2026-09-01** — `loop/mine.py:119` reads `corpus.clean()`, and the paragraph below already
+re-derived DEF-075 against the 934 without this line being swept with it.
 
 ⚠️ **7 of those 878 are clean because their task is impossible, not because the session was good —
 `DEFECTS.md` DEF-075.** Task 105's single gold action raises inside the *gold* environment
