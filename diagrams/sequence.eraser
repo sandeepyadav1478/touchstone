@@ -102,7 +102,7 @@ Tel [icon: activity, color: blue, label: "telemetry.py — P1.2 ✅ shipped\nmlf
 Spans [icon: file-text, color: red, label: "results/spans/(version).jsonl\nthe ONLY thing that crosses from the run to the score"]
 Score [icon: bar-chart-2, color: blue, label: "loop/score.py — reads SPANS, never a return value (D-007)"]
 Cmp [icon: filter, color: grey, label: "loop/compare.py — P2.4, decision 2\nDEFERRED ENTIRE, D-080 — no second operand exists to compare against"]
-Corpus [icon: database, color: grey, label: "tau2-bench results/final/ — 1,712 shipped simulations over 107 tasks\nD-080: the trace source. 834 anomalous, 878 clean, and the clean half is the CONTROL SET"]
+Corpus [icon: database, color: grey, label: "tau2-bench results/final/ — 1,712 shipped simulations over 107 tasks\nD-080: the trace source. 778 anomalous, 934 clean on D-108's two signals, and the clean half is the CONTROL SET — the 834/878 three-signal split is retired, its third signal unbuildable"]
 Router [icon: git-branch, color: orange, label: "router agent — D-082 §A\nrubric over ONE session: ENHANCE or SKIP. It replaced analyst, the mechanical select, and the unbuilt rubric judge"]
 Curator [icon: edit-3, color: orange, label: "curator agent — D-082\nwrites the predicate, and owns the two memories"]
 Critic [icon: alert-triangle, color: orange, label: "qa / critic agent — D-082 §C2, D-086 A\nthe ONLY judge of the curator's call, and the loop's DECISION POINT. It MAY call run_predicate first — D-085 F made that a choice, not a step — then picks: bounce, hand over, or give up"]

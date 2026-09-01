@@ -168,7 +168,8 @@ actually resolve, and everything else is reported without being acted on.
                         │
    1,712 shipped τ² simulations ──▶ router ──▶ enhance · skip
                         │            ⛔ a RUBRIC, not `DB == 0` — D-082 §A
-                        └──── mine ◀─┘  τ²'s own 834/878 split is the ANSWER KEY now
+                        └──── mine ◀─┘  τ²'s own 778/934 split is the ANSWER KEY now
+                                 │              — D-108, two signals, not the 834/878 three
                                  │
                                  │  the INNER loop — up to n times per TRACE
                                  └─▶ curator ⇄ critic ⇄ run_predicate   (D-086: the critic decides)
@@ -248,7 +249,7 @@ makes the thing that answers.
 
 | | |
 |---|---|
-| **In** | one τ² retail session the **router** marked `ENHANCE` — it reads **all 1,712** shipped simulations, one at a time (`D-082` §A). ⚠️ **Not the 834**: that split is now the answer key, not the filter |
+| **In** | one τ² retail session the **router** marked `ENHANCE` — it reads **all 1,712** shipped simulations, one at a time (`D-082` §A). ⚠️ **Not the anomalous half**: that split is the answer key now, not the filter — and it is `D-108`'s **778**, not the 834 this cell named until 2026-09-01 |
 | **Out** | a **mechanical predicate** that fires on that session and is silent on every session that passes |
 | **Or** | *unmineable* — the **one** terminal, with every attempt and its counterexample. A result, **not an error** (`D-081`). The critic asks `attempt_budget` whether it may keep going and is told to exit, or gives up early through the same tool (`D-089`). ⛔ **One function reads `config.MAX_ATTEMPTS` — the tool and the graph's loop condition both call it, so no second place knows the cap** (`D-091`) |
 
@@ -260,8 +261,11 @@ corpus: **407** traces fail DB, and a further **371** pass DB with a failed `act
 the silence set** — the *is it quiet on what passes?* half of the test below — so a correct
 predicate catching a confirmation violation would have been **rejected as a false positive**. The
 union of the three signals is **834** in, **878** clean. ⚠️ **`D-082` §A retired it as the selector**
-— a **router agent** does that job now, and this split became the **answer key** it is scored
-against (`criterion_1_agreement`, `D-082` §B). ⛔ **No result is reportable without that figure**,
+— a **router agent** does that job now, and a split became the **answer key** it is scored
+against (`criterion_1_agreement`, `D-082` §B). 🔴 **Not this one.** `D-108` dropped the third
+signal as unbuildable, so what the router is scored against is the **two**-signal
+**778/934** — `corpus.is_anomalous()`, which spells it out in one place. This sentence said
+*this split became the answer key* until 2026-09-01, which named the retired trio. ⛔ **No result is reportable without that figure**,
 and if it comes back poor selection reverts to exactly this union.
 
 🔴 **`D-108` moved the line, because one of the three signals rebuilds from nothing.** The answer
@@ -428,7 +432,7 @@ flowchart TB
   SUITE0[("the CLEARED suite so far<br/>D-087 · exact check BEFORE any agent call:<br/>a predicate already fires ⇒ already_covered, zero attempts spent")] -.-> TRANS
   SCORE["1,712 shipped τ² simulations<br/>🔴 not our own run — D-080"] --> ROUTER{"0. ROUTER — rubric, D-082 §A · criteria in D-086 §B<br/>reads ONE session, grades 4 criteria, returns ENHANCE or SKIP<br/>it replaced analyst + the mechanical select"}
   ROUTER -->|SKIP| CLEAN["the control set — 934 clean, plus every skip — D-108<br/>a predicate that fires here is a FALSE POSITIVE"]
-  KEY["τ²'s own three signals · 834 ∪ 878<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
+  KEY["τ²'s own TWO signals · 778 anomalous + 934 clean — D-108<br/>🔴 the ANSWER KEY since D-082 §B, not the selector<br/>⛔ not the 834/878 three-signal split: its third signal came from an uncommitted regex<br/>criterion_1_agreement scores the router against it"] -.- ROUTER
   ROUTER -->|ENHANCE| TRANS["1. CURATOR — decides what is worth encoding, and writes it<br/>D-086 §C · is this worth an eval at all? which rule broke?<br/>D-087 · reads the CLEARED SUITE first — a rule already gated is not worth mining twice<br/>🔴 no scope pre-check — D-081 deleted it; worth is the curator's own call"]
   TRANS --> CRIT{"1b. CRITIC — judges the curator's work, and DECIDES<br/>🔴 the loop's decision point since D-086 §A · reads the tool result and chooses<br/>ONE bounce per attempt · D-082 §C2 · ≤ config.MAX_ATTEMPTS critic calls"}
   CRIT <-->|"its tool, and nobody else's — D-086 §A"| TEST{"2. run_predicate — mechanical, no model<br/>⚠️ EVIDENCE, not a gate — D-086 overturned D-081's 'only decision point'<br/>fires on the target · silent on the control set"}
