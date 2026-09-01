@@ -55,11 +55,13 @@ __all__ = [
     "shape",
 ]
 
-# Tool results and long assistant turns are cut to this. A retail session carries whole order
-# JSONs, and the rule the loop is looking for lives in which call came after which, not in the
-# hundredth line of an order dump. ponytail: no measurement behind the number -- if a mined
-# rule ever needs a field past it, raise it and say so in the run that needed it.
-_CUT = 800
+# Tool results are cut to this. Measured 2026-09-01 over all 13,095 in the corpus, because 800
+# was a guess and it cut 60.6% of them while the longest is 3,370 characters. A curator
+# proposing over a truncated render while `run_predicate` judges the full messages is the
+# mismatch the failed-tool render exists to prevent, and `ArgumentIn` reads what was being cut.
+# So the bound sits above the corpus maximum and never fires here; it stays for a swapped
+# specimen (D-062). Uncut, transcripts run 12.2 KB median, 21 KB p95, 106 KB max.
+_CUT = 4000
 
 RUBRIC = """You screen one agent session and decide whether it is worth mining for an eval gate.
 
