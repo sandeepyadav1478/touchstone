@@ -412,7 +412,7 @@ file. ⛔ **Never report an unmineable count without the `gave_up` share beside 
 | `scored` | The run finished and produced a parseable verdict | Everything |
 | `parse_failure` | Structured output violated the schema | ⛔ **Scored as wrong** — D-013's "a parse failure is a scored failure, not a retry" |
 | `void` | 429, or a provider switch mid-run | ⛔ **Nothing.** `void_attempts` only — a quota limit must never look like a regression |
-| `incomplete` | The process died; the checkpoint exists | Nothing. `touchstone run --resume` picks it up (D-015) |
+| `incomplete` | The process died; the checkpoint exists | Nothing. `touchstone run` picks it up — `D-111` made that unconditional |
 
 **`other_models` is every `model_usage` key that is not the candidate's model, with its cost** —
 usually the CLI's housekeeping haiku call, and usually absent. It exists so that `cost_usd`, which
@@ -548,9 +548,12 @@ src/touchstone/
                        design: τ²'s `run_domain` is the runner, and this is the three things
                        it cannot do for us — install the adapter, restrict the tasks to the
                        frozen ten, and REFUSE a run the adapter did not attach to. ⛔ Its
-                       `--resume` is τ²'s own `auto_resume`, ⚠️ **not an attempt cache we
+                       it ALWAYS resumes — `D-111` deleted the flag, because τ²'s way of
+                       NOT resuming is a console prompt. ⚠️ **Not an attempt cache we
                        built** — τ² already writes each simulation as it finishes and skips
-                       what is on disk, so D-015 was satisfied upstream
+                       what is on disk, so D-015 was satisfied upstream. ⛔ **`same_run()` is
+                       the price**: `auto_resume` makes τ² merge a changed config with a
+                       warning, so the pins and `k` are checked here first
     score.py           🆕 **P1.5** — τ² `RewardInfo` → `aggregate` + `cases` (§6). PURE: no
                        I/O, no τ² import (1.56s against a 2s gate), no model. ⛔ The span half
                        of §6 waits for `touchstone run`; those keys are ABSENT, not zeroed.

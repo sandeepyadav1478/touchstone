@@ -10,9 +10,12 @@ Thin on purpose. Running 114 tasks, driving a simulator and computing `reward_br
     verify      `install()` returns how many references it replaced, and a run that patched
                 nothing is stopped here rather than discovered in the results (DEF-052)
 
-`--resume` is τ²'s own `auto_resume`: it writes each simulation as it completes and skips what
-is already on disk, which is exactly D-015 and is already built. The quota is a five-hour window
-that REJECTS rather than bills, so a re-run that discards completed work is the failure mode.
+Resuming is not a flag, it is the only behaviour -- D-111. τ² writes each simulation as it
+completes and skips what is on disk, which is exactly D-015 and is already built; the quota is a
+five-hour window that REJECTS rather than bills, so a re-run that discards completed work is the
+failure mode. Its `auto_resume=False` branch does not restart a run, it PROMPTS on the console,
+and a prompt is a human step in a project that has none. So this module always resumes and owns
+the check that upstream downgrades to a warning: `same_run()` below.
 """
 
 from __future__ import annotations
@@ -58,17 +61,62 @@ def frozen_task_ids() -> list[str]:
     return [str(t) for t in manifest["task_ids"]]
 
 
-def run(version: str, k: int, *, resume: bool = False) -> Path:
+def same_run(done: Path, k: int) -> str | None:
+    """Why the run on disk is not the run we are about to make, or None when it is.
+
+    The version label is a run's identity, so resuming inside one label is resuming the same
+    configuration -- unless someone changed a pin, or `k`, or the manifest, without bumping the
+    label. τ² checks exactly this and then downgrades it to a `logger.warning` under
+    `auto_resume`, which is how one results file ends up holding two configurations and being
+    scored as one. Held here instead, before the quota is spent.
+
+    Task ids are checked as a SUBSET and not for equality: a partial run has only some of the
+    frozen ten on disk, and that is the case this function exists to allow. `report.py:106`
+    holds the equality, at the point where a complete run is the claim.
+
+    Args:
+        done: An existing τ² `results.json` for this version.
+        k: Trials per task for the run about to start.
+
+    Returns:
+        A sentence naming the first field that differs, or None when every field matches.
+    """
+    raw = json.loads(done.read_text())
+    info = raw.get("info") or {}
+    for field, was, now in (
+        ("the agent model", (info.get("agent_info") or {}).get("llm"), config.MODEL),
+        ("the user model", (info.get("user_info") or {}).get("llm"), config.USER_MODEL),
+        ("k", info.get("num_trials"), k),
+    ):
+        if was != now:
+            return f"{field} was {was!r} and is now {now!r}"
+    stray = {str(s["task_id"]) for s in raw.get("simulations") or []} - set(frozen_task_ids())
+    if stray:
+        return f"the manifest no longer contains {sorted(stray)}, which the run on disk holds"
+    return None
+
+
+def run(version: str, k: int) -> Path:
     """Run the frozen subset `k` times each. Returns the τ² results file it wrote.
+
+    Always resumes (D-111). A version whose run on disk was made under a different
+    configuration is refused rather than merged into.
 
     Args:
         version: The version label — names the run directory, and `score` resolves the same one.
         k: Trials per task. `config.K` by default, quoted from there and never as a literal.
-        resume: Skip simulations already on disk (τ²'s `auto_resume`).
 
     Returns:
         The path τ² saved to, so a caller can assert a file rather than an absence of an error.
+
+    Raises:
+        RuntimeError: The adapter patched nothing, or the run on disk is a different run.
     """
+    if (done := results_path(version)).exists() and (why := same_run(done, k)):
+        raise RuntimeError(
+            f"{done} holds a run of {version} made differently — {why}. Resuming would score two "
+            f"configurations as one. Use a new version label, or delete {done.parent}"
+        )
     telemetry.install()
     if (patched := adapter.install()) < 2:
         raise RuntimeError(
@@ -91,7 +139,7 @@ def run(version: str, k: int, *, resume: bool = False) -> Path:
         user="user_simulator",
         llm_user=config.USER_MODEL,
         save_to=run_name(version),
-        auto_resume=resume,
+        auto_resume=True,  # D-111: never False — its branch is a console prompt, not a restart
     )
     run_domain(cfg)
     return results_path(version)

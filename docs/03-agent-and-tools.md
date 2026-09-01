@@ -213,8 +213,9 @@ ceiling travels with the pin — a smaller judge is a weaker judge (D-067, third
 - ⛔ **No model routing, no fallback chains inside a candidate.** One model per candidate. A
   provider switch mid-suite voids the run (D-013) rather than mixing it.
 - ⚠️ **The subscription cap is a five-hour window that *rejects*, not bills**
-  (`overage_status='rejected'`). Exhausting it kills a run in flight, so the runner's `--resume`
-  and attempt cache (D-015) are a requirement rather than a convenience.
+  (`overage_status='rejected'`). Exhausting it kills a run in flight, so resuming
+  and the attempt cache (D-015) are a requirement rather than a convenience — which is why `D-111`
+  made resuming unconditional rather than a flag.
 
 ⚠️ **`max_turns` is not a count of model calls** — D-032 measured that, and the archived design
 set it to 2 because `output_format` spent a turn of its own. 🔴 **That value does not transfer.**

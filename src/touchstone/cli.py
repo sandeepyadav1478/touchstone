@@ -58,14 +58,15 @@ def doctor(
 def run(
     version: str = typer.Argument(..., help="The version label, e.g. `v1`. Names the run."),
     k: int = typer.Option(config.K, "--k", help="Trials per task."),
-    resume: bool = typer.Option(
-        False, "--resume", help="Skip simulations already on disk — τ²'s own `auto_resume`."
-    ),
 ) -> None:
-    """Run the frozen benchmark subset through τ², with the SDK behind every model role."""
+    """Run the frozen benchmark subset through τ², with the SDK behind every model role.
+
+    Resuming is not an option here — D-111. It is what a five-hour rejecting quota requires,
+    and τ²'s way of not resuming is to ask a human on the console.
+    """
     from .loop.run import run as run_suite
 
-    typer.echo(f"wrote {run_suite(version, k, resume=resume)}")
+    typer.echo(f"wrote {run_suite(version, k)}")
 
 
 @app.command()
