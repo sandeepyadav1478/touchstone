@@ -8,7 +8,9 @@ rather than restated here:
                      `freeze-benchmark --check` re-verifies it against τ²'s tasks.json
     tau2_commit      the same manifest. Not the results file's `info.git_commit` — see below
     model            the run's own `info.agent_info.llm`, which τ² wrote while running
-    auth             measured from the environment, the same fact `doctor` reports
+    auth             read from `touchstone-run.json`, which the RUN wrote. NEVER measured
+                     here: `score` is a separate invocation and its environment is not the one
+                     that spent the quota (D-112)
 
 `info.git_commit` names the wrong repository in any run we drive. τ²'s `get_commit_hash()`
 (`utils/utils.py:91`) shells out to `git rev-parse HEAD` in the current working directory, and
@@ -24,7 +26,6 @@ anything can measure it is a published number that nothing computed.
 from __future__ import annotations
 
 import json
-import os
 from typing import TYPE_CHECKING, Any
 
 from touchstone import config
@@ -73,14 +74,18 @@ def envelope(
     }
 
 
-def auth_mode() -> str:
-    """`subscription` or `api_key` — measured from the environment, never assumed.
+def recorded_auth(results_file: Path) -> str:
+    """What the run recorded beside itself, or `unknown` when it recorded nothing.
 
-    D-001 runs on the subscription and `doctor` asserts the key's ABSENCE, so the two can
-    disagree only if something set it between the check and the run. This reads it at the
-    moment the file is written, which is the only moment the answer is about this run.
+    `unknown` is a real answer and not a default: it says this run predates D-112 or lost its
+    sidecar, which is exactly what a reader needs to know before comparing its numbers to a
+    run whose auth is stated. Measuring the environment here instead would answer a question
+    about the SCORING process and publish it as a fact about the run.
     """
-    return "api_key" if os.environ.get(config.API_KEY_ENV) else "subscription"
+    from touchstone.loop.run import PROVENANCE
+
+    side = results_file.with_name(PROVENANCE)
+    return str(json.loads(side.read_text())["auth"]) if side.exists() else "unknown"
 
 
 def write(results_file: Path, version: str, k: int) -> Path:
@@ -109,7 +114,12 @@ def write(results_file: Path, version: str, k: int) -> Path:
             "manifest froze — `benchmark_hash` would name tasks this run did not touch"
         )
     published = envelope(
-        score(raw["simulations"], k), manifest, raw.get("info") or {}, version, k, auth_mode()
+        score(raw["simulations"], k),
+        manifest,
+        raw.get("info") or {},
+        version,
+        k,
+        recorded_auth(results_file),
     )
 
     config.RESULTS.mkdir(parents=True, exist_ok=True)

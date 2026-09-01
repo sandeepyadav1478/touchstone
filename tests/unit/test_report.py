@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 
 from touchstone import config
-from touchstone.loop.report import auth_mode, envelope, write
+from touchstone.loop.report import envelope, recorded_auth, write
+from touchstone.loop.run import PROVENANCE
 from touchstone.loop.schema import TERMINATION_REASONS, Scored
 
 MANIFEST = {
@@ -69,12 +70,23 @@ def test_the_scored_halves_pass_through_untouched() -> None:
     assert out["cases"] == SCORED["cases"]
 
 
-def test_auth_is_measured_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """`doctor` asserts the key's absence; this reads it when the file is written."""
-    monkeypatch.delenv(config.API_KEY_ENV, raising=False)
-    assert auth_mode() == "subscription"
+def test_auth_is_read_from_the_run_and_never_measured_here(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """D-112: `score` is a separate invocation, so its environment is not the run's.
+
+    The key is set here, which is the state that used to produce `api_key`. The published
+    value is whatever the RUN wrote, and the environment of this process changes nothing.
+    """
     monkeypatch.setenv(config.API_KEY_ENV, "sk-whatever")
-    assert auth_mode() == "api_key"
+    results = tmp_path / "results.json"
+    results.with_name(PROVENANCE).write_text(json.dumps({"auth": "subscription"}))
+    assert recorded_auth(results) == "subscription"
+
+
+def test_a_run_that_recorded_nothing_publishes_unknown(tmp_path: Path) -> None:
+    """`unknown` is an answer, not a default — it says the run predates its own sidecar."""
+    assert recorded_auth(tmp_path / "results.json") == "unknown"
 
 
 def test_a_results_file_of_other_tasks_is_refused(tmp_path: Path) -> None:

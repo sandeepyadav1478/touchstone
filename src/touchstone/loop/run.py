@@ -9,6 +9,8 @@ Thin on purpose. Running 114 tasks, driving a simulator and computing `reward_br
                 frozen ten are a recorded selection (D-098), and a count would re-sample it
     verify      `install()` returns how many references it replaced, and a run that patched
                 nothing is stopped here rather than discovered in the results (DEF-052)
+    record      `auth`, beside the results file, because the SCORING process cannot know it
+                and publishes it anyway (D-112)
 
 Resuming is not a flag, it is the only behaviour -- D-111. τ² writes each simulation as it
 completes and skips what is on disk, which is exactly D-015 and is already built; the quota is a
@@ -21,10 +23,14 @@ the check that upstream downgrades to a warning: `same_run()` below.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 from touchstone import adapter, config, telemetry
+
+#: The run's own provenance, beside τ²'s results file. One name, two readers (D-112).
+PROVENANCE = "touchstone-run.json"
 
 
 def run_name(version: str) -> str:
@@ -48,6 +54,27 @@ def results_path(version: str) -> Path:
     # `Path(...)`: τ²'s DATA_DIR is untyped, and an unchecked Any is how a wrong path reaches a
     # caller that annotated itself honestly.
     return Path(DATA_DIR) / "simulations" / run_name(version) / "results.json"
+
+
+def provenance_path(version: str) -> Path:
+    """Beside the run: the facts about it that only the run process can know.
+
+    Today that is `auth` alone. It is published in `results/<version>.json` as provenance for
+    the run, and it was measured by `touchstone score` -- a SEPARATE invocation, whose
+    environment is not the one that spent the quota. Nothing downstream can contradict a wrong
+    value, which is the argument `report.write` already makes about `benchmark_hash` (D-112).
+    """
+    return results_path(version).with_name(PROVENANCE)
+
+
+def auth_mode() -> str:
+    """`subscription` or `api_key` — measured from the environment, never assumed.
+
+    D-001 runs on the subscription and `doctor` asserts the key's ABSENCE, so the two can
+    disagree only if something set it between the check and the run. Read here, at the moment
+    the run starts, because that is the process the answer is about.
+    """
+    return "api_key" if os.environ.get(config.API_KEY_ENV) else "subscription"
 
 
 def frozen_task_ids() -> list[str]:
@@ -83,10 +110,15 @@ def same_run(done: Path, k: int) -> str | None:
     """
     raw = json.loads(done.read_text())
     info = raw.get("info") or {}
+    # An api_key half and a subscription half are different rate limits and possibly different
+    # routing, and `results/<version>.json` names only one of them. `_recorded_auth` returns the
+    # live value when there is no sidecar: a missing file is not a disagreement, and every run
+    # made before D-112 has none.
     for field, was, now in (
         ("the agent model", (info.get("agent_info") or {}).get("llm"), config.MODEL),
         ("the user model", (info.get("user_info") or {}).get("llm"), config.USER_MODEL),
         ("k", info.get("num_trials"), k),
+        ("auth", _recorded_auth(done), auth_mode()),
     ):
         if was != now:
             return f"{field} was {was!r} and is now {now!r}"
@@ -94,6 +126,12 @@ def same_run(done: Path, k: int) -> str | None:
     if stray:
         return f"the manifest no longer contains {sorted(stray)}, which the run on disk holds"
     return None
+
+
+def _recorded_auth(done: Path) -> str:
+    """What the run on disk recorded, or the live value when it recorded nothing."""
+    side = done.with_name(PROVENANCE)
+    return str(json.loads(side.read_text())["auth"]) if side.exists() else auth_mode()
 
 
 def run(version: str, k: int) -> Path:
@@ -112,7 +150,8 @@ def run(version: str, k: int) -> Path:
     Raises:
         RuntimeError: The adapter patched nothing, or the run on disk is a different run.
     """
-    if (done := results_path(version)).exists() and (why := same_run(done, k)):
+    done = results_path(version)
+    if done.exists() and (why := same_run(done, k)):
         raise RuntimeError(
             f"{done} holds a run of {version} made differently — {why}. Resuming would score two "
             f"configurations as one. Use a new version label, or delete {done.parent}"
@@ -123,6 +162,12 @@ def run(version: str, k: int) -> Path:
             f"the adapter replaced {patched} reference(s) — τ²'s roles hold their own, so a "
             "run this quiet would measure litellm and report it as ours"
         )
+
+    done.parent.mkdir(parents=True, exist_ok=True)
+    # Written BEFORE the run, so a resume has something to disagree with. Not overwritten on a
+    # resume either -- `same_run` above has already refused if it would have had to change.
+    if not (prov := provenance_path(version)).exists():
+        prov.write_text(json.dumps({"auth": auth_mode()}, indent=2) + "\n")
 
     from tau2.data_model.simulation import TextRunConfig
     from tau2.run import run_domain

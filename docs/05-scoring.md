@@ -356,6 +356,13 @@ emitted as `0` before anything can measure it is a published number that nothing
 `touchstone score` command rather than by the pure function. **A scorer that reaches for a
 manifest is a scorer that cannot be tested without one.**
 
+🔴 **`auth` is read from the run, never measured while scoring — `D-112`.** It said
+`os.environ` at write time until 2026-09-01, and `score` is a *separate invocation*: its
+environment is not the one that spent the quota. `run` now writes `run.PROVENANCE` beside τ²'s
+results file and `report.recorded_auth()` reads it back, ⚠️ **`unknown` when there is none** —
+an answer, not a default. **`model` is safe by a different route**: τ² writes it into
+`info.agent_info.llm` *while running*, so it was always the run's own record.
+
 🆕 **`user_model` was added by P1.6 and is not in the block's original list.** The τ² apparatus is
 **two** models — the agent under test and the user simulator driving it — and D-067 pins both.
 A results file naming only the agent's cannot be compared against another: **a reward moves when

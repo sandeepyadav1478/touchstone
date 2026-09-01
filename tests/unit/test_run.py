@@ -8,8 +8,10 @@ under which name — and both are the kind of thing that is silently wrong for a
 import json
 from pathlib import Path
 
+import pytest
+
 from touchstone import config
-from touchstone.loop.run import frozen_task_ids, run_name, same_run
+from touchstone.loop.run import PROVENANCE, frozen_task_ids, run_name, same_run
 
 
 def test_run_and_score_agree_on_one_name() -> None:
@@ -97,3 +99,38 @@ def test_a_task_the_manifest_no_longer_holds_is_refused(tmp_path: Path) -> None:
     )
     assert (why := same_run(done, config.K)) is not None
     assert "9999" in why
+
+
+def test_a_run_started_under_the_other_auth_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-112: an api_key half and a subscription half are two runs in one results file.
+
+    Different rate limits and possibly different routing, and `results/<version>.json` names
+    only one of them. The sidecar is what makes the disagreement visible at all — τ²'s `info`
+    does not record how the call was authenticated.
+    """
+    monkeypatch.delenv(config.API_KEY_ENV, raising=False)
+    done = _results(
+        tmp_path / "results.json",
+        agent=config.MODEL,
+        user=config.USER_MODEL,
+        k=config.K,
+        tasks=frozen_task_ids(),
+    )
+    done.with_name(PROVENANCE).write_text(json.dumps({"auth": "api_key"}))
+    assert (why := same_run(done, config.K)) is not None
+    assert why.startswith("auth was")
+
+
+def test_a_run_with_no_sidecar_is_not_a_disagreement(tmp_path: Path) -> None:
+    """A missing file is not a conflict. Every run made before D-112 has none."""
+    done = _results(
+        tmp_path / "results.json",
+        agent=config.MODEL,
+        user=config.USER_MODEL,
+        k=config.K,
+        tasks=frozen_task_ids(),
+    )
+    assert not done.with_name(PROVENANCE).exists()
+    assert same_run(done, config.K) is None
