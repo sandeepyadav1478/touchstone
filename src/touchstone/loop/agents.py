@@ -224,15 +224,24 @@ async def curator(state: mine.State) -> Predicate | None:
     session its last candidate fired on -- the id alone names the failure without showing it,
     and the whole point of a counterexample is that the next attempt can read what it got
     wrong (D-085 SS F).
+
+    The counterexample is looked up BY the last candidate and not as `attempts[-1]`, for the
+    reason D-110 gives for `mine.held`. `state["candidate"]` still holds the previous lap's
+    proposal here -- `curate` overwrites it with this call's return -- and the critic is free
+    to bounce without calling `run_predicate` (D-086 C prices exactly that), so the newest
+    attempt on the record can belong to a candidate two laps old. Showing that one back would
+    tell the curator its last proposal fired on a session it never ran against.
     """
     parts = [f"The session:\n\n{_transcript(state['session'])}\n"]
     if state["argument"]:
         parts.append(f"The critic sent your last candidate back:\n\n{state['argument']}\n")
-    attempts = state["record"].attempts
-    if attempts and attempts[-1].counterexample:
+    last = next(
+        (a for a in reversed(state["record"].attempts) if a.predicate == state["candidate"]), None
+    )
+    if last is not None and last.counterexample:
         parts.append(
             "It also fired on this session, which the benchmark scored clean. Whatever it is "
-            f"keying on is not the rule:\n\n{_by_id(attempts[-1].counterexample)}\n"
+            f"keying on is not the rule:\n\n{_by_id(last.counterexample)}\n"
         )
     prompt = "\n".join(parts)
     system = f"{CURATOR}{extract.SYSTEM}\nThe policy, line-numbered:\n\n{policy()}\n"

@@ -298,6 +298,28 @@ def test_the_curator_is_handed_the_objection_and_the_counterexample(
     assert "authenticate first" in calls[1]["system"]
 
 
+def test_a_counterexample_from_an_older_candidate_is_not_shown_as_this_ones(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The `attempts[-1]` trap D-110 names, on its second reader.
+
+    The critic may bounce without calling `run_predicate` -- D-086 SS C prices that on purpose
+    -- so the newest attempt on the record can belong to a candidate the curator has already
+    replaced. Showing it back would tell the curator its LAST proposal fired on a clean session
+    it was never run against, and the next attempt would be spent fixing the wrong thing.
+    """
+    calls = _capture(monkeypatch, '{"kind": null, "why": "no shape fits"}')
+    record = mine.Record(session_id="t")
+    older = Predicate(rule="an older rule", source="policy.md:20", check=AUTH.check)
+    record.attempts.append(
+        mine.Attempt(predicate=older, fired_on_target=True, counterexample="c9")
+    )
+    state = _state(record)  # `candidate` is AUTH, and the only attempt is not AUTH's
+
+    asyncio.run(agents.curator(state))
+    assert "<transcript of c9>" not in calls[0]["prompt"]
+
+
 def test_the_critic_is_sent_the_candidate_and_both_tools(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
