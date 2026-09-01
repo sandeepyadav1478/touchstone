@@ -84,7 +84,18 @@ def row(record: mine.Record) -> dict[str, Any]:
 
 
 def _work(session: corpus.Session) -> mine.Record:
-    """One session, inside one span. The span is the only place the loop is observable live."""
+    """One session, inside one span. The span is the only place the loop is observable live.
+
+    Every flag is set here by hand, and D-090 SS D is the reason there is no shorter way. It
+    sends the flags to the trace so a human can read why one lap ended without the loop being
+    allowed to branch on them -- so a flag that is only in the JSON has been written to the
+    half of that decision the loop does not use.
+
+    Ceiling: this span has no children. `mlflow.langgraph` is not in `mlflow-skinny` 3.15.1
+    (measured 2026-09-01, `ModuleNotFoundError`), so there is no autolog to attach, and the
+    critic's tool calls happen inside the Agent SDK's own subprocess where an in-process
+    autolog would not see them anyway. Per-attempt evidence lives in `row`, not in the trace.
+    """
     with mlflow.start_span("touchstone.mine") as span:
         span.set_attribute("touchstone.session_id", session.id)
         record = asyncio.run(
@@ -97,6 +108,9 @@ def _work(session: corpus.Session) -> mine.Record:
         )
         span.set_attribute("touchstone.exit_reason", record.exit_reason or "")
         span.set_attribute("touchstone.attempts", record.dispatches)
+        span.set_attribute("touchstone.told_to_exit", record.told_to_exit)
+        span.set_attribute("touchstone.gave_up", record.gave_up)
+        span.set_attribute("touchstone.rule_searched_for", record.rule_searched_for or "")
         return record
 
 
