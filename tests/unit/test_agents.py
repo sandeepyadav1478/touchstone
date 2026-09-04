@@ -60,7 +60,7 @@ def test_the_transcript_carries_the_exchange_and_not_the_verdict() -> None:
     rendered = agents._transcript(session())
     assert "user: cancel my order" in rendered
     assert 'assistant calls cancel({"id": "W1"})' in rendered
-    assert "tool[ok]: done" in rendered
+    assert "tool #0[ok]: done" in rendered
     assert "agent_error" not in rendered
     assert "anomalous" not in rendered
 
@@ -74,7 +74,24 @@ def test_a_failed_tool_result_is_rendered_as_failed() -> None:
     """
     s = session()
     s.messages[2]["error"] = True
-    assert "tool[error]: done" in agents._transcript(s)
+    assert "tool #0[error]: done" in agents._transcript(s)
+
+
+def test_a_result_is_labelled_with_the_call_it_answers() -> None:
+    """Two calls in one message, one of which failed, and the render has to say which.
+
+    `predicate._succeeded` pairs a result to its call by id, so a render that drops the id
+    leaves the model to pair by counting. 657 of the corpus's 1,712 sessions have a message
+    with more than one call, so this is the ordinary case rather than a corner of it.
+    """
+    s = session()
+    s.messages[1]["tool_calls"].append({"id": "1", "name": "refund", "arguments": {}})
+    s.messages.append({"role": "tool", "id": "1", "content": "no", "error": True})
+    rendered = agents._transcript(s)
+    assert 'assistant calls cancel({"id": "W1"}) #0' in rendered
+    assert "assistant calls refund({}) #1" in rendered
+    assert "tool #0[ok]: done" in rendered
+    assert "tool #1[error]: no" in rendered
 
 
 def test_long_content_is_cut_and_says_so() -> None:

@@ -39,6 +39,8 @@ from touchstone.gate import extract
 from touchstone.loop import corpus, mine
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from touchstone.gate.predicate import Predicate
 
 __all__ = [
@@ -173,25 +175,37 @@ def _cut(text: str) -> str:
     return text if len(text) <= _CUT else f"{text[:_CUT]} [...{len(text) - _CUT} more]"
 
 
+def _tag(item: Mapping[str, Any]) -> str:
+    """A call or result's id, rendered so the two can be paired, or nothing when it has none."""
+    return f" #{item['id']}" if item.get("id") else ""
+
+
 def _transcript(session: corpus.Session) -> str:
     """One session as the model sees it: messages, in order, and nothing derived from a reward.
 
     Tool calls are rendered with their arguments and each result with whether it errored,
     because order and success are exactly what the three predicate shapes read. A render that
     dropped either would be showing the model less than the check it is proposing.
+
+    Each call and each result carries its id for the same reason, one field along (DEF-078).
+    `predicate._succeeded` pairs a result to its call BY id, and 657 of the corpus's 1,712
+    sessions have a message that calls more than one tool -- 994 such messages, up to 47 calls
+    in one. Untagged, their results arrive as a run of `tool[ok]` and `tool[error]` lines that
+    can only be paired by counting, so the reader is guessing at exactly the field the check
+    reads. Measured 2026-09-01: all 13,870 calls carry an id and every one is answered.
     """
     out = []
     for m in session.messages:
         role = str(m.get("role", "?"))
         content = _cut(str(m.get("content") or "").strip())
         if role == "tool":
-            out.append(f"tool[{'error' if m.get('error') else 'ok'}]: {content}")
+            out.append(f"tool{_tag(m)}[{'error' if m.get('error') else 'ok'}]: {content}")
             continue
         if content:
             out.append(f"{role}: {content}")
         for call in m.get("tool_calls") or []:
             args = json.dumps(call.get("arguments") or {}, sort_keys=True)
-            out.append(f"{role} calls {call.get('name')}({_cut(args)})")
+            out.append(f"{role} calls {call.get('name')}({_cut(args)}){_tag(call)}")
     return "\n".join(out)
 
 
