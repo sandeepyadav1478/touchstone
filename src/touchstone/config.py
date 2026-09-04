@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 SUITE = ROOT / "suite"
 BENCHMARK = SUITE / "benchmark"
+REGRESSION = SUITE / "regression"
 RESULTS = ROOT / "results"
 PROMPTS = ROOT / "prompts"
 DIAGRAMS = ROOT / "diagrams"
