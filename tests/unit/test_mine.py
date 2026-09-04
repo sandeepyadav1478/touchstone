@@ -117,6 +117,21 @@ def test_the_router_can_end_a_trace_before_any_agent_runs() -> None:
     assert record.dispatches == 0
 
 
+def test_a_router_that_enhances_a_clean_session_ends_before_the_curator() -> None:
+    """DEF-079. The key scores this target clean, so it is in the set `run_predicate` scans.
+
+    Any predicate that fires on it is therefore its own counterexample, `holds` can never be
+    true, and the five laps a bounce-forever critic would spend could not have ended any other
+    way. The router made the error and the record names it, rather than reading as a curator
+    that ran out of attempts. Asserted on the dispatch count too: an exit that still paid for
+    the laps would be a relabelling and not a fix.
+    """
+    target = session("clean", authenticated=True)
+    record = asyncio.run(mine.mine(target, router=_yes, curator=_propose, critic=_bounce))
+    assert record.exit_reason == "misrouted"
+    assert record.dispatches == 0
+
+
 def test_a_hand_over_ends_the_trace() -> None:
     """The one exit that produces a candidate. Everything else is a finding about the policy.
 

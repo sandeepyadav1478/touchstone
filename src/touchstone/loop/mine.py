@@ -25,6 +25,11 @@ D-089's whole mitigation is that the give-up rate can be watched.
                        count above it is a bug report against a prompt, never a category
     skipped            the router never entered the loop. Not in D-094's table, because a
                        trace that did not enter cannot have left by one of its four doors
+    misrouted          the router said ENHANCE about a session the answer key scores clean.
+                       Also outside D-094: no attempt is spent, because the target is itself
+                       in the set `run_predicate` scans, so every candidate is its own
+                       counterexample and no verdict is reachable (DEF-079). A router error,
+                       counted as one rather than as a curator that ran out of attempts
 
 The cap is read by `budget.attempts_exhausted()` and by nothing here -- the edge and the
 critic's tool call the one function, so no second place knows the number (D-091 C).
@@ -52,7 +57,9 @@ __all__ = [
     "spend",
 ]
 
-ExitReason = Literal["handed_over", "budget_exhausted", "gave_up", "force_terminated", "skipped"]
+ExitReason = Literal[
+    "handed_over", "budget_exhausted", "gave_up", "force_terminated", "skipped", "misrouted"
+]
 
 CONTINUE, EXIT, REFUSED, RECORDED = "continue", "exit", "refused", "recorded"
 
@@ -119,6 +126,11 @@ def run_predicate(predicate: Predicate, session: corpus.Session) -> Attempt:
     Silence is checked against the 934 rather than sampled, and it short-circuits on the first
     clean session that fires because that session IS the counterexample -- a second one would
     be a longer answer to a question already answered.
+
+    The target is not in the set being scanned, but that is the graph's doing and not this
+    function's: `selected` leaves by `misrouted` before any curator call when the router marks
+    a clean session ENHANCE (DEF-079). Called directly with one, a predicate that fires on the
+    target returns the target as its own counterexample.
 
     Ceiling, and it is docs/02's: silent on the corpus is a claim about the sessions that were
     run, never about the domain. The slower control that was supposed to catch the difference
@@ -253,10 +265,15 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
         return END if state["record"].exit_reason else "curate"
 
     def selected(state: State) -> str:
-        if state["enhance"]:
-            return "curate"
-        state["record"].exit_reason = "skipped"
-        return END
+        if not state["enhance"]:
+            state["record"].exit_reason = "skipped"
+            return END
+        # DEF-079: a clean target sits in the set `run_predicate` scans, so nothing can hold.
+        # The key is read here and never in a prompt, and only after the router has answered.
+        if not state["session"].anomalous:
+            state["record"].exit_reason = "misrouted"
+            return END
+        return "curate"
 
     graph = StateGraph(State)
     graph.add_node("route", route)
