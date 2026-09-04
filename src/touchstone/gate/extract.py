@@ -31,7 +31,7 @@ from touchstone.loop import budget
 if TYPE_CHECKING:
     from touchstone.gate.predicate import Check
 
-__all__ = ["SYSTEM", "ask", "extract", "json_object", "parse"]
+__all__ = ["SYSTEM", "ask", "extract", "json_object", "parse", "shape"]
 
 _SHAPES: dict[str, type[Check]] = {
     c.__name__: c for c in (RequiresPriorTool, ArgumentIn)
@@ -76,6 +76,22 @@ def json_object(text: str) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise TypeError(f"expected an object, got {type(loaded).__name__}")
     return loaded
+
+
+def shape(predicate: Predicate) -> dict[str, Any]:
+    """A predicate as JSON: what the curator emitted, and what `parse` reads back.
+
+    Lives beside `parse` because the two are a codec and `test_agents.py` already asserts the
+    round trip. Split across modules, a new entry in `_SHAPES` has two places to be taught
+    about and only one of them is next to the closed set it is being added to.
+    """
+    check = predicate.check
+    return {
+        "kind": type(check).__name__,
+        "rule": predicate.rule,
+        "source": predicate.source,
+        **{k: list(v) if isinstance(v, tuple) else v for k, v in vars(check).items()},
+    }
 
 
 def parse(text: str) -> Predicate | None:

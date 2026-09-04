@@ -26,14 +26,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from touchstone import __version__, config
-from touchstone.loop.agents import shape
+from touchstone.gate import extract
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from touchstone.gate.predicate import Predicate
 
-__all__ = ["FIELDS", "blank", "case", "covered", "load", "path", "write"]
+__all__ = ["FIELDS", "blank", "case", "covered", "index", "load", "path", "predicates", "write"]
 
 # Invariant 11's subject: a case with any of these empty does not get to gate anything.
 FIELDS = ("task_id", "origin", "why", "added", "cleared_by", "predicate", "history")
@@ -59,6 +59,55 @@ def load() -> list[dict[str, Any]]:
 def covered() -> set[str]:
     """The task ids already admitted. This is what `admit.distinct` is asking about."""
     return {c["task_id"] for c in load()}
+
+
+def index() -> str:
+    """The suite as the curator is shown it: what already gates, one line each.
+
+    D-087 SS B's judged half, and it changes no control flow. The exact half already refuses a
+    session an admitted predicate fires on; this is for the case that half cannot see -- a
+    session with a genuinely different failure whose NEAREST rule is one already in the suite.
+    Nothing mechanical can tell that apart from a real second rule, so the curator is told what
+    is here and writes around it.
+
+    `task_id` and `why` and nothing else. The predicate's encoded shape is the answer to the
+    question being asked, and D-092's guard would refuse this prompt if it carried one --
+    a curator shown three worked examples writes a fourth in their shape rather than the
+    session's. What it needs is the rules that are taken, not how they were written.
+
+    Empty until P2.4 admits the first case. An empty suite renders as nothing rather than as an
+    empty heading, because a heading with nothing under it reads as a suite that was searched
+    and found wanting.
+    """
+    cases = load()
+    if not cases:
+        return ""
+    rules = "\n".join(f"  {c['task_id']}  {c['why']}" for c in cases)
+    return f"Rules already in the suite, which a new one may not restate:\n\n{rules}\n"
+
+
+def predicates() -> tuple[Predicate, ...]:
+    """Every admitted case as a live predicate, for the exact half of D-087 SS B.
+
+    Read back through `extract.parse` rather than a second builder. `parse` is already the
+    trust boundary that refuses a `kind` outside the closed set, so a case written by a version
+    that had a fourth shape is refused here by the rule that refuses a model inventing one --
+    and a second constructor would be the place those two answers drift apart.
+
+    It refuses by RAISING, which is right where it was written and wrong here. At the model
+    boundary the raise costs one session a `failed` row; on this path the same raise would take
+    down every session in the harvest, including every one that has nothing to do with the bad
+    file. So it is caught and the case is dropped, and the cost of dropping is bounded: the
+    loop may spend a lap re-mining that task and `admit.distinct` refuses the result on the
+    task id, which is exactly the backstop D-087 SS D keeps it for.
+    """
+    out = []
+    for case_ in load():
+        try:
+            out.append(extract.parse(json.dumps(case_["predicate"])))
+        except ValueError:
+            continue
+    return tuple(p for p in out if p)
 
 
 def case(
@@ -90,7 +139,7 @@ def case(
         "why": f"{predicate.rule} -- {predicate.source}",
         "added": datetime.now(UTC).isoformat(),
         "cleared_by": list(cleared),
-        "predicate": shape(predicate),
+        "predicate": extract.shape(predicate),
         "history": [{"at": datetime.now(UTC).isoformat(), "was": "admitted", "by": list(cleared)}],
     }
 

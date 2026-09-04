@@ -34,6 +34,13 @@ D-089's whole mitigation is that the give-up rate can be watched.
                        in the set `run_predicate` scans, so every candidate is its own
                        counterexample and no verdict is reachable (DEF-079). A router error,
                        counted as one rather than as a curator that ran out of attempts
+    already_covered    a predicate already in the regression suite fires on this session, so
+                       whatever the curator found here would be a second name for a rule that
+                       is already gating. D-087 SS B: mechanical, and decided on the edge out
+                       of START, so it costs no attempt AND no router call -- a session this
+                       fires on never reaches a model at all. Silence on the clean corpus is
+                       not re-checked, because admission already established it and the
+                       answer cannot have changed; the only open question is this target
 
 The cap is read by `budget.attempts_exhausted()` and by nothing here -- the edge and the
 critic's tool call the one function, so no second place knows the number (D-091 C).
@@ -41,7 +48,7 @@ critic's tool call the one function, so no second place knows the number (D-091 
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
@@ -62,7 +69,13 @@ __all__ = [
 ]
 
 ExitReason = Literal[
-    "handed_over", "budget_exhausted", "gave_up", "force_terminated", "skipped", "misrouted"
+    "handed_over",
+    "budget_exhausted",
+    "gave_up",
+    "force_terminated",
+    "skipped",
+    "misrouted",
+    "already_covered",
 ]
 
 CONTINUE, EXIT, REFUSED, RECORDED = "continue", "exit", "refused", "recorded"
@@ -123,6 +136,7 @@ class Record:
     rule_searched_for: str | None = None
     exit_reason: ExitReason | None = None
     handed_over: Predicate | None = None
+    covered_by: Predicate | None = None
 
 
 def run_predicate(predicate: Predicate, session: corpus.Session) -> Attempt:
@@ -234,7 +248,9 @@ def _reason(state: State) -> ExitReason | None:
     return "budget_exhausted" if attempts_exhausted(record.dispatches) else None
 
 
-def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
+def build(
+    *, router: Router, curator: Curator, critic: Critic, admitted: Sequence[Predicate] = ()
+) -> Any:
     """The compiled graph: route, then curator and critic until an edge says stop.
 
     Imported here rather than at module scope. langgraph costs 0.617 s and the three functions
@@ -271,6 +287,20 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
             state["record"].handed_over = state["candidate"]
         return END if state["record"].exit_reason else "curate"
 
+    def unseen(state: State) -> str:
+        # D-087 SS B's exact half, and it sits on the edge out of START rather than in `route`
+        # so that it is reached before the router -- the cheapest refusal in the loop is the
+        # one that spends nothing, and a node would have had to run to return the same answer.
+        # `admitted` arrives as an argument rather than being read from `suite` here: `mine`
+        # importing the directory it eventually writes to would close a cycle, and a graph
+        # that reads global state cannot be tested against a suite it does not have.
+        covering = next((p for p in admitted if evaluate(p, state["session"].messages)), None)
+        if covering is None:
+            return "route"
+        state["record"].exit_reason = "already_covered"
+        state["record"].covered_by = covering
+        return END
+
     def selected(state: State) -> str:
         if not state["enhance"]:
             state["record"].exit_reason = "skipped"
@@ -286,7 +316,7 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
     graph.add_node("route", route)
     graph.add_node("curate", curate)
     graph.add_node("criticise", criticise)
-    graph.add_edge(START, "route")
+    graph.add_conditional_edges(START, unseen, {"route": "route", END: END})
     graph.add_conditional_edges("route", selected, {"curate": "curate", END: END})
     graph.add_edge("curate", "criticise")
     graph.add_conditional_edges("criticise", settle, {"curate": "curate", END: END})
@@ -294,7 +324,12 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
 
 
 async def mine(
-    session: corpus.Session, *, router: Router, curator: Curator, critic: Critic
+    session: corpus.Session,
+    *,
+    router: Router,
+    curator: Curator,
+    critic: Critic,
+    admitted: Sequence[Predicate] = (),
 ) -> Record:
     """Work one session and return its record, whichever door it left by.
 
@@ -311,5 +346,6 @@ async def mine(
         "decision": None,
         "enhance": None,
     }
-    final: State = await build(router=router, curator=curator, critic=critic).ainvoke(state)
+    graph = build(router=router, curator=curator, critic=critic, admitted=admitted)
+    final: State = await graph.ainvoke(state)
     return final["record"]

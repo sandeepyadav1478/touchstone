@@ -30,12 +30,18 @@ import json
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import mlflow
 
-from touchstone import config, telemetry
+from touchstone import config, suite, telemetry
+from touchstone.gate import extract
 from touchstone.loop import agents, budget, corpus, mine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from touchstone.gate.predicate import Predicate
 
 __all__ = ["failed", "harvest", "mined_path"]
 
@@ -83,10 +89,11 @@ def row(record: mine.Record) -> dict[str, Any]:
         "told_to_exit": record.told_to_exit,
         "waved_through": record.waved_through,
         "rule_searched_for": record.rule_searched_for,
-        "handed_over": agents.shape(record.handed_over) if record.handed_over else None,
+        "handed_over": extract.shape(record.handed_over) if record.handed_over else None,
+        "covered_by": extract.shape(record.covered_by) if record.covered_by else None,
         "attempts": [
             {
-                "predicate": agents.shape(a.predicate),
+                "predicate": extract.shape(a.predicate),
                 "fired_on_target": a.fired_on_target,
                 "counterexample": a.counterexample,
                 "holds": a.holds,
@@ -116,13 +123,18 @@ def failed(session: corpus.Session, error: Exception) -> dict[str, Any]:
     }
 
 
-def _work(session: corpus.Session) -> mine.Record:
+def _work(session: corpus.Session, admitted: Sequence[Predicate]) -> mine.Record:
     """One session, inside one span. The span is the only place the loop is observable live.
 
     Every flag is set here by hand, and D-090 SS D is the reason there is no shorter way. It
     sends the flags to the trace so a human can read why one lap ended without the loop being
     allowed to branch on them -- so a flag that is only in the JSON has been written to the
     half of that decision the loop does not use.
+
+    `admitted` is passed in rather than read here, and read once per harvest rather than
+    once per session: `suite.load()` is a directory walk, and re-walking it between sessions
+    would also let a suite that changed mid-harvest give two sessions different answers to
+    the same question.
 
     Ceiling: this span has no children. `mlflow.langgraph` is not in `mlflow-skinny` 3.15.1
     (measured 2026-09-01, `ModuleNotFoundError`), so there is no autolog to attach, and the
@@ -137,6 +149,7 @@ def _work(session: corpus.Session) -> mine.Record:
                 router=agents.router,
                 curator=agents.curator,
                 critic=agents.critic,
+                admitted=admitted,
             )
         )
         span.set_attribute("touchstone.exit_reason", record.exit_reason or "")
@@ -173,11 +186,12 @@ def harvest(label: str, limit: int, session_ids: tuple[str, ...] = ()) -> Path:
     resume either: the file records how far it got, and nothing reads it back yet.
     """
     telemetry.install()
+    admitted = suite.predicates()
     rows: list[dict[str, Any]] = []
     stopped = None
     for session in pick(limit, session_ids):
         try:
-            rows.append(row(_work(session)))
+            rows.append(row(_work(session, admitted)))
         except budget.QuotaExhaustedError as exhausted:
             stopped = str(exhausted)
             break

@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 
 from touchstone import config
-from touchstone.gate.extract import parse
+from touchstone.gate.extract import parse, shape
 from touchstone.gate.predicate import Predicate, RequiresPriorTool
 from touchstone.loop import agents, corpus, mine
 
@@ -121,7 +121,7 @@ def test_the_critic_argues_with_what_the_curator_emitted() -> None:
     carries -- and `parse` is the closed-set boundary that catches it, so the round trip runs
     through it rather than comparing dictionaries.
     """
-    assert parse(json.dumps(agents.shape(AUTH))) == AUTH
+    assert parse(json.dumps(shape(AUTH))) == AUTH
 
 
 def test_a_curator_that_found_no_shape_costs_no_model_call() -> None:

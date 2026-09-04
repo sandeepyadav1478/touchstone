@@ -92,3 +92,48 @@ def test_a_written_case_round_trips_as_json() -> None:
     out = suite.write(built("7"))
     assert json.loads(out.read_text())["origin"]["session_id"] == "s1"
     assert json.loads(out.read_text())["history"][0]["was"] == "admitted"
+
+
+def test_a_written_case_reads_back_as_the_predicate_that_was_admitted() -> None:
+    """The round trip the exact half of D-087 SS B rests on.
+
+    `predicates()` goes back through `extract.parse` rather than a second constructor, so this
+    asserts equality with the original object and not field-by-field: a shape that survived
+    the write and came back as something else would gate a rule nobody admitted.
+    """
+    suite.write(built())
+    assert suite.predicates() == (AUTH,)
+
+
+def test_a_case_whose_shape_no_longer_parses_is_dropped_and_not_raised_on() -> None:
+    """One hand-edited file must not stop every later harvest -- `distinct` is the backstop.
+
+    The cost is bounded and named in the docstring: the loop may re-mine that task and
+    admission refuses it on the task id. Asserted beside a good case, because a version that
+    dropped the whole suite on one bad file would also return no bad predicate.
+    """
+    suite.write(built("7"))
+    bad = built("8")
+    bad["predicate"]["kind"] = "RequiresIncantation"
+    suite.path("8").write_text(json.dumps(bad))
+    assert suite.predicates() == (AUTH,)
+
+
+def test_an_empty_suite_shows_the_curator_nothing_at_all() -> None:
+    """Not an empty heading. A heading with nothing under it reads as a search that failed."""
+    assert suite.index() == ""
+
+
+def test_the_index_names_the_rules_and_never_the_shape_that_encodes_them() -> None:
+    """D-092's guard is the reason. A curator shown a worked shape writes a fourth in it.
+
+    What it needs is which rules are taken, so `task_id` and `why` are in and the encoded
+    check is out. Asserted on the tool name rather than on the whole predicate: a leak would
+    arrive as one field, and the field a curator would copy is the one naming a tool.
+    """
+    suite.write(built())
+    index = suite.index()
+    assert "7" in index
+    assert AUTH.rule in index
+    assert "RequiresPriorTool" not in index
+    assert "get_user_details" not in index

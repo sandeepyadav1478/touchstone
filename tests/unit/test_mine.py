@@ -15,6 +15,7 @@ its 2 s budget for a fact about three sessions.
 """
 
 import asyncio
+from collections.abc import Sequence
 
 import pytest
 
@@ -87,10 +88,13 @@ def run(
     router: mine.Router = _yes,
     curator: mine.Curator = _propose,
     critic: mine.Critic = _bounce,
+    admitted: Sequence[Predicate] = (),
 ) -> Record:
     """Drive one anomalous session through the graph with stubs. Returns its record."""
     target = session("t", authenticated=False)
-    return asyncio.run(mine.mine(target, router=router, curator=curator, critic=critic))
+    return asyncio.run(
+        mine.mine(target, router=router, curator=curator, critic=critic, admitted=admitted)
+    )
 
 
 def test_a_critic_that_never_calls_a_tool_still_stops() -> None:
@@ -130,6 +134,45 @@ def test_a_router_that_enhances_a_clean_session_ends_before_the_curator() -> Non
     record = asyncio.run(mine.mine(target, router=_yes, curator=_propose, critic=_bounce))
     assert record.exit_reason == "misrouted"
     assert record.dispatches == 0
+
+
+def test_a_session_a_suite_predicate_already_fires_on_never_reaches_the_router() -> None:
+    """D-087 SS B's exact half, asserted on the ROUTER and not only on the attempt count.
+
+    The exit is on the edge out of START, so what it saves is a model call and not just a lap.
+    `dispatches == 0` would also hold if the check sat inside `route` and the router had run,
+    which is the version that costs money -- so the router records being called and the test
+    reads that. `covered_by` is asserted because the exit is undiagnosable without it: the
+    suite is keyed by task and this predicate may have been mined from a different one.
+    """
+    called = []
+
+    async def counting(s: corpus.Session) -> bool:
+        called.append(s.id)
+        return True
+
+    record = run(router=counting, admitted=[AUTH])
+    assert record.exit_reason == "already_covered"
+    assert record.covered_by == AUTH
+    assert record.dispatches == 0
+    assert called == []
+
+
+def test_a_suite_predicate_that_is_silent_here_does_not_end_the_trace() -> None:
+    """The other half, and the reason the one above is not a check that cannot fail.
+
+    Same suite, a rule about a tool this session never calls -- and the loop runs its full
+    five laps. Without this, an edge that returned END unconditionally would pass the test
+    above, and a non-empty suite would silently end every trace it was handed.
+    """
+    silent = Predicate(
+        rule="a modification must follow authentication",
+        source="policy.md:9",
+        check=RequiresPriorTool(tool="modify_pending_order", prior=("get_user_details",)),
+    )
+    record = run(admitted=[silent])
+    assert record.exit_reason == "budget_exhausted"
+    assert record.dispatches == MAX_ATTEMPTS
 
 
 def test_a_hand_over_ends_the_trace() -> None:

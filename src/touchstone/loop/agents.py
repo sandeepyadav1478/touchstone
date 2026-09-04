@@ -34,7 +34,7 @@ from functools import lru_cache
 from hashlib import sha256
 from typing import TYPE_CHECKING, Any
 
-from touchstone import config
+from touchstone import config, suite
 from touchstone.gate import extract
 from touchstone.loop import corpus, mine
 
@@ -54,7 +54,6 @@ __all__ = [
     "ran",
     "route",
     "router",
-    "shape",
 ]
 
 # Tool results are cut to this. Measured 2026-09-01 over all 13,095 in the corpus, because 800
@@ -260,7 +259,12 @@ async def curator(state: mine.State) -> Predicate | None:
             f"keying on is not the rule:\n\n{_by_id(last.counterexample)}\n"
         )
     prompt = "\n".join(parts)
-    system = f"{CURATOR}{extract.SYSTEM}\nThe policy, line-numbered:\n\n{policy()}\n"
+    # D-087 SS B's judged half. Read per call rather than cached: the exact half takes its
+    # snapshot once per harvest, and a cache here would be a SECOND snapshot with a different
+    # lifetime -- a curator told a task is covered while the check ran on a suite without it.
+    system = (
+        f"{CURATOR}{suite.index()}{extract.SYSTEM}\nThe policy, line-numbered:\n\n{policy()}\n"
+    )
     return extract.parse(await extract.ask("curator", system, prompt, max_turns=config.AGENT_TURNS))
 
 
@@ -282,7 +286,7 @@ async def critic(state: mine.State) -> mine.Ruling:
         return mine.Ruling("bounce", "the curator found no shape that fits this session")
 
     prompt = (
-        f"The candidate:\n\n{json.dumps(shape(candidate), indent=2)}\n\n"
+        f"The candidate:\n\n{json.dumps(extract.shape(candidate), indent=2)}\n\n"
         f"The session it was written for:\n\n{_transcript(state['session'])}\n"
     )
     answer = extract.json_object(
@@ -297,17 +301,6 @@ async def critic(state: mine.State) -> mine.Ruling:
     )
     decision = "hand_over" if answer.get("decision") == "hand_over" else "bounce"
     return mine.Ruling(decision, str(answer.get("argument") or "") or None)
-
-
-def shape(predicate: Predicate) -> dict[str, Any]:
-    """A predicate as the curator emitted it, so the critic argues with what was proposed."""
-    check = predicate.check
-    return {
-        "kind": type(check).__name__,
-        "rule": predicate.rule,
-        "source": predicate.source,
-        **{k: list(v) if isinstance(v, tuple) else v for k, v in vars(check).items()},
-    }
 
 
 def _by_id(session_id: str) -> str:

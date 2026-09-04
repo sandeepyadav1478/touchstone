@@ -10,6 +10,7 @@ be re-run for free.
 """
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -107,7 +108,7 @@ def test_the_quota_shutting_keeps_what_it_already_paid_for(
     """
     worked = []
 
-    def one(s: corpus.Session) -> mine.Record:
+    def one(s: corpus.Session, _: Sequence[Predicate]) -> mine.Record:
         if s.id == "b":
             raise budget.QuotaExhaustedError("the window is shut")
         worked.append(s.id)
@@ -139,7 +140,7 @@ def test_one_bad_model_answer_costs_its_session_and_not_the_harvest(
     `exit_reason` is null on the failed row and stays null: D-093 §C gives that field to the
     graph's edge, and a session that fell over never reached one. It is counted under `failed`.
     """
-    def one(s: corpus.Session) -> mine.Record:
+    def one(s: corpus.Session, _: Sequence[Predicate]) -> mine.Record:
         if s.id == "b":
             parse("the curator narrated instead of answering")
         return mine.Record(session_id=s.id, exit_reason="skipped")
@@ -173,7 +174,7 @@ def test_the_file_is_on_disk_before_the_harvest_ends(
     seen: list[list[str]] = []
     out = tmp_path / "t.json"
 
-    def one(s: corpus.Session) -> mine.Record:
+    def one(s: corpus.Session, _: Sequence[Predicate]) -> mine.Record:
         got = json.loads(out.read_text()) if out.exists() else {"records": []}
         seen.append([r["session_id"] for r in got["records"]])
         return mine.Record(session_id=s.id, exit_reason="skipped")
