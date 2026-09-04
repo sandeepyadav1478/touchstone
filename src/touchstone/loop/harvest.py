@@ -83,6 +83,7 @@ def row(record: mine.Record) -> dict[str, Any]:
         "told_to_exit": record.told_to_exit,
         "waved_through": record.waved_through,
         "rule_searched_for": record.rule_searched_for,
+        "handed_over": agents.shape(record.handed_over) if record.handed_over else None,
         "attempts": [
             {
                 "predicate": agents.shape(a.predicate),

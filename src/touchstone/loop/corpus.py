@@ -72,6 +72,17 @@ def data_dir() -> Path:
     return Path(DATA_DIR)
 
 
+def policy_text() -> str:
+    """Retail's policy as written. Line-numbered by one reader and counted by another.
+
+    The path lives here rather than at either call site. `agents.policy()` numbers it for a
+    prompt and `gate.admit.justified()` counts its lines to check a citation, and a filename
+    duplicated across a prompt and the gate that checks the prompt's output is the pair most
+    likely to drift apart without either side noticing.
+    """
+    return (data_dir() / "tau2" / "domains" / "retail" / "policy.md").read_text()
+
+
 def files() -> list[Path]:
     """The four shipped retail baselines."""
     return sorted((data_dir() / "tau2" / "results" / "final").glob("*_retail_*.json"))

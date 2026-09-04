@@ -166,8 +166,8 @@ def policy() -> str:
     line. Numbering it here is what makes the requirement answerable: without it the model is
     being asked to cite a line it was never shown.
     """
-    text = (corpus.data_dir() / "tau2" / "domains" / "retail" / "policy.md").read_text()
-    return "\n".join(f"{i:>4}  {line}" for i, line in enumerate(text.splitlines(), 1))
+    lines = corpus.policy_text().splitlines()
+    return "\n".join(f"{i:>4}  {line}" for i, line in enumerate(lines, 1))
 
 
 def _cut(text: str) -> str:

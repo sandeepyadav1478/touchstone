@@ -18,7 +18,11 @@ D-089's whole mitigation is that the give-up rate can be watched.
     handed_over        a candidate reached the gauntlet -- the critic said so AND the check
                        agreed. Both, because the critic is a model and D-064 keeps the verdict
                        mechanical; a hand-over it cannot support is counted in `waved_through`
-                       and costs an attempt like any other bounce
+                       and costs an attempt like any other bounce. The candidate itself is on
+                       the record, because admission cannot recover it: a critic may run a
+                       predicate that holds, bounce it anyway and hand over a different one a
+                       lap later, leaving two holding attempts and nothing saying which of
+                       them the hand-over was about
     budget_exhausted   the edge fired at the cap -- the honest failure
     gave_up            the critic gave up early and the tool accepted it
     force_terminated   an agent was told to exit and continued. Expected value: 0, and a
@@ -118,6 +122,7 @@ class Record:
     waved_through: int = 0
     rule_searched_for: str | None = None
     exit_reason: ExitReason | None = None
+    handed_over: Predicate | None = None
 
 
 def run_predicate(predicate: Predicate, session: corpus.Session) -> Attempt:
@@ -262,6 +267,8 @@ def build(*, router: Router, curator: Curator, critic: Critic) -> Any:
         if state["decision"] == "hand_over" and not held(state["record"], state["candidate"]):
             state["record"].waved_through += 1
         state["record"].exit_reason = _reason(state)
+        if state["record"].exit_reason == "handed_over":
+            state["record"].handed_over = state["candidate"]
         return END if state["record"].exit_reason else "curate"
 
     def selected(state: State) -> str:
