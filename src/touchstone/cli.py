@@ -111,5 +111,28 @@ def mine(
     typer.echo(f"wrote {harvest(label, limit, tuple(session))}")
 
 
+@app.command()
+def gauntlet(
+    label: str = typer.Argument(..., help="The harvest to admit from — `mine`'s label."),
+) -> None:
+    """Run a harvest's handed-over candidates past the three gates and write what clears.
+
+    Free and re-runnable, which is why it is a separate command rather than the tail of
+    `mine`. Mining costs quota; this reads a file. A gate with a bug is fixed and re-run over
+    the same harvest, where the same bug inside `mine` would mean paying to mine again.
+
+    Safe to run twice: `distinct` refuses on `task_id`, so a second pass finds every case the
+    first one wrote already covered and admits nothing.
+    """
+    from .gate.gauntlet import gauntlet as run_gauntlet
+    from .loop.harvest import mined_path
+
+    if not mined_path(label).exists():
+        raise typer.BadParameter(
+            f"{mined_path(label)} does not exist — run `touchstone mine {label}`"
+        )
+    typer.echo(f"wrote {run_gauntlet(label)}")
+
+
 if __name__ == "__main__":
     app()

@@ -35,6 +35,7 @@ from typing import Any
 __all__ = [
     "Session",
     "anomalous",
+    "by_id",
     "clean",
     "data_dir",
     "files",
@@ -172,6 +173,21 @@ def load() -> tuple[Session, ...]:
 def anomalous() -> tuple[Session, ...]:
     """The 778 the router reads one at a time (D-082 A) and the recall denominator."""
     return tuple(s for s in load() if s.anomalous)
+
+
+@lru_cache(maxsize=1)
+def _by_id() -> dict[str, Session]:
+    return {s.id: s for s in load()}
+
+
+def by_id(session_id: str) -> Session:
+    """One session by its id, raising rather than returning None.
+
+    An id that is not in the corpus came from a file written against a different one, and a
+    caller handed a null would report that as a session with no anomaly rather than as the
+    mismatch it is.
+    """
+    return _by_id()[session_id]
 
 
 def clean() -> tuple[Session, ...]:

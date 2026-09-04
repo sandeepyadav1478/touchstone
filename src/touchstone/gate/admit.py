@@ -66,10 +66,28 @@ def reproducible(predicate: Predicate, session: corpus.Session) -> bool:
     keying on a sampling accident, and clearing it puts a case in the suite that fails an agent
     at random -- somebody then debugs a regression that never happened.
 
-    Measured 2026-09-04 with one RequiresPriorTool candidate: it fires on 342 of the 428 groups
-    and on all four trials in 328 of them, so this refuses 14, 4.1%. Nothing here rests on the
-    seeds being replayable; D-084 SS C leaves replay identity unverified and the check is over
-    trials that were already run.
+    Re-measured 2026-09-05, and the figure that was here is retired rather than corrected
+    (DEF-080). It said the candidate fires on 342 of 428 groups, all four in 328, refusing 14
+    at 4.1%. No query reproduces those, and the query that produced them was never recorded, so
+    there is nothing to correct them toward -- preferring the new ones would be preferring a
+    second guess over a first. They are discarded.
+
+    What is reproducible, with the query recorded in D-084 SS D and one RequiresPriorTool
+    candidate keyed on get_order_details after get_user_details:
+
+        fires on                            194 of 1,712 sessions
+        of those, whole group also fires    100
+        REFUSED                              94, which is 48.5%
+
+    So this gate refuses about half of what it is handed, not one case in twenty-four. That is
+    the number to carry, and it is a statement about the gate having teeth rather than a
+    reassurance: a candidate mined from one trial usually does NOT survive its siblings, which
+    is exactly the sampling accident D-084 SS A.2 names. Denominator is sessions the predicate
+    fires on, because that is the only population this gate can be handed -- the loop will not
+    hand over a candidate that does not fire on its own target.
+
+    Nothing here rests on the seeds being replayable; D-084 SS C leaves replay identity
+    unverified and the check is over trials that were already run.
 
     A group of one cannot support the claim and is refused. That branch cannot fire on retail,
     where every group is 4 -- it is here for the specimen swap D-062 leaves open, and it is

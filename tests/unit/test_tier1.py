@@ -88,3 +88,31 @@ def test_no_model_in_gating_path() -> None:
             assert marker not in path.read_text(), f"{path.name} mentions {marker}"
 
     assert len(seen) >= 2
+
+
+def test_the_gauntlet_calls_no_model() -> None:
+    """The other half of D-086 SS A's ceiling, and it needs its own shape to be assertable.
+
+    That ceiling is that the loop has no mechanical gate left inside it and the boundary which
+    survives is admission. So `gauntlet.py` claiming NO MODEL in its docstring is load-bearing,
+    and a claim with no guard behind it is a check that cannot fail.
+
+    It is NOT a third root of the walk above and cannot be. It imports `gate.extract` to read a
+    stored predicate back, and `extract` is the one module D-107 deliberately let reach a model
+    -- so the import walk would fail on a dependency that is correct. What is assertable is
+    narrower and is the thing that would actually break: the file names no model, and the only
+    names it takes off `extract` are the codec pair. `ask` appearing here is the regression.
+    """
+    path = ROOT / "src" / "touchstone" / "gate" / "gauntlet.py"
+    source = path.read_text()
+    for marker in MODEL_CALLS:
+        assert marker not in source, f"gauntlet.py mentions {marker}"
+    used = {
+        node.attr
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "extract"
+    }
+    assert used, "gauntlet.py reaches nothing on `extract` -- this check reads the wrong name"
+    assert used <= {"parse", "shape"}, f"gauntlet.py takes {used - {'parse', 'shape'}} off extract"

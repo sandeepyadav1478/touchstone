@@ -305,7 +305,7 @@ async def critic(state: mine.State) -> mine.Ruling:
 
 def _by_id(session_id: str) -> str:
     """One session by id. The corpus is already loaded by the time a counterexample exists."""
-    return next(_transcript(s) for s in corpus.load() if s.id == session_id)
+    return _transcript(corpus.by_id(session_id))
 
 
 def ran(state: mine.State, candidate: Predicate) -> dict[str, Any]:
