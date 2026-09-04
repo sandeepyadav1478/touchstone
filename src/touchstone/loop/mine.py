@@ -202,14 +202,18 @@ def _reason(state: State) -> ExitReason | None:
     already recorded; a hand-over outranks the cap, because a candidate that held on the last
     attempt held. `force_terminated` sits above the cap so that an agent which was told to
     exit and bounced anyway is reported as disobedience rather than as an ordinary exhaustion.
+
+    The compliant half of that needs no branch. `attempt_budget` sets `told_to_exit` from
+    `attempts_exhausted` and `dispatches` only ever rises, so a trace that was told to exit is
+    still over the cap on the last line and is exhausted there -- one door, reached two ways.
     """
     record = state["record"]
     if record.gave_up:
         return "gave_up"
     if state["decision"] == "hand_over" and held(record, state["candidate"]):
         return "handed_over"
-    if record.told_to_exit:
-        return "force_terminated" if state["decision"] == "bounce" else "budget_exhausted"
+    if record.told_to_exit and state["decision"] == "bounce":
+        return "force_terminated"
     return "budget_exhausted" if attempts_exhausted(record.dispatches) else None
 
 
