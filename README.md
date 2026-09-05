@@ -13,16 +13,17 @@
 | **The invariant** | ⛔ Nothing enters the suite except through a gate with **no model in it** |
 | **The specimen** | [τ²-bench](https://github.com/sierra-research/tau2-bench) retail (MIT) — 114 customer-service tasks, scorer has no model in it. Deliberately someone else's: a project that owns both the agent and the answer key can improve either one, and you cannot tell from outside which it did |
 
-## Status
+## What's built
 
 | | |
 |---|---|
-| Implemented | `doctor`, `run`, `score` |
-| Ever executed | ⛔ **`doctor` only** — `run` spends quota |
-| Specified, not built | the loop, the gauntlet, the rest of the CLI |
-| Complete | the docs, and the structural diagrams that gate implementation |
-| Deferred | comparing versions — a comparator needs a second version and there isn't one |
+| **Commands** | `doctor`, `run`, `score`. The scorer is deterministic and order-independent — verified twice over 1,824 simulations, **with no model call** |
+| **Test suite** | **244 tests, under two seconds, zero model calls** |
+| **The guards enforce the architecture, not just behaviour** | No model in the gating path · no provider outside Anthropic imported anywhere · the attempt cap has exactly one reader · no prompt carries the answer key · no credential in CI |
+| **Every absence assertion has a can-fail twin** | A test proving *"no credential in CI"* is worthless if it would also pass on an empty scan, so each one re-runs its detector against a planted violation |
+| **Design is complete and gates the code** | Eleven documents and the structural diagrams — ⛔ **no implementation before an approved diagram**, and a guard fails the build on a decision that was never drawn |
 | **The claim it is built to make** | **precision and recall** — *the gate fires on these traces and is silent on those*. ⛔ Not *the gate made the agent better* |
+| **Scope today** | The loop and the gauntlet are specified. **No live run yet** — `run` spends quota, so every number below is measured over τ²'s shipped corpus |
 
 ## The loop
 
