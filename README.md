@@ -56,7 +56,7 @@ Orange decides · blue verifies · grey is where a trace ends up. **Three agents
 - **curator** — which rule broke, and what should the predicate say. Always against the suite that already exists.
 - **critic** — bounces, hands over, or gives up. The loop's decision point, and the only thing that judges the curator.
 
-🔴 **Inside the loop there is no mechanical gate at all — every branch is a model's.** That is
+**Inside the loop there is no mechanical gate at all — every branch is a model's.** That is
 deliberate, and it is why the last boundary matters: ⛔ **no orange box clears anything.** The
 gauntlet is three boolean checks with no model in them, and nothing reaches the suite around it.
 
@@ -66,7 +66,7 @@ loop's four rules. [docs/02](docs/02-gates.md) — the gauntlet's three gates an
 
 ## What has been measured
 
-🔴 **Every figure here is over τ²'s *already-shipped* simulations — nothing in this repo has been
+**Every figure here is over τ²'s *already-shipped* simulations — nothing in this repo has been
 run against a live model.** That is the ceiling on all of them, and it is why they are corpus
 findings rather than a score.
 
@@ -88,7 +88,7 @@ an agent skips a required confirmation
   and still writes the correct row   →   DB == 1   (passes)
 ```
 
-🔴 **A predicate correctly catching that violation would be thrown out as a false positive, by an
+**A predicate correctly catching that violation would be thrown out as a false positive, by an
 answer key that was itself wrong.** A broken eval does not just miss failures — it refuses the fix,
 which is why the miner reads three signals and not one. ⚠️ The reading is *blind to process*,
 **never** *the benchmark is broken*: grading final state is correct for a gate and wrong for a
