@@ -182,8 +182,12 @@ async def ask(
     except Exception:
         if not text:
             raise
-    if result is not None and result.is_error and not text:
-        raise RuntimeError(f"the {role} failed: {result.subtype} {result.api_error_status}")
+    if result is not None:
+        # Filed before the raise, not after it: a call that failed still spent the window, and
+        # a turn cap set too low surfaces here rather than as an error (config.py:54).
+        budget.spent(role, result)
+        if result.is_error and not text:
+            raise RuntimeError(f"the {role} failed: {result.subtype} {result.api_error_status}")
     return "\n".join(t for t in text if t)
 
 

@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
+from claude_agent_sdk import ResultMessage
 
 from touchstone import telemetry
 from touchstone.gate.extract import parse
@@ -186,3 +187,37 @@ def test_the_file_is_on_disk_before_the_harvest_ends(
 
     harvest.harvest("t", 3)
     assert seen == [[], ["a"], ["a", "b"]]
+
+
+@pytest.mark.usefixtures("three")
+def test_the_header_carries_what_the_harvest_spent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """D-091 SS E. The ledger is per role and a role spans sessions, so it is header not row.
+
+    `forget()` at the top of the harvest is the half worth asserting: without it a second
+    harvest in one process reports the first one's spend, and the number would look plausible.
+    """
+    budget.spent("critic", ResultMessage(
+        subtype="success", duration_ms=1, duration_api_ms=1, is_error=False,
+        num_turns=99, session_id="from-an-earlier-harvest",
+    ))
+
+    def one(s: corpus.Session, _: Sequence[Predicate]) -> mine.Record:
+        budget.spent("router", ResultMessage(
+            subtype="success", duration_ms=250, duration_api_ms=200, is_error=False,
+            num_turns=2, session_id=s.id, total_cost_usd=0.5, usage={"input_tokens": 1_000},
+        ))
+        return mine.Record(session_id=s.id, exit_reason="skipped")
+
+    monkeypatch.setattr(harvest, "_work", one)
+    monkeypatch.setattr(telemetry, "install", lambda: "")
+    monkeypatch.setattr(telemetry, "flush", lambda: None)
+    monkeypatch.setattr(harvest, "mined_path", lambda label: tmp_path / f"{label}.json")
+
+    written = json.loads(harvest.harvest("t", 3).read_text())
+    assert "critic" not in written["cost"]
+    assert written["cost"]["router"] == {
+        "calls": 3, "turns": 2, "duration_ms": 750, "usd": 1.5,
+        "tokens": {"input_tokens": 3_000},
+    }

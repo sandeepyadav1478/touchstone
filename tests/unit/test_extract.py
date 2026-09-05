@@ -2,14 +2,21 @@
 
 No SDK call anywhere in here. `parse` is pure by design so the half of `extract` that can be
 tested for free is the half that decides whether an answer is usable at all.
+
+One exception at the end, and it reads the source rather than running it: `ask` cannot be
+called without a model, but the ORDER of what it does after the stream ends is a property of
+the file, and that order is where the cost ledger is either kept or lost (D-091 SS E).
 """
 
 from __future__ import annotations
 
+import ast
 import json
+from pathlib import Path
 
 import pytest
 
+from touchstone.gate import extract as extract_module
 from touchstone.gate.extract import parse
 from touchstone.gate.predicate import ArgumentIn, RequiresPriorTool, evaluate
 
@@ -104,3 +111,35 @@ def test_a_parsed_answer_is_one_evaluate_can_run() -> None:
         {"role": "assistant", "tool_calls": [{"id": "1", "name": "cancel", "arguments": {}}]},
     ]
     assert len(evaluate(got, messages)) == 1
+
+
+def test_the_seam_charges_a_failed_call_before_it_raises() -> None:
+    """`ask` reaches the SDK, so its ORDER is what is checkable here without a model.
+
+    The cost is filed between the stream ending and the error raise, and the direction is the
+    whole point: a call that came back an error spent the five-hour window exactly as an
+    answered one did, and those are the calls a turn cap set too low produces (config.py:54).
+    A ledger that only counted the successes would understate the thing it exists to tune.
+
+    The bare `raise` inside the stream's own `except` is deliberately not covered -- that path
+    never received a `ResultMessage`, so there is nothing to charge.
+    """
+    tree = ast.parse(Path(extract_module.__file__).read_text())
+    ask = next(
+        n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == "ask"
+    )
+    charged = [
+        n.lineno
+        for n in ast.walk(ask)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "spent"
+    ]
+    raised = [
+        n.lineno
+        for n in ast.walk(ask)
+        if isinstance(n, ast.Raise)
+        and isinstance(n.exc, ast.Call)
+        and getattr(n.exc.func, "id", "") == "RuntimeError"
+    ]
+    assert len(charged) == 1, f"one call to budget.spent, found {len(charged)}"
+    assert len(raised) == 1, f"one RuntimeError raise, found {len(raised)}"
+    assert charged[0] < raised[0], "a failed call must be charged before ask raises"

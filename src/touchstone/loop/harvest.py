@@ -21,6 +21,12 @@ Sessions are taken in corpus order and NOT filtered by `Session.anomalous`. Hand
 only the failures would answer rubric criterion 1 before it is asked, and that criterion is
 where the router's own error rate comes from (D-082 SS B). It costs a model call on sessions
 that will be skipped, and that cost is the measurement.
+
+`cost` is the other half of that sentence, and until D-091 SS E it was a cost nobody could
+read. Everything mechanical in this loop is free -- the 934-session control scan is 10 ms, the
+graph compiles in 1.6 ms and the corpus is cached -- so the whole of what a harvest spends is
+model I/O, and no run kept the `ResultMessage` that says how much. The ledger goes in the
+header rather than in the rows because it is per role, and a role spans sessions.
 """
 
 from __future__ import annotations
@@ -186,6 +192,7 @@ def harvest(label: str, limit: int, session_ids: tuple[str, ...] = ()) -> Path:
     resume either: the file records how far it got, and nothing reads it back yet.
     """
     telemetry.install()
+    budget.forget()
     admitted = suite.predicates()
     rows: list[dict[str, Any]] = []
     stopped = None
@@ -222,6 +229,12 @@ def _write(label: str, rows: list[dict[str, Any]], stopped: str | None) -> Path:
                 "exits": dict(Counter(
                     "failed" if r.get("error") else r["exit_reason"] for r in rows
                 )),
+                # What it cost, per role, from the seam that spent it. Beside `exits` because
+                # the two answer the same question from opposite ends: `exits` says what the
+                # sessions bought, this says what they were charged. Written on every partial
+                # write for the same reason the rows are -- a harvest a closed lid ended still
+                # spent the window, and the cost of the sessions it did work is the reading.
+                "cost": budget.ledger(),
                 "records": rows,
             },
             indent=2,

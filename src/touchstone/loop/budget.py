@@ -11,22 +11,46 @@ reading and `quota_exhausted()` answers from it. The state is module-level becau
 belongs to the account, not to a call site: two callers asking separately would disagree, and
 the one that guessed low would be the one that killed the run.
 
-Cost is deliberately not accumulated here. docs/03 requires a budget derived from measured
-usage rather than a turn count, and `utilization` already is that measurement -- taken by the
-vendor over the same window it enforces, which is a stronger reading than anything summed on
-this side.
+Cost is deliberately not accumulated FOR THE DECISION, and that is unchanged. docs/03 requires
+a budget derived from measured usage rather than a turn count, and `utilization` already is
+that measurement -- taken by the vendor over the same window it enforces, which is a stronger
+reading than anything summed on this side. `quota_exhausted()` is still the only thing that
+answers whether to spend, and it still answers from `utilization` alone.
+
+`spent()` records what a finished call cost, and nothing reads it back to make a decision. It
+is here because it is the same seam: `extract.ask` already hands `observe()` the rate-limit
+event, and a second module summing the same stream is the two-readers failure this file's own
+caps avoid. The reason to record at all is that three constants in `config.py` are guesses
+whose own comments ask for a number no run currently keeps -- `CRITIC_TURNS` wants `num_turns`
+pinned to what the critic actually spends, `AGENT_TURNS` the same, and
+`QUOTA_STOP_UTILIZATION` says calls-per-trace is unmeasured. The `ResultMessage` carrying all
+three answers was arriving at `ask` and being dropped.
+
+`turns` is the MAXIMUM, not a total, because that is the number a cap is pinned to: a maximum
+equal to the cap means the ceiling was reached, which surfaces as an empty verdict rather than
+an error (config.py:54). Token counts are summed by whatever key the SDK reports rather than
+by a fixed list -- naming the keys here would make a renamed field read as zero.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from touchstone import config
 
 if TYPE_CHECKING:  # annotation only -- the runtime SDK import is policed by test_invariants
-    from claude_agent_sdk import RateLimitInfo
+    from claude_agent_sdk import RateLimitInfo, ResultMessage
 
-__all__ = ["QuotaExhaustedError", "attempts_exhausted", "observe", "quota_exhausted", "reading"]
+__all__ = [
+    "QuotaExhaustedError",
+    "attempts_exhausted",
+    "forget",
+    "ledger",
+    "observe",
+    "quota_exhausted",
+    "reading",
+    "spent",
+]
 
 
 class QuotaExhaustedError(RuntimeError):
@@ -50,6 +74,42 @@ def observe(info: RateLimitInfo) -> None:
 def reading() -> RateLimitInfo | None:
     """The last reading, or None if the SDK has not reported one yet."""
     return _last
+
+
+_spent: dict[str, dict[str, Any]] = {}
+
+
+def spent(role: str, result: ResultMessage) -> None:
+    """File what one finished call cost, under the role that made it.
+
+    Called for a failed call too. A call that ran out of turns or came back an error spent the
+    window exactly as an answered one did, and a ledger that only counted the successes would
+    understate the cost of the thing most worth tuning.
+
+    Per role rather than in one total: the three roles have different caps and different
+    prompts, and the tuning question is always about one of them. A single figure would say the
+    harvest was expensive without saying which knob to turn.
+    """
+    row = _spent.setdefault(
+        role, {"calls": 0, "turns": 0, "duration_ms": 0, "usd": 0.0, "tokens": {}}
+    )
+    row["calls"] += 1
+    row["turns"] = max(row["turns"], result.num_turns)
+    row["duration_ms"] += result.duration_ms
+    row["usd"] += result.total_cost_usd or 0.0
+    for name, value in (result.usage or {}).items():
+        if isinstance(value, int):
+            row["tokens"][name] = row["tokens"].get(name, 0) + value
+
+
+def ledger() -> dict[str, dict[str, Any]]:
+    """What has been spent so far, by role. A copy -- a caller writing a header cannot edit it."""
+    return {role: {**row, "tokens": dict(row["tokens"])} for role, row in _spent.items()}
+
+
+def forget() -> None:
+    """Start a fresh ledger. Called at the top of a harvest, so its header is its own cost."""
+    _spent.clear()
 
 
 def quota_exhausted() -> bool:
