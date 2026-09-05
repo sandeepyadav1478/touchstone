@@ -63,26 +63,6 @@ gauntlet is three boolean checks with no model in them, and nothing reaches the 
 loop's four rules. [docs/02](docs/02-gates.md) — the gauntlet's three gates and their yields.
 [`diagrams/loop.png`](diagrams/loop.png) is the gate artifact and **wins if any of them disagree.**
 
-## Why the specimen is someone else's
-
-τ²'s `DB` check replays a task's gold actions on a fresh environment and diffs the end state. Any
-path reaching an equivalent state passes — **so it is blind to how that state was reached.**
-
-```
-an agent skips a required confirmation
-  and still writes the correct row      →  DB == 1   (passes)
-
-of the 1,712 retail simulations τ² ships:
-  371  pass DB and fail an action check →  invisible to a `DB == 0` selector
-```
-
-🔴 **A predicate correctly catching that violation would be thrown out as a false positive, by an
-answer key that was itself wrong.** A broken eval does not just miss failures; it refuses the fix —
-which is why the miner reads three signals and not one, and why the specimen has to be a third
-party's. ⚠️ The reading is *blind to process*, **never** *the benchmark is broken*: grading final
-state is correct for a gate and wrong for a selector. Derivation, corpus and both population
-splits: [docs/02](docs/02-gates.md).
-
 ## What has been measured
 
 🔴 **Every figure here is over τ²'s *already-shipped* simulations — nothing in this repo has been
@@ -96,6 +76,22 @@ findings rather than a score.
 | **The router has an answer key it did not write** | **778** anomalous · **934** clean | τ²'s own two mechanical signals (`corpus.is_anomalous()`) — so the router's agreement with it **is** its measured error rate |
 | **The composite reward cannot gate** | **112** of 114 tasks declare `reward_basis = ["DB", "NL_ASSERTION"]` | The second component is LLM-judged, so the gate reads `DB` alone |
 | **The false-positive floor is named, not assumed** | **7** of 934 (**0.75%**) are clean because the task is *impossible* | Task 105's gold action raises inside the *gold* environment, so doing nothing scores `DB == 1` |
+
+### The second row is the one the design rests on
+
+τ²'s `DB` check replays a task's gold actions on a fresh environment and diffs the end state. Any
+path reaching an equivalent state passes, **so it is blind to how that state was reached**:
+
+```
+an agent skips a required confirmation
+  and still writes the correct row   →   DB == 1   (passes)
+```
+
+🔴 **A predicate correctly catching that violation would be thrown out as a false positive, by an
+answer key that was itself wrong.** A broken eval does not just miss failures — it refuses the fix,
+which is why the miner reads three signals and not one. ⚠️ The reading is *blind to process*,
+**never** *the benchmark is broken*: grading final state is correct for a gate and wrong for a
+selector. Derivation and both population splits: [docs/02](docs/02-gates.md).
 
 **Everything else is in [`docs/`](docs/README.md)** — eleven documents, the diagram set, and the
 **limits** that bound every number above.
