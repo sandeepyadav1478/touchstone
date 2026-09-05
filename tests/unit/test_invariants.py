@@ -229,6 +229,65 @@ def test_only_the_seam_and_the_doctor_may_reach_a_model() -> None:
     )
 
 
+# Import names, not words. `doctor` NAMES both Cerebras and ollama on purpose -- it reads
+# `CEREBRAS_API_KEY` and pings `OLLAMA_URL` -- and that is the distinction D-067 draws: naming a
+# provider is a diagnostic, importing one is a model source. A word ban would have to exempt the
+# one file that is allowed to say the words, and the exemption is where the next one gets in.
+NOT_ANTHROPIC = frozenset(
+    {"openai", "cerebras", "langchain_cerebras", "cerebras_cloud_sdk", "ollama", "groq",
+     "mistralai", "cohere", "litellm", "transformers", "vllm"}
+)
+SCRIPTS = ROOT / "scripts"
+
+
+def repo_trees() -> dict[str, ast.Module]:
+    """Every shipped module, `src/` and `scripts/` both. Tests are excluded deliberately.
+
+    `scripts/` is in because that is where the breach was: a `ChatCerebras(...).invoke(...)` sat
+    in `p0-probe.py` after D-067 banned it, in the one directory no guard reads. Tests are out
+    because this file has to name the banned packages in order to ban them.
+
+    Working tree, not `git ls-files` -- eleven scripts here and nine in CI, because `.gitignore`
+    excludes `scripts/p0-*` (DEF-081). The gap is deliberate: a tracked-files scan would invert
+    it and miss the untracked file entirely, and untracked is where the next one gets written.
+    """
+    scripts = {f"scripts.{p.stem}": ast.parse(p.read_text(), p.name) for p in SCRIPTS.rglob("*.py")}
+    return dict(MODULES) | scripts
+
+
+def test_no_provider_outside_anthropic_is_imported() -> None:
+    """D-067 — Anthropic models in every role, and the rule had no mechanism until now.
+
+    The polarity is the whole point and it is easy to get backwards: `doctor` asserts these keys
+    are ABSENT, so the words belong in this repo and the packages do not. What is forbidden is a
+    module that could call one.
+
+    Ceiling: `google.generativeai` is not in the ban list, because `imported()` answers with the
+    top-level name and `google` is also protobuf's. It would be a ban that fires on the wrong
+    thing, which trains someone to relax it.
+    """
+    reaching = {
+        name: found
+        for name, tree in repo_trees().items()
+        if (found := imported(tree) & NOT_ANTHROPIC)
+    }
+    assert not reaching, (
+        f"{reaching} imports a provider that is not Anthropic's. D-067 allows no other model in "
+        "any role, and the quota window rejects rather than bills, so a second provider is a "
+        "second bill rather than a fallback"
+    )
+
+
+def test_the_provider_check_can_fail() -> None:
+    """Absence again, and the same answer -- run the detector on a planted import."""
+    assert imported(ast.parse("from langchain_cerebras import ChatCerebras")) & NOT_ANTHROPIC
+    assert imported(ast.parse("import litellm")) & NOT_ANTHROPIC
+    assert not imported(ast.parse("from claude_agent_sdk import query")) & NOT_ANTHROPIC
+    assert "scripts.p0-probe" in repo_trees() or any(
+        n.startswith("scripts.") for n in repo_trees()
+    ), "scripts/ contributed nothing, so the scan above read src/ only"
+
+
 def test_the_model_pins_live_in_config_and_nowhere_else() -> None:
     """One place to change a pin, and one place to read one off.
 

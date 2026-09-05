@@ -664,7 +664,9 @@ scripts/               🆕 tooling that checks the OTHER files — not imported
                        the live specimen against it. ⛔ The SAME function does both, so the
                        check cannot drift from the generator (D-098)
   p0-deps.sh           the phase 0 install, one command
-  p0-probe.py          the two phase 0 measurements docs/00 §8 requires before code
+  p0-probe.py          the phase 0 measurement docs/00 §8 requires before code. 🆕 P0.6 was the
+                       second one and is deleted, not deferred: it called a non-Anthropic model
+                       (D-067 third amendment, D-001 §B)
 .github/workflows/
   touchstone.yml       🆕 CI, P2.7 — `uv sync --locked`, `pytest tests/unit`, `mypy src/`,
                        `check-links.py`. ⛔ **No `secrets:` block, no `env:` key, no model
