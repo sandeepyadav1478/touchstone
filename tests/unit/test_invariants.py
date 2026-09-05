@@ -18,6 +18,8 @@ Coverage of §6 from here, stated so the gaps are visible rather than implied:
     13, 14      need specialist spans; un-retired by D-071, not yet buildable
     new         no model in any gating path, by test_only_the_seam_and_the_doctor_may_reach_a_model
     new         no credential in CI (D-014), by test_ci_carries_no_credential_and_calls_no_model
+    new         one span vocabulary (D-017), by
+                test_no_span_attribute_is_named_outside_the_openinference_vocabulary
 """
 
 import ast
@@ -286,6 +288,76 @@ def test_the_provider_check_can_fail() -> None:
     assert "scripts.p0-probe" in repo_trees() or any(
         n.startswith("scripts.") for n in repo_trees()
     ), "scripts/ contributed nothing, so the scan above read src/ only"
+
+
+SPAN_VOCABULARY = ("llm.", "touchstone.")
+
+
+def _attribute_names(tree: ast.AST) -> Iterator[ast.expr]:
+    """Every first argument handed to a `.set_attribute(...)` call."""
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "set_attribute"
+            and node.args
+        ):
+            yield node.args[0]
+
+
+def _literal_name(arg: ast.expr) -> str | None:
+    """The attribute name when it is a plain string literal, and None when it is built."""
+    return arg.value if isinstance(arg, ast.Constant) and isinstance(arg.value, str) else None
+
+
+def test_no_span_attribute_is_named_outside_the_openinference_vocabulary() -> None:
+    """D-017 wants OpenInference names and not the `gen_ai` ones, and nothing checked it.
+
+    The phase plan states this box as `git grep gen_ai src/` returning nothing, and it never
+    will: adapter.py names that convention in the comment explaining why we do not emit it,
+    so the grep is answered by the sentence enforcing the rule. Deleting the comment to quiet
+    the grep is the wrong direction. Reading the EMITTED name instead lets the explanation
+    stay at the line a reader needs it, which is the same trade the provider ban above makes.
+
+    A name that is not a literal fails rather than being skipped. One attribute assembled at
+    runtime is one this test cannot read, and an allow-list with a blind spot is not one.
+
+    Ceiling: our spans only. The SDK's instrumentor emits its own and we do not rename them
+    (docs/04 §2) -- what is pinned here is the vocabulary we choose, never the one we receive.
+    """
+    wrong = []
+    for name, tree in repo_trees().items():
+        for arg in _attribute_names(tree):
+            if (literal := _literal_name(arg)) is None:
+                wrong.append(f"{name}:{arg.lineno} name is built, so it cannot be read here")
+            elif not literal.startswith(SPAN_VOCABULARY):
+                wrong.append(f"{name}:{arg.lineno} {literal}")
+    assert not wrong, (
+        f"{wrong} -- a span attribute is OpenInference `llm.` or our own `touchstone.`. D-017 "
+        "rejects the `gen_ai` convention outright so the scorer reads one vocabulary, and a "
+        "second one costs every reader of a trace the question of which span they are holding"
+    )
+
+
+def test_the_span_vocabulary_check_can_fail() -> None:
+    """Absence again, so run the detector on a planted attribute."""
+
+    def names(source: str) -> list[ast.expr]:
+        return list(_attribute_names(ast.parse(source)))
+
+    banned = _literal_name(names("span.set_attribute('gen_ai.request.model', m)")[0])
+    assert banned is not None
+    assert not banned.startswith(SPAN_VOCABULARY)
+
+    built = names("span.set_attribute(prefix + '.model', m)")
+    assert _literal_name(built[0]) is None, "a computed name must not read as a literal"
+
+    kept = _literal_name(names("span.set_attribute('llm.model_name', m)")[0])
+    assert kept is not None
+    assert kept.startswith(SPAN_VOCABULARY)
+
+    found = [a for tree in repo_trees().values() for a in _attribute_names(tree)]
+    assert found, "no set_attribute call in the repo, so the scan above read nothing"
 
 
 def test_the_model_pins_live_in_config_and_nowhere_else() -> None:

@@ -17,13 +17,13 @@
 
 | | |
 |---|---|
-| **Commands** | `doctor`, `run`, `score`. The scorer is deterministic and order-independent — verified twice over 1,824 simulations, **with no model call** |
-| **Test suite** | **244 tests, under two seconds, zero model calls** |
-| **The guards enforce the architecture, not just behaviour** | No model in the gating path · no provider outside Anthropic imported anywhere · the attempt cap has exactly one reader · no prompt carries the answer key · no credential in CI |
+| **Commands** | `doctor` · `run` · `score` · **`mine`** (the loop) · **`gauntlet`**. The scorer is deterministic and order-independent — verified twice over 1,824 simulations, **with no model call** |
+| **Test suite** | **246 tests, under two seconds, zero model calls** |
+| **The guards enforce the architecture, not just behaviour** | No model in the gating path · no provider outside Anthropic imported anywhere · the attempt cap has exactly one reader · no prompt carries the answer key · one span vocabulary, read off the emitted names · no credential in CI |
 | **Every absence assertion has a can-fail twin** | A test proving *"no credential in CI"* is worthless if it would also pass on an empty scan, so each one re-runs its detector against a planted violation |
 | **Design is complete and gates the code** | Eleven documents and the structural diagrams — ⛔ **no implementation before an approved diagram**, and a guard fails the build on a decision that was never drawn |
 | **The claim it is built to make** | **precision and recall** — *the gate fires on these traces and is silent on those*. ⛔ Not *the gate made the agent better* |
-| **Scope today** | The loop and the gauntlet are specified. **No live run yet** — `run` spends quota, so every number below is measured over τ²'s shipped corpus |
+| **Scope today** | The loop and the gauntlet are **built and wired to the CLI, and have not been run against a live model** — `run` and `mine` spend quota, so every number below is measured over τ²'s shipped corpus |
 
 ## The loop
 
@@ -102,11 +102,17 @@ selector. Derivation and both population splits: [docs/02](docs/02-gates.md).
 ```bash
 git clone git@github.com:sandeepyadav1478/touchstone.git && cd touchstone
 uv sync
-uv run touchstone doctor     # asserts ANTHROPIC_API_KEY is *absent* — if it is set,
-                             # runs quietly bill an API account, not the subscription
-uv run touchstone run v1     # the frozen ten through τ², k=3
-uv run touchstone score v1   # → results/v1.json, no model call
+uv run touchstone doctor       # asserts ANTHROPIC_API_KEY is *absent* — if it is set,
+                               # runs quietly bill an API account, not the subscription
+uv run touchstone run v1       # the frozen ten through τ², k=3
+uv run touchstone score v1     # → results/v1.json, no model call
+uv run touchstone mine m1      # the loop: failing traces → candidate predicates
+uv run touchstone gauntlet m1  # the three gates — free, re-runnable, no model call
 ```
+
+**`gauntlet` is a separate command on purpose.** Mining costs quota; the gates read a file. A gate
+with a bug is fixed and re-run over the same harvest — the same bug inside `mine` means paying to
+mine again.
 
 | | |
 |---|---|
