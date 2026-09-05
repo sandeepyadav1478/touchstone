@@ -155,6 +155,18 @@ So the split is deliberate, and it is worth being able to say out loud:
 | LLM/tool attributes | **OpenInference** (Apache-2.0, since 2023) | ✅ versioned. ⚠️ **A vocabulary we write, not a protocol anything speaks here** — see the `touchstone.llm` row in §1 |
 | Scoring fields | **`touchstone.*`**, defined in the table above | ours, namespaced so it cannot collide |
 
+🆕 **Those bottom two rows are now enforced, and the rule was 23 days old before anything read
+it** (D-017 §A). `test_no_span_attribute_is_named_outside_the_openinference_vocabulary` parses
+every `set_attribute` call in the repo and requires the name to start with `llm.` or
+`touchstone.`. ⚠️ **It reads the *emitted* name, never the word** — the phase plan stated this
+check as `git grep gen_ai src/` returning nothing, which can never pass, because its one hit is
+the comment on `adapter.py` explaining why we do not emit it. A text ban would need an exemption
+for that comment and for this section; an emitted-name ban needs none, so the explanation stays
+at the line a reader needs it. A name built at runtime fails rather than being skipped.
+⛔ **Ceiling: the names we write.** It reads `set_attribute` call sites, so what
+`mlflow.langchain.autolog()` writes on v5 is outside it — that is a vocabulary this repo
+receives, and §2 is where the three dead emitters are counted.
+
 ⚠️ **"OpenTelemetry is mature" and "OpenTelemetry's AI conventions are mature" are two
 different claims.** The first is true, the second is not, and this project only makes the first.
 

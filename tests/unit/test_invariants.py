@@ -322,8 +322,8 @@ def test_no_span_attribute_is_named_outside_the_openinference_vocabulary() -> No
     A name that is not a literal fails rather than being skipped. One attribute assembled at
     runtime is one this test cannot read, and an allow-list with a blind spot is not one.
 
-    Ceiling: our spans only. The SDK's instrumentor emits its own and we do not rename them
-    (docs/04 §2) -- what is pinned here is the vocabulary we choose, never the one we receive.
+    Ceiling: the names we write. What mlflow.langchain.autolog() emits on v5 is outside this
+    scan (docs/04 §2) -- the vocabulary we choose is pinned, never the one we receive.
     """
     wrong = []
     for name, tree in repo_trees().items():
