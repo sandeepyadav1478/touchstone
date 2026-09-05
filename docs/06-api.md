@@ -230,4 +230,5 @@ silently switches quota to invoice (D-001).
 
 ⚠️ **An absence that is explained is a decision; an absence that is not reads as unfinished.**
 That is the only reason this table exists — no auth because nothing served here is worth
-protecting, and the scope was chosen rather than run out of. **Mirror it in the README's Limits.**
+protecting, and the scope was chosen rather than run out of. **Mirrored in [docs/](README.md)
+§Limits**, which is where that table moved when the README was cut back to an entry point.

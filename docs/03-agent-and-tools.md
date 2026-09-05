@@ -151,8 +151,8 @@ adds, if any, and the SDK parameters in §5.
 - ⛔ **No few-shot examples drawn from the 114 tasks.** That is leakage, and it is the easiest
   way to accidentally publish a great number. ⚠️ **The risk changed shape rather than going
   away**: the tasks are *public*, so a model may have seen them in training. That is a ceiling on
-  the absolute number, not on the version-to-version delta, and it is stated in the README's
-  limits rather than hedged away here.
+  the absolute number, not on the version-to-version delta, and it is stated in
+  [docs/](README.md) §Limits rather than hedged away here.
 - **A prompt is a candidate under a version number**, not a document. Wording lives in git under
   a version, never in a doc ([docs/09](09-schemas.md) §11).
 

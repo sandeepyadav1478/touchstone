@@ -99,7 +99,7 @@ def main() -> int:
         )
         logging.error(
             "Cite DECISIONS.md, DEFECTS.md and ROADMAP.md as plain `backticks`, "
-            "never as a link — they are local-only by design (README §working files)."
+            "never as a link — they are local-only by design (docs/README.md §working files)."
         )
         return 1
 

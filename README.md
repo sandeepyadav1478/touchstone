@@ -83,6 +83,23 @@ party's. ⚠️ The reading is *blind to process*, **never** *the benchmark is b
 state is correct for a gate and wrong for a selector. Derivation, corpus and both population
 splits: [docs/02](docs/02-gates.md).
 
+## What has been measured
+
+🔴 **Every figure here is over τ²'s *already-shipped* simulations — nothing in this repo has been
+run against a live model.** That is the ceiling on all of them, and it is why they are corpus
+findings rather than a score.
+
+| finding | number | how |
+|---|---|---|
+| **The scorer is deterministic and order-independent** | `PASS — 1824 simulations, identical twice`, four baselines stable at 456 each | `scripts/check-determinism.py`, 2026-08-26. ⛔ **No model call** — which is the whole claim |
+| **`DB` is blind to process** | **371** of 1,712 pass `DB` and fail an action check | Swept over the shipped simulations; **407** fail `DB` outright |
+| **The router has an answer key it did not write** | **778** anomalous · **934** clean | τ²'s own two mechanical signals (`corpus.is_anomalous()`) — so the router's agreement with it **is** its measured error rate |
+| **The composite reward cannot gate** | **112** of 114 tasks declare `reward_basis = ["DB", "NL_ASSERTION"]` | The second component is LLM-judged, so the gate reads `DB` alone |
+| **The false-positive floor is named, not assumed** | **7** of 934 (**0.75%**) are clean because the task is *impossible* | Task 105's gold action raises inside the *gold* environment, so doing nothing scores `DB == 1` |
+
+**Everything else is in [`docs/`](docs/README.md)** — eleven documents, the diagram set, and the
+**limits** that bound every number above.
+
 ## Quick start
 
 ```bash
@@ -100,44 +117,6 @@ uv run touchstone score v1   # → results/v1.json, no model call
 | `TAU2_DATA_DIR` | `run` needs it, and writes into **that** tree rather than this one. `doctor` tells you whether it resolves |
 | the rest of the CLI | specified in [docs/06](docs/06-api.md), **not implemented** |
 | models | Claude via [`claude-agent-sdk`](https://github.com/anthropics/claude-agent-sdk-python), which inherits the `claude` CLI's login — a **subscription rather than a metered API key**, which is what makes k runs per task affordable. ⛔ **Anthropic only, in every role**; five roles pinned separately ([docs/00](docs/00-stack.md)) |
-
-## Limits
-
-⚠️ **Read this before quoting any number this repo produces.** These are properties of the
-**design**, so they hold whether or not a run has happened. Reasoning: [docs/05](docs/05-scoring.md).
-
-| limit | what it does to a number |
-|---|---|
-| 🔴 **Nothing here has been run by this project** | The traces are someone else's. A gate that fires on their failures is not shown to fire on ours |
-| **The customer is a language model** | A failure τ²'s user simulator causes is charged to the agent, and the corpus was already run, so we cannot measure its fabrication rate ourselves |
-| **Enforcement has never run live** | Replay only. ⚠️ *Wired but never seen to fire* reads exactly like *works* |
-| **The gate is a component, not the reward** | Gates on `reward_breakdown["DB"]`; the composite adds an LLM-judged `NL_ASSERTION` on 112 of 114 tasks. ⛔ Different measurements |
-| **The agent does not learn** | No training, no weights, nothing carried between sessions. ⛔ *"It improves itself"* fuses two loops — **what iterates is the ruler** |
-| 🔴 **A run covers ten of 114 tasks** | Frozen and hash-recorded so it cannot be re-sampled to flatter a result, and still a tenth of the exam. ⛔ **Not a τ²-bench retail score** |
-| **Nothing compares two versions** | `compare`, the run record and the version table are unbuilt. A comparator with no second operand is scaffolding |
-| **A benchmark task is cleaner than a ticket** | Gold actions known, small database, a right answer — the reward is an **upper bound** on a harder problem |
-
-## Documentation
-
-| Doc | What it covers |
-|---|---|
-| [00-stack](docs/00-stack.md) | Every dependency pinned and why, the five model pins, `touchstone doctor` |
-| [01-spec](docs/01-spec.md) | The τ² task model, what a case is, the benchmark manifest, the live invariants |
-| [02-gates](docs/02-gates.md) | The gauntlet's three gates, the corpus and its splits, the acceptance rule, case provenance |
-| [03-agent-and-tools](docs/03-agent-and-tools.md) | The adapter at the model seam, what we may and may not change about the τ² agent |
-| [04-observability](docs/04-observability.md) | Span schema, OpenInference conventions, why the scorer reads spans |
-| [05-scoring](docs/05-scoring.md) | Reward, `pass^k`, cost per success, and why a judge can never gate |
-| [06-api](docs/06-api.md) | CLI, HTTP surface, compose |
-| [07-diagrams](docs/07-diagrams.md) | The gate: no code before an approved structural diagram |
-| [08-memory](docs/08-memory.md) | Where agent memory legitimately goes, and the anchoring failure it is planted to catch |
-| [09-schemas](docs/09-schemas.md) | Every remaining type, the `benchmark_hash` algorithm, the file map, prompt and tool contracts |
-| [10-loop](docs/10-loop.md) | 🆕 The three agents, the critic's two tools, the loop's four rules |
-| [diagrams/](diagrams/README.md) | The structural flowchart and the run sequence |
-
-⚠️ **The docs specify the deferred comparison half in the present tense, deliberately** — they
-describe the design that half revives to, not code that runs. **Working files:** `DECISIONS.md`,
-`DEFECTS.md` and `ROADMAP.md` are local by design and not in this repository, which is why `D-084`
-and the like are cited in backticks and never as links.
 
 ## Prior work this builds on
 

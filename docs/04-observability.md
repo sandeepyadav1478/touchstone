@@ -365,7 +365,7 @@ failure table is full of.
   in real time. The consumer of the spans is a scorer, and now also a human reading them after the
   fact (§2's second contract).
 - ⛔ **No sampling.** Every run is traced; the volume is ten cases × k.
-- ⛔ **No distributed tracing claim.** One service, one machine. Stated in the README's Limits.
+- ⛔ **No distributed tracing claim.** One service, one machine. Stated in [docs/](README.md) §Limits.
 
 ⚠️ **The monitoring row is the one under pressure, so the reason is written out.** A gate list for
 an enterprise agentic system reasonably includes *realtime monitoring in production*. **This
