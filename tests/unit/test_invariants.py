@@ -23,6 +23,7 @@ Coverage of §6 from here, stated so the gaps are visible rather than implied:
 import ast
 import io
 import re
+import subprocess
 import tokenize
 from collections.abc import Iterator
 from pathlib import Path
@@ -411,3 +412,49 @@ def test_the_credential_check_can_fail() -> None:
         "anthropic", "api_key", "secrets.",
     }
     assert banned_in("- run: uv run pytest tests/unit -q") == set()
+
+
+# The trailer and the session URL are two spellings of one leak, so one pattern reads both.
+# Matched case-insensitively and on the whole raw message, because a trailer is conventionally
+# last and nothing enforces that.
+CLAUDE_TRAILER = re.compile(r"co-authored-by:.*claude|claude-session:", re.IGNORECASE)
+
+
+def commit_messages() -> list[str]:
+    """Every commit message in this repository, subject and body, newest first."""
+    log = subprocess.run(
+        ["git", "log", "--format=%B%x00"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # Stripped, not just filtered: `%B` ends in a newline, so every message after the first
+    # carries a leading blank line and its subject would report as the empty string.
+    return [message.strip() for message in log.stdout.split("\0") if message.strip()]
+
+
+def test_no_commit_carries_a_claude_trailer() -> None:
+    """The repository is public, so authorship metadata is read before the code is.
+
+    P0's exit gate asks this of the first commit. It is asserted over every commit instead,
+    because the property the gate wanted is a property of the published history and a one-time
+    check cannot hold it -- the trailer is re-proposed by tooling on every session, so the
+    discipline needs a mechanism rather than a memory.
+
+    Only as deep as the checkout: CI clones at depth 1, where this reads the pushed commit and
+    nothing before it. That is the commit worth refusing, so the shallow case is the useful one
+    and the full history is checked locally.
+    """
+    messages = commit_messages()
+    assert messages, "no commit messages -- not a git checkout, and this test would pass vacuously"
+    carrying = [m.splitlines()[0] for m in messages if CLAUDE_TRAILER.search(m)]
+    assert not carrying, f"{carrying} carry a Claude trailer, and the repository is public"
+
+
+def test_the_trailer_check_can_fail() -> None:
+    """The same absence-assertion problem, and the same answer: run it on a planted positive."""
+    assert CLAUDE_TRAILER.search("Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>")
+    assert CLAUDE_TRAILER.search("Claude-Session: https://claude.ai/code/session_019")
+    assert not CLAUDE_TRAILER.search("Co-Authored-By: a person <someone@example.com>")
+    assert not CLAUDE_TRAILER.search("the gate had no caller, and claude is not in this line")
