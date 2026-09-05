@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from touchstone import config
-from touchstone.loop.report import envelope, recorded_auth, write
+from touchstone.loop.report import envelope, recorded_auth, recorded_enforcement, write
 from touchstone.loop.run import PROVENANCE
 from touchstone.loop.schema import TERMINATION_REASONS, Scored
 
@@ -87,6 +87,26 @@ def test_auth_is_read_from_the_run_and_never_measured_here(
 def test_a_run_that_recorded_nothing_publishes_unknown(tmp_path: Path) -> None:
     """`unknown` is an answer, not a default — it says the run predates its own sidecar."""
     assert recorded_auth(tmp_path / "results.json") == "unknown"
+
+
+def test_enforcement_is_published_both_ways_and_absent_when_unrecorded(tmp_path: Path) -> None:
+    """Three states, not two. `False` is a claim about the run and `absent` is a claim about us.
+
+    A lost sidecar publishing `false` would say the gate was off, which is a fact this process
+    has no access to — the same reason `auth` answers `unknown` rather than guessing.
+    """
+    results = tmp_path / "results.json"
+    assert recorded_enforcement(results) is None
+
+    results.with_name(PROVENANCE).write_text(json.dumps({"auth": "subscription"}))
+    assert recorded_enforcement(results) is None, "a sidecar older than the field recorded nothing"
+
+    results.with_name(PROVENANCE).write_text(json.dumps({"auth": "subscription", "enforced": True}))
+    assert recorded_enforcement(results) is True
+
+    assert envelope(SCORED, MANIFEST, INFO, "v1", 3, "subscription", True)["enforced"] is True
+    assert envelope(SCORED, MANIFEST, INFO, "v1", 3, "subscription", False)["enforced"] is False
+    assert "enforced" not in envelope(SCORED, MANIFEST, INFO, "v1", 3, "subscription")
 
 
 def test_a_results_file_of_other_tasks_is_refused(tmp_path: Path) -> None:

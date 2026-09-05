@@ -215,8 +215,8 @@ def generate(
     )
 
 
-def rebind(home: Any, replacement: Any) -> int:
-    """Bind `replacement` over `home.generate` and every `tau2.*` module already holding it.
+def rebind(home: Any, replacement: Any, name: str = "generate") -> int:
+    """Bind `replacement` over `home.<name>` and every `tau2.*` module already holding it.
 
     Patching `home.generate` alone is a silent no-op for ten modules: they each did
     `from tau2.utils.llm_utils import generate` at import and hold their own reference. Both
@@ -226,17 +226,20 @@ def rebind(home: Any, replacement: Any) -> int:
     Split from `install()` so it can be tested without importing τ². Same reason as
     `doctor.specimen_check` — that import costs 1.71 s against phase 1's two-second gate — and the
     same shape: the logic takes values, the wrapper does the I/O.
+
+    `name` defaults to the seam this was written for and is a parameter because the gate needs
+    the same operation over `build_environment` (`loop.run.install_gate`). The alternative was a
+    second copy of the sweep, and two functions that walk `sys.modules` looking for a stale
+    reference are two chances to fix only one of them.
     """
-    upstream = home.generate
-    home.generate = replacement
+    upstream = getattr(home, name)
+    setattr(home, name, replacement)
     patched = 1
-    for name, mod in list(sys.modules.items()):
-        if name.startswith("tau2.") and getattr(mod, "generate", None) is upstream:
-            # `setattr`, not `mod.generate = …`: `ModuleType` declares no such attribute, so
-            # the assignment form is a type error rather than a style choice. Rebinding a name in
-            # someone else's already-imported module is dynamic by nature; this is the spelling
-            # that says so.
-            setattr(mod, "generate", replacement)  # noqa: B010
+    for module_name, mod in list(sys.modules.items()):
+        if module_name.startswith("tau2.") and getattr(mod, name, None) is upstream:
+            # `setattr` is not a style choice here — the attribute name is a parameter, and
+            # `ModuleType` declares neither of the two it can be (D-100).
+            setattr(mod, name, replacement)
             patched += 1
     return patched
 

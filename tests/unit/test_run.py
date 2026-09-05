@@ -6,12 +6,16 @@ under which name — and both are the kind of thing that is silently wrong for a
 """
 
 import json
+import sys
+import types
 from pathlib import Path
 
 import pytest
 
-from touchstone import config
-from touchstone.loop.run import PROVENANCE, frozen_task_ids, run_name, same_run
+from touchstone import config, suite
+from touchstone.gate.predicate import Predicate, RequiresPriorTool
+from touchstone.loop import run as loop_run
+from touchstone.loop.run import PROVENANCE, auth_mode, frozen_task_ids, run_name, same_run
 
 
 def test_run_and_score_agree_on_one_name() -> None:
@@ -134,3 +138,124 @@ def test_a_run_with_no_sidecar_is_not_a_disagreement(tmp_path: Path) -> None:
     )
     assert not done.with_name(PROVENANCE).exists()
     assert same_run(done, config.K) is None
+
+
+def _matching(tmp_path: Path, sidecar: dict[str, object]) -> Path:
+    """A run on disk agreeing with the live configuration on every field but enforcement.
+
+    `auth` comes from `auth_mode()` rather than a literal, so the guard under test is the only
+    field that can disagree -- a hardcoded `subscription` would make these pass or fail on
+    whether the machine running them happens to hold a key.
+    """
+    done = _results(
+        tmp_path / "results.json",
+        agent=config.MODEL,
+        user=config.USER_MODEL,
+        k=config.K,
+        tasks=frozen_task_ids(),
+    )
+    done.with_name(PROVENANCE).write_text(json.dumps({"auth": auth_mode(), **sidecar}))
+    return done
+
+
+def test_an_ungated_run_is_not_resumed_under_the_gate(tmp_path: Path) -> None:
+    """The gate changes what the agent may do, so the two halves would be two agents.
+
+    Nothing in τ²'s `info` records it, which is why the sidecar exists at all: without this
+    check the merge is silent and the published number covers both.
+    """
+    done = _matching(tmp_path, {"enforced": False})
+    assert (why := same_run(done, config.K, enforced=True)) is not None
+    assert why.startswith("enforcement was")
+
+
+def test_a_gated_run_is_not_resumed_without_the_gate(tmp_path: Path) -> None:
+    """The other direction, asserted separately -- a one-sided check passes half the time."""
+    done = _matching(tmp_path, {"enforced": True})
+    assert (why := same_run(done, config.K, enforced=False)) is not None
+    assert why.startswith("enforcement was")
+
+
+def test_resuming_a_gated_run_under_the_gate_is_allowed(tmp_path: Path) -> None:
+    """The case the check exists to allow, and the one an over-strict guard would break."""
+    done = _matching(tmp_path, {"enforced": True})
+    assert same_run(done, config.K, enforced=True) is None
+
+
+def test_a_sidecar_that_predates_the_gate_reads_as_ungated(tmp_path: Path) -> None:
+    """False here is a measurement, not a default: the run could not have armed a gate.
+
+    Distinguished from `auth`, whose fallback is the LIVE value -- absent evidence there means
+    no disagreement, and absent evidence here means the field did not exist yet.
+    """
+    done = _matching(tmp_path, {})
+    assert same_run(done, config.K, enforced=False) is None
+    assert (why := same_run(done, config.K, enforced=True)) is not None
+    assert "False" in why
+
+
+AUTH = Predicate(
+    rule="orders are read only after the user is identified",
+    source="policy.md:3",
+    check=RequiresPriorTool(tool="get_order_details", prior=("get_user_details",)),
+)
+
+
+def test_an_empty_suite_is_refused_rather_than_armed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tier 1 is silent on retail (D-105), so a gate with no predicate refuses nothing.
+
+    The label would still say enforced, which is the phase-3 exit gate's own wording: wired
+    but never seen to fire reads exactly like working.
+    """
+    # Patched on the module rather than on `loop_run`: `run.py` imports the module and calls
+    # `suite.predicates()` through it, so one setattr reaches the caller and nothing is shadowed.
+    monkeypatch.setattr(suite, "predicates", tuple)
+    with pytest.raises(RuntimeError, match="empty regression suite"):
+        loop_run.admitted()
+
+
+def test_a_suite_with_a_case_in_it_is_what_the_gate_gets(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(suite, "predicates", lambda: (AUTH,))
+    assert loop_run.admitted() == (AUTH,)
+
+
+def test_the_gate_arms_what_the_orchestrator_builds_and_returns_it_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`install_gate` against a stand-in τ², the same trick `test_adapter` uses on the seam.
+
+    Two claims. The wrapper hands back upstream's own object, because the orchestrator holds
+    that instance and a copy would gate an environment nobody runs against. And every
+    environment it hands back is armed -- which is the list `run()` checks after the run, so an
+    empty one there means the rebind landed on a function upstream stopped calling.
+    """
+    # The parameter names are `enforce.arm`'s to keep, not this file's: `gated` binds over the
+    # method and calls upstream through the signature it found there.
+    class Env:
+        def make_tool_call(self, tool_name: str, requestor: str = "assistant", **kw: object) -> str:
+            return f"{requestor} called {tool_name}{sorted(kw)}"
+
+    built: list[Env] = []
+
+    def build_environment(domain: str) -> Env:
+        assert domain == "retail", "the stand-in was built for the specimen and nothing else"
+        built.append(env := Env())
+        return env
+
+    tau2 = types.ModuleType("tau2")
+    runner = types.ModuleType("tau2.runner")
+    build = types.ModuleType("tau2.runner.build")
+    setattr(build, "build_environment", build_environment)  # noqa: B010
+    setattr(tau2, "runner", runner)  # noqa: B010
+    setattr(runner, "build", build)  # noqa: B010
+    for name, module in (("tau2", tau2), ("tau2.runner", runner), ("tau2.runner.build", build)):
+        monkeypatch.setitem(sys.modules, name, module)
+
+    states = loop_run.install_gate([AUTH])
+    assert states == [], "nothing is armed until something is built"
+
+    environment = build.build_environment("retail")
+    assert environment is built[0], "the wrapper returned something upstream did not build"
+    assert len(states) == 1
+    with pytest.raises(ValueError, match=r"policy\.md:3"):
+        environment.make_tool_call("get_order_details", order_id="#1")

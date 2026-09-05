@@ -11,6 +11,8 @@ rather than restated here:
     auth             read from `touchstone-run.json`, which the RUN wrote. NEVER measured
                      here: `score` is a separate invocation and its environment is not the one
                      that spent the quota (D-112)
+    enforced         the same sidecar, same argument. Whether the gate was armed changes what
+                     the agent was allowed to do, and τ²'s `info` has no field for it
 
 `info.git_commit` names the wrong repository in any run we drive. τ²'s `get_commit_hash()`
 (`utils/utils.py:91`) shells out to `git rev-parse HEAD` in the current working directory, and
@@ -43,6 +45,7 @@ def envelope(
     version: str,
     k: int,
     auth: str,
+    enforced: bool | None = None,
 ) -> dict[str, Any]:
     """Wrap `score()`'s two halves in the provenance that makes them comparable — docs/05 §6.
 
@@ -56,6 +59,10 @@ def envelope(
         version: The version label this run is published under.
         k: Trials per task — echoed so a reader never has to count `cases`.
         auth: How the run reached Anthropic, measured rather than assumed.
+        enforced: Whether the gate was armed on the agent's tool calls. `None` where the run
+            recorded nothing, and then the key is ABSENT rather than false — the rule this
+            module's header states, and the case it covers is a lost sidecar, where `false`
+            would be a claim about a run nothing here can see.
 
     Returns:
         The published results object, provenance first and arithmetic after it.
@@ -70,6 +77,7 @@ def envelope(
         "user_model": (info.get("user_info") or {}).get("llm", ""),
         "provider": "anthropic",
         "auth": auth,
+        **({} if enforced is None else {"enforced": enforced}),
         **scored,
     }
 
@@ -86,6 +94,22 @@ def recorded_auth(results_file: Path) -> str:
 
     side = results_file.with_name(PROVENANCE)
     return str(json.loads(side.read_text())["auth"]) if side.exists() else "unknown"
+
+
+def recorded_enforcement(results_file: Path) -> bool | None:
+    """Whether the run armed the gate, or None when it recorded nothing.
+
+    `None` rather than False, and the difference is the same one `auth` makes with `unknown`: a
+    run with no sidecar did not tell us, and answering False would publish a fact about the gate
+    that came from the absence of a file. `envelope` drops the key on None.
+    """
+    from touchstone.loop.run import PROVENANCE
+
+    side = results_file.with_name(PROVENANCE)
+    if not side.exists():
+        return None
+    recorded = json.loads(side.read_text()).get("enforced")
+    return bool(recorded) if recorded is not None else None
 
 
 def write(results_file: Path, version: str, k: int) -> Path:
@@ -120,6 +144,7 @@ def write(results_file: Path, version: str, k: int) -> Path:
         version,
         k,
         recorded_auth(results_file),
+        recorded_enforcement(results_file),
     )
 
     config.RESULTS.mkdir(parents=True, exist_ok=True)

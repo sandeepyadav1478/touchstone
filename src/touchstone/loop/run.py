@@ -11,6 +11,14 @@ Thin on purpose. Running 114 tasks, driving a simulator and computing `reward_br
                 nothing is stopped here rather than discovered in the results (DEF-052)
     record      `auth`, beside the results file, because the SCORING process cannot know it
                 and publishes it anyway (D-112)
+    arm         `gate/enforce.py` over the orchestrator's environment when `--enforce` is
+                given — D-065's second mode, and the only caller `arm()` has
+
+`enforced` is a field of the run's identity and not a runtime flag, which is why it is in the
+sidecar and in `same_run()`. A gated half and an ungated half under one version label would be
+two agents scored as one, and it is the same argument `auth` already makes one line up: τ²'s
+`info` cannot record it, so nothing downstream could contradict a wrong value. The gate changes
+what the agent is allowed to do, so it changes what the number means.
 
 Resuming is not a flag, it is the only behaviour -- D-111. τ² writes each simulation as it
 completes and skips what is on disk, which is exactly D-015 and is already built; the quota is a
@@ -25,9 +33,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from touchstone import adapter, config, telemetry
+from touchstone import adapter, config, suite, telemetry
+from touchstone.gate import enforce
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from touchstone.gate.predicate import Predicate
 
 #: The run's own provenance, beside τ²'s results file. One name, two readers (D-112).
 PROVENANCE = "touchstone-run.json"
@@ -88,7 +102,54 @@ def frozen_task_ids() -> list[str]:
     return [str(t) for t in manifest["task_ids"]]
 
 
-def same_run(done: Path, k: int) -> str | None:
+def admitted() -> tuple[Predicate, ...]:
+    """The suite the gate will enforce, or a refusal because there is nothing to enforce.
+
+    An empty suite is refused rather than armed. Tier 1 is silent on this specimen (D-105), so a
+    gate holding no admitted predicate cannot refuse anything -- and a run that enforced nothing,
+    published under a label saying it did, is the exact failure the phase-3 exit gate names:
+    wired but never fired reads like working.
+
+    Separate from `run()` so the decision is checkable without τ², the SDK or a network. It is
+    also the first thing `run()` does under `--enforce`, before either installer, because a
+    refusal that costs nothing should happen before anything has been spent.
+    """
+    if not (predicates := suite.predicates()):
+        raise RuntimeError(
+            "--enforce with an empty regression suite — the gate would refuse nothing and the "
+            "run would still be labelled enforced. Run `touchstone gauntlet` first"
+        )
+    return predicates
+
+
+def install_gate(predicates: Sequence[Predicate]) -> list[enforce.Armed]:
+    """Arm the gate on every environment the simulation builds, and on none of the evaluator's.
+
+    `tau2.runner.build.build_environment` is the attachment point and `enforce.py`'s header is
+    the argument for it: the orchestrator's environment comes through it and the evaluator's
+    gold environment does not, so the separation the gate needs is upstream's own call graph
+    rather than a flag. Rebound rather than wrapped at the call site, because the call site is
+    `build.py:393` and it is not ours to edit.
+
+    Returns:
+        The list the wrapper appends to — one `Armed` per environment, filled as they are built.
+        Empty after a run means the gate armed nothing, which `run()` refuses to publish.
+    """
+    import tau2.runner.build as build
+
+    upstream = build.build_environment
+    states: list[enforce.Armed] = []
+
+    def armed(*args: Any, **kwargs: Any) -> Any:
+        environment = upstream(*args, **kwargs)
+        states.append(enforce.arm(environment, predicates))
+        return environment
+
+    adapter.rebind(build, armed, "build_environment")
+    return states
+
+
+def same_run(done: Path, k: int, enforced: bool = False) -> str | None:
     """Why the run on disk is not the run we are about to make, or None when it is.
 
     The version label is a run's identity, so resuming inside one label is resuming the same
@@ -104,6 +165,7 @@ def same_run(done: Path, k: int) -> str | None:
     Args:
         done: An existing τ² `results.json` for this version.
         k: Trials per task for the run about to start.
+        enforced: Whether the run about to start arms the gate.
 
     Returns:
         A sentence naming the first field that differs, or None when every field matches.
@@ -111,14 +173,16 @@ def same_run(done: Path, k: int) -> str | None:
     raw = json.loads(done.read_text())
     info = raw.get("info") or {}
     # An api_key half and a subscription half are different rate limits and possibly different
-    # routing, and `results/<version>.json` names only one of them. `_recorded_auth` returns the
+    # routing, and `results/<version>.json` names only one of them. `_recorded` falls back to the
     # live value when there is no sidecar: a missing file is not a disagreement, and every run
-    # made before D-112 has none.
+    # made before D-112 has none. `enforcement` falls back to False instead, and that is a
+    # measurement rather than a default -- a run made before the gate could arm did not arm it.
     for field, was, now in (
         ("the agent model", (info.get("agent_info") or {}).get("llm"), config.MODEL),
         ("the user model", (info.get("user_info") or {}).get("llm"), config.USER_MODEL),
         ("k", info.get("num_trials"), k),
-        ("auth", _recorded_auth(done), auth_mode()),
+        ("auth", _recorded(done, "auth", auth_mode()), auth_mode()),
+        ("enforcement", _recorded(done, "enforced", False), enforced),
     ):
         if was != now:
             return f"{field} was {was!r} and is now {now!r}"
@@ -128,13 +192,17 @@ def same_run(done: Path, k: int) -> str | None:
     return None
 
 
-def _recorded_auth(done: Path) -> str:
-    """What the run on disk recorded, or the live value when it recorded nothing."""
+def _recorded(done: Path, field: str, fallback: Any) -> Any:
+    """What the run on disk recorded for `field`, or `fallback` when it recorded nothing.
+
+    A sidecar that exists but lacks the field is the same case as no sidecar: it was written by
+    a version that did not know about it, which is not a disagreement about it.
+    """
     side = done.with_name(PROVENANCE)
-    return str(json.loads(side.read_text())["auth"]) if side.exists() else auth_mode()
+    return json.loads(side.read_text()).get(field, fallback) if side.exists() else fallback
 
 
-def run(version: str, k: int) -> Path:
+def run(version: str, k: int, enforced: bool = False) -> Path:
     """Run the frozen subset `k` times each. Returns the τ² results file it wrote.
 
     Always resumes (D-111). A version whose run on disk was made under a different
@@ -143,31 +211,36 @@ def run(version: str, k: int) -> Path:
     Args:
         version: The version label — names the run directory, and `score` resolves the same one.
         k: Trials per task. `config.K` by default, quoted from there and never as a literal.
+        enforced: Arm the gate on the agent's tool calls. Off by default, because a gated run
+            and an ungated one are different measurements and the label has to say which.
 
     Returns:
         The path τ² saved to, so a caller can assert a file rather than an absence of an error.
 
     Raises:
-        RuntimeError: The adapter patched nothing, or the run on disk is a different run.
+        RuntimeError: The adapter patched nothing, the run on disk is a different run, or the
+            gate was asked for and armed nothing.
     """
     done = results_path(version)
-    if done.exists() and (why := same_run(done, k)):
+    if done.exists() and (why := same_run(done, k, enforced)):
         raise RuntimeError(
             f"{done} holds a run of {version} made differently — {why}. Resuming would score two "
             f"configurations as one. Use a new version label, or delete {done.parent}"
         )
+    predicates = admitted() if enforced else ()
     telemetry.install()
     if (patched := adapter.install()) < 2:
         raise RuntimeError(
             f"the adapter replaced {patched} reference(s) — τ²'s roles hold their own, so a "
             "run this quiet would measure litellm and report it as ours"
         )
+    armed = install_gate(predicates) if enforced else []
 
     done.parent.mkdir(parents=True, exist_ok=True)
     # Written BEFORE the run, so a resume has something to disagree with. Not overwritten on a
     # resume either -- `same_run` above has already refused if it would have had to change.
     if not (prov := provenance_path(version)).exists():
-        prov.write_text(json.dumps({"auth": auth_mode()}, indent=2) + "\n")
+        prov.write_text(json.dumps({"auth": auth_mode(), "enforced": enforced}, indent=2) + "\n")
 
     from tau2.data_model.simulation import TextRunConfig
     from tau2.run import run_domain
@@ -187,4 +260,12 @@ def run(version: str, k: int) -> Path:
         auto_resume=True,  # D-111: never False — its branch is a console prompt, not a restart
     )
     run_domain(cfg)
+    # After the run, not before it: `build_environment` is called once per simulation, so an
+    # empty list here says the rebind landed on a function upstream no longer calls. The results
+    # are already on disk and keep their value; what is refused is publishing them as gated.
+    if enforced and not armed:
+        raise RuntimeError(
+            f"{len(armed)} environment(s) armed over {len(frozen_task_ids()) * k} simulation(s) "
+            "— the gate refused nothing because it was never on the call path"
+        )
     return results_path(version)

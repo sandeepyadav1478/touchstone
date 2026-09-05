@@ -39,3 +39,34 @@ def test_rebind_reaches_the_modules_that_imported_the_function() -> None:
     finally:
         for name in added:
             sys.modules.pop(name, None)
+
+
+def test_the_attribute_it_rebinds_is_a_parameter_and_the_default_is_the_seam() -> None:
+    """`loop.run.install_gate` rebinds `build_environment` through this same sweep.
+
+    The default is asserted alongside, because every existing caller relies on it and a
+    parameter with a default is exactly where a rename goes unnoticed.
+    """
+
+    def upstream() -> str:
+        return "upstream"
+
+    def ours() -> str:
+        return "ours"
+
+    home = types.ModuleType("tau2.runner.build")
+    setattr(home, "build_environment", upstream)  # noqa: B010
+    setattr(home, "generate", upstream)  # noqa: B010
+    holder = types.ModuleType("tau2.runner.other")
+    setattr(holder, "build_environment", upstream)  # noqa: B010
+
+    added = {m.__name__: m for m in (home, holder)}
+    sys.modules.update(added)
+    try:
+        assert rebind(home, ours, "build_environment") == 2
+        assert home.build_environment is ours
+        assert holder.build_environment is ours, "the sweep did not reach the other tau2 module"
+        assert home.generate is upstream, "the default name is not what was asked for"
+    finally:
+        for name in added:
+            sys.modules.pop(name, None)

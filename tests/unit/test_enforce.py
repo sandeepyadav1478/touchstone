@@ -239,3 +239,33 @@ def test_the_upstream_shape_enforce_py_describes_is_still_the_upstream_shape() -
         caught = [stmt for handler in node.handlers for stmt in handler.body]
         handlers = ast.unparse(ast.Module(body=caught, type_ignores=[]))
         assert "raise" not in handlers, "the evaluator now re-raises — reread enforce.py"
+
+
+def test_the_simulation_builds_its_environment_where_the_gate_attaches() -> None:
+    """The fourth claim: `build_environment` is the orchestrator's constructor and only that.
+
+    `loop.run.install_gate` rebinds it, so this is what makes the arming per-instance in
+    practice rather than only in principle. Two halves, and the second is the load-bearing one:
+    the evaluator builds its gold environment from the registry directly, so it never comes
+    through here. The day it does, this run gates the gold actions and the reward is wrong in
+    silence — the failure `enforce.py`'s header is entirely about.
+    """
+    tree = ast.parse((_tau2() / "runner" / "build.py").read_text())
+    callers = {
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+        for call in ast.walk(node)
+        if isinstance(call, ast.Call) and getattr(call.func, "id", "") == "build_environment"
+    }
+    assert callers == {"build_text_orchestrator", "build_voice_orchestrator"}
+
+    # Every file that CALLS it, not every file that names it: `run.py` and `runner/__init__.py`
+    # re-export the name and neither invokes it, so a check on the bare name would fail on
+    # upstream's own public surface.
+    calling = sorted(
+        path.relative_to(_tau2()).as_posix()
+        for path in _tau2().rglob("*.py")
+        if "build_environment(" in path.read_text()
+    )
+    assert calling == ["runner/build.py"], f"{calling} also builds through the gated constructor"

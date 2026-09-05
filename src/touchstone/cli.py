@@ -58,15 +58,25 @@ def doctor(
 def run(
     version: str = typer.Argument(..., help="The version label, e.g. `v1`. Names the run."),
     k: int = typer.Option(config.K, "--k", help="Trials per task."),
+    enforce: bool = typer.Option(
+        False,
+        "--enforce/--no-enforce",
+        help="Refuse the agent's tool calls that break an admitted rule, instead of only "
+        "judging the finished session. Needs a non-empty regression suite.",
+    ),
 ) -> None:
     """Run the frozen benchmark subset through τ², with the SDK behind every model role.
 
     Resuming is not an option here — D-111. It is what a five-hour rejecting quota requires,
     and τ²'s way of not resuming is to ask a human on the console.
+
+    `--enforce` is off by default and belongs to the LABEL, not to the invocation: a gated run
+    and an ungated one measure different agents, so `same_run` refuses to resume one into the
+    other rather than merging them.
     """
     from .loop.run import run as run_suite
 
-    typer.echo(f"wrote {run_suite(version, k)}")
+    typer.echo(f"wrote {run_suite(version, k, enforce)}")
 
 
 @app.command()

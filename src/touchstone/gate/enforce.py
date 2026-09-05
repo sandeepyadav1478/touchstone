@@ -22,6 +22,14 @@ So the scope is one object: `arm(environment)` binds an instance attribute, `sel
 finds it, and the evaluator's environment is a different object that was never armed. The
 separation is by construction rather than by a flag somebody has to remember to set.
 
+Which makes ONE upstream function the attachment point, and it is `runner/build.py`'s
+`build_environment`. It is where the orchestrator's environment is constructed and the evaluator
+does not use it -- `evaluator.py:158, 173, 198, 281` calls `registry.get_env_constructor(domain)`
+itself, four times. Arming at the registry would therefore arm the gold environment too, which is
+the failure above; arming here cannot. `loop.run.install_gate` does the binding, because this
+module deliberately does not import tau2, and
+`test_the_simulation_builds_its_environment_where_the_gate_attaches` holds the claim.
+
 Three more things that are decisions rather than mechanics:
 
     requestor   only `assistant` is gated. Every predicate is mined from assistant calls --
