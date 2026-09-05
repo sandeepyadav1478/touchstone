@@ -248,9 +248,20 @@ design, so they hold whether or not a run has happened. The full list is in
 - **The gate is a component, not the whole reward.** touchstone gates on `reward_breakdown["DB"]`
   because retail's composite includes an LLM-judged `NL_ASSERTION` on **112 of 114** tasks. Both
   are reported. ⛔ **A `DB` figure and a composite figure are different measurements.**
-- **The agent does not learn.** Nothing trains, fine-tunes or updates weights. ⛔ **"It improves
-  itself" fuses two loops and is false on the half that matters** — what iterates is the **ruler**,
-  never the thing being measured.
+- **The agent does not learn, and it carries nothing between sessions.** Nothing trains,
+  fine-tunes or updates weights, and agent memory is designed ([docs/08](docs/08-memory.md)) and
+  unbuilt. ⛔ **"It improves itself" fuses two loops and is false on the half that matters** — what
+  iterates is the **ruler**, never the thing being measured.
+- 🔴 **A run covers ten of retail's 114 tasks.** The subset is frozen and recorded with the hash it
+  was read at (`suite/benchmark/manifest.json`), so it cannot be re-sampled to flatter a result —
+  and it is still a tenth of the exam. ⛔ **A number from here is not a τ²-bench retail score.**
+- **Nothing compares two versions.** `compare`, the run record and the version table are unbuilt,
+  because a comparator with no second operand is scaffolding. So *the gate fires on these N and is
+  silent on these M* is sayable, and ⛔ ***the gate made the agent better* is not.**
+- **A mined case has no lifecycle and no reader.** It is written and it stays written: there is no
+  `locked` state recording that a version scored it, and `suite log`/`show`/`diff` are a `jq`
+  invocation rather than a build. **Nothing re-runs on a schedule either** — a cron over a frozen
+  benchmark re-measures a constant until the suite starts growing.
 - 🔴 **No `pass^k` figure appears anywhere in this repo.** It needs repeated attempts by *our*
   agent and there are none. ⛔ It is **not** `pass@k`.
 - **τ² can change its tasks under us; it already has.** Storing task ids and a hash makes a moved
