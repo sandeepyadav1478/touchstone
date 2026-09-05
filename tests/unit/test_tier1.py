@@ -57,16 +57,22 @@ def test_no_model_in_gating_path() -> None:
     model to decide whether to. Walked through imports rather than asserted about one file,
     because the way this breaks is a helper three modules down.
 
-    Two roots, not one. `predicate.py` is the tier-2 evaluator and nothing reached it from
+    Three roots, not one. `predicate.py` is the tier-2 evaluator and nothing reached it from
     here — it imports `tier1`, so the walk ran the wrong way down the only edge between them
     and the file that decides tier 2 was never covered. Found while widening
     `test_only_the_seam_and_the_doctor_may_reach_a_model` for `gate.extract` (D-107): the
     argument for letting a model propose is that nothing lets one decide, and that half was
     unasserted.
+
+    `enforce.py` is the third and it is the one this test was always about. The other two
+    decide; that one ACTS, and D-086 SS A's ceiling — the surviving mechanical boundary — is
+    a claim about the module that refuses a call before the write. It reaches both of the
+    others and nothing else, so adding it costs the walk two edges and closes the gap between
+    what the gate concludes and what the gate does.
     """
     seen: set[Path] = set()
     gate = ROOT / "src" / "touchstone" / "gate"
-    queue = [gate / "tier1.py", gate / "predicate.py"]
+    queue = [gate / "tier1.py", gate / "predicate.py", gate / "enforce.py"]
     while queue:
         path = queue.pop()
         if path in seen or not path.exists():
@@ -87,7 +93,7 @@ def test_no_model_in_gating_path() -> None:
         for marker in MODEL_CALLS:
             assert marker not in path.read_text(), f"{path.name} mentions {marker}"
 
-    assert len(seen) >= 2
+    assert len(seen) >= 3
 
 
 def test_the_gauntlet_calls_no_model() -> None:
